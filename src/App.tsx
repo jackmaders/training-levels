@@ -11,18 +11,18 @@ import { PrototypeSwitcher, VariantOption } from './components/PrototypeSwitcher
 const VARIANTS: VariantOption[] = [
   {
     key: 'A',
-    name: 'Card Deck + Bottom Thumb Arc',
-    description: 'Fixed bottom thumb matrix & pull-up reference sheet',
+    name: 'Bottom Arc Action Hub',
+    description: 'Stacked bottom timer, 5-rep tracker, pass/miss buttons & pull-up sheet',
   },
   {
     key: 'B',
-    name: 'Drill Feed + 4-Tab Bottom Dock',
-    description: 'Overview feed with 4-tab nav dock & tag filter drawer',
+    name: 'Split Bottom Dock Layout',
+    description: 'Horizontal timer bar, linear rep tracker & full-height notes drawer',
   },
   {
     key: 'C',
-    name: 'Step Ribbon + Edge Gesture Tab',
-    description: 'High-focus step HUD with side pull tab drawer',
+    name: 'Tactical Bottom Bar & Side Tab',
+    description: 'Oversized thumb buttons with side pull tab for notes drawer',
   },
 ];
 

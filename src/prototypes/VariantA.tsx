@@ -7,50 +7,69 @@ import {
   X,
   Star,
   RotateCcw,
-  Clock,
-  ArrowRight
+  ArrowRight,
+  Sparkles
 } from 'lucide-react';
-import { getLevel } from '../lib/curriculumData';
+import { getBehavior, getStep } from '../lib/curriculumData';
 import { getCriteriaConfig } from '../lib/criteriaHelper';
+import { HeaderNavDrawer } from '../components/HeaderNavDrawer';
+import { HistoryList } from '../components/HistoryList';
+import { CustomTrainingView } from '../components/CustomTrainingView';
 import { CalloutCard } from '../components/CalloutCard';
-import { RepStatus } from '../components/RepMatrix';
+import { INITIAL_SESSION_HISTORY, SessionHistoryItem } from '../types/session';
 
 export function VariantA() {
-  const [view, setView] = useState<'select' | 'session'>('select');
-  const [selectedLevel, setSelectedLevel] = useState(1);
-  const [selectedBehaviorIndex, setSelectedBehaviorIndex] = useState(0);
-  const [selectedStepNumber, setSelectedStepNumber] = useState(1);
+  const [route, setRoute] = useState<'home' | 'custom' | 'session' | 'library' | 'dog'>('home');
+  const [isNavOpen, setIsNavOpen] = useState(false);
 
-  // In-session state
+  // Selected session setup
+  const [sessionLevel, setSessionLevel] = useState(1);
+  const [sessionBehaviorKey, setSessionBehaviorKey] = useState('zen');
+  const [sessionStepNumber, setSessionStepNumber] = useState(1);
+  const [sessionType, setSessionType] = useState<'practice' | 'cold'>('practice');
+
+  // Active session tracking state
   const [activeRepIndex, setActiveRepIndex] = useState(0);
-  const [reps, setReps] = useState<RepStatus[]>(['empty', 'empty', 'empty', 'empty', 'empty']);
+  const [reps, setReps] = useState<('empty' | 'pass' | 'miss')[]>(['empty', 'empty', 'empty', 'empty', 'empty']);
+  const [coldResult, setColdResult] = useState<'pending' | 'pass' | 'miss'>('pending');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState<'tips' | 'criteria' | 'prep'>('tips');
 
-  // In-session timer state
-  const [timerSecondsLeft, setTimerSecondsLeft] = useState<number>(5);
+  // Bottom-bar timer state
+  const [timerSecondsLeft, setTimerSecondsLeft] = useState(5);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  const levelData = getLevel(selectedLevel);
-  const currentBehavior = levelData.behaviors[selectedBehaviorIndex] ?? levelData.behaviors[0];
-  const currentStep = currentBehavior.steps.find((s) => s.stepNumber === selectedStepNumber) ?? currentBehavior.steps[0];
+  // Session history
+  const [history, setHistory] = useState<SessionHistoryItem[]>(INITIAL_SESSION_HISTORY);
+
+  const currentBehavior = getBehavior(sessionLevel, sessionBehaviorKey);
+  const currentStep = getStep(sessionLevel, sessionBehaviorKey, sessionStepNumber);
   const criteriaConfig = getCriteriaConfig(currentStep.criterionSummary, currentStep.title);
 
-  const startSession = (stepNum: number) => {
-    setSelectedStepNumber(stepNum);
+  const startSession = (lvl: number, bKey: string, stepNum: number, type: 'practice' | 'cold') => {
+    setSessionLevel(lvl);
+    setSessionBehaviorKey(bKey);
+    setSessionStepNumber(stepNum);
+    setSessionType(type);
     setReps(['empty', 'empty', 'empty', 'empty', 'empty']);
     setActiveRepIndex(0);
-    setTimerSecondsLeft(criteriaConfig.durationSeconds || 5);
+    setColdResult('pending');
+    const cfg = getCriteriaConfig(getStep(lvl, bKey, stepNum).criterionSummary, getStep(lvl, bKey, stepNum).title);
+    setTimerSecondsLeft(cfg.durationSeconds || 5);
     setIsTimerRunning(false);
-    setView('session');
+    setRoute('session');
   };
 
-  const handleLogRep = (status: RepStatus) => {
+  const handleLogRep = (status: 'pass' | 'miss') => {
+    if (sessionType === 'cold') {
+      setColdResult(status);
+      return;
+    }
+
     const updated = [...reps];
     updated[activeRepIndex] = status;
     setReps(updated);
 
-    // Auto-advance to next empty rep if available
     if (activeRepIndex < 4) {
       setActiveRepIndex(activeRepIndex + 1);
     }
@@ -65,321 +84,313 @@ export function VariantA() {
     }
   };
 
-  // Timer countdown effect
-  useState(() => {
-    const interval = setInterval(() => {
-      if (isTimerRunning) {
-        setTimerSecondsLeft((prev) => {
-          if (prev <= 1) {
-            setIsTimerRunning(false);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  });
+  const finishSession = () => {
+    const passCount = reps.filter((r) => r === 'pass').length;
+    const passed = sessionType === 'cold' ? coldResult === 'pass' : passCount >= 4;
 
-  const passCount = reps.filter((r) => r === 'pass' || r === 'cold').length;
-  const isAllLogged = reps.every((r) => r !== 'empty');
-  const isGoalMet = passCount >= 4;
+    const newLog: SessionHistoryItem = {
+      id: `s-${Date.now()}`,
+      dogName: 'Barnaby',
+      levelNumber: sessionLevel,
+      behaviorTitle: currentBehavior.title,
+      stepNumber: currentStep.stepNumber,
+      stepTitle: currentStep.title,
+      sessionType: sessionType,
+      score: sessionType === 'cold' ? (passed ? 'Passed Cold' : 'Failed') : `${passCount}/5`,
+      passed,
+      date: 'Just now',
+      durationMinutes: 3,
+    };
+
+    setHistory([newLog, ...history]);
+    setRoute('home');
+  };
+
+  const passCount = reps.filter((r) => r === 'pass').length;
+  const isPracticeDone = reps.every((r) => r !== 'empty');
+  const isColdDone = coldResult !== 'pending';
+  const isFinished = sessionType === 'cold' ? isColdDone : isPracticeDone;
+  const isGoalMet = sessionType === 'cold' ? coldResult === 'pass' : passCount >= 4;
 
   return (
     <div className="relative min-h-screen bg-zinc-950 text-zinc-100 flex flex-col justify-between pb-36 max-w-md mx-auto border-x border-zinc-800">
-      {/* =========================================================================
-          PAGE 1: EXERCISE SELECTION (PRE-BRIEF)
-         ========================================================================= */}
-      {view === 'select' && (
-        <div className="flex-1 flex flex-col">
-          {/* Header: Level Tabs */}
-          <header className="sticky top-0 z-30 bg-zinc-900 border-b border-zinc-800 px-4 py-2.5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-zinc-300">
-                Select Training Exercise
-              </span>
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4].map((lvl) => (
-                  <button
-                    key={lvl}
-                    onClick={() => {
-                      setSelectedLevel(lvl);
-                      setSelectedBehaviorIndex(0);
-                      setSelectedStepNumber(1);
-                    }}
-                    className={`px-2 py-0.5 rounded text-xs font-mono font-semibold cursor-pointer ${
-                      selectedLevel === lvl
-                        ? 'bg-zinc-100 text-zinc-900'
-                        : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
-                    }`}
-                  >
-                    L{lvl}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Behavior Switcher */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-              {levelData.behaviors.map((b, idx) => (
-                <button
-                  key={b.id}
-                  onClick={() => {
-                    setSelectedBehaviorIndex(idx);
-                    setSelectedStepNumber(1);
-                  }}
-                  className={`px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap cursor-pointer ${
-                    idx === selectedBehaviorIndex
-                      ? 'bg-zinc-700 text-white'
-                      : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
-                  }`}
-                >
-                  {b.title}
-                </button>
-              ))}
-            </div>
-          </header>
-
-          {/* Exercise Step Cards */}
-          <main className="px-4 py-3 flex-1 text-left space-y-3">
-            <div className="text-xs text-zinc-400 font-mono uppercase">
-              {currentBehavior.title} Steps (Level {selectedLevel})
-            </div>
-
-            {currentBehavior.steps.map((s) => {
-              const cfg = getCriteriaConfig(s.criterionSummary, s.title);
-              const isCurrent = s.stepNumber === selectedStepNumber;
-
-              return (
-                <div
-                  key={s.id}
-                  onClick={() => setSelectedStepNumber(s.stepNumber)}
-                  className={`p-3.5 rounded-xl border transition cursor-pointer ${
-                    isCurrent
-                      ? 'bg-zinc-900 border-zinc-500 ring-1 ring-zinc-500'
-                      : 'bg-zinc-900/60 border-zinc-800 hover:bg-zinc-900'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-mono font-bold text-zinc-200">
-                      Step {s.stepNumber}: {s.title}
-                    </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
-                      {cfg.type === 'timing' ? `⏱️ ${cfg.label}` : '🎯 5 Reps'}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-zinc-400 leading-relaxed mb-3">
-                    {s.criterionSummary}
-                  </p>
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      startSession(s.stepNumber);
-                    }}
-                    className="w-full py-2 bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs rounded-lg flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <span>Start 5-Rep Session</span>
-                    <ArrowRight size={14} />
-                  </button>
-                </div>
-              );
-            })}
-          </main>
-        </div>
+      {/* Header with Navigation Drawer */}
+      {route !== 'session' && (
+        <HeaderNavDrawer
+          isOpen={isNavOpen}
+          onClose={() => setIsNavOpen(false)}
+          onOpen={() => setIsNavOpen(true)}
+          activeRoute={route}
+          onNavigate={(r) => setRoute(r)}
+        />
       )}
 
       {/* =========================================================================
-          PAGE 2: IN-SESSION DRILL (TABBED REPS + BOTTOM GOAL ACTION)
+          PAGE 1: MAIN HOMEPAGE (RECOMMENDED NEXT EXERCISE & HISTORY)
          ========================================================================= */}
-      {view === 'session' && (
-        <div className="flex-1 flex flex-col justify-between">
-          {/* Top Session Bar */}
-          <header className="sticky top-0 z-30 bg-zinc-900 border-b border-zinc-800 px-4 py-2.5">
+      {route === 'home' && (
+        <main className="p-4 flex-1 text-left space-y-4">
+          {/* Primary Recommended Next Exercise Card */}
+          <div className="bg-zinc-900 border-2 border-zinc-700 rounded-2xl p-4 shadow-xl">
             <div className="flex items-center justify-between mb-2">
-              <button
-                onClick={() => setView('select')}
-                className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white cursor-pointer"
-              >
-                <ChevronLeft size={16} />
-                <span>Exercises</span>
-              </button>
-
-              <div className="text-xs font-semibold text-zinc-200">
-                Level {selectedLevel} • {currentBehavior.title}
+              <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-zinc-300">
+                <Sparkles size={14} className="text-amber-400" />
+                <span>RECOMMENDED NEXT DRILL</span>
               </div>
-
-              <span className="text-[10px] font-mono bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded border border-zinc-700">
-                Step {currentStep.stepNumber}
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
+                Level 1 • Step 1
               </span>
             </div>
 
-            {/* 5 Rep Tabs Along Top */}
-            <div className="grid grid-cols-5 gap-1.5 pt-1">
-              {reps.map((status, idx) => {
-                const isActive = idx === activeRepIndex;
-                let statusIcon = <span className="font-mono text-[10px] text-zinc-500">--</span>;
-                let statusStyle = 'bg-zinc-950 border-zinc-800 text-zinc-400';
+            <h2 className="text-base font-bold text-white mb-1">
+              Zen: Watch Treat for 5 Seconds
+            </h2>
+            <p className="text-xs text-zinc-400 leading-relaxed mb-3">
+              Dog watches treat in open hand without moving towards it for 5 seconds. Builds impulse foundation.
+            </p>
 
-                if (status === 'pass') {
-                  statusStyle = 'bg-emerald-950/80 border-emerald-600 text-emerald-300';
-                  statusIcon = <Check size={14} className="text-emerald-400" strokeWidth={3} />;
-                } else if (status === 'miss') {
-                  statusStyle = 'bg-rose-950/80 border-rose-600 text-rose-300';
-                  statusIcon = <X size={14} className="text-rose-400" strokeWidth={3} />;
-                } else if (status === 'cold') {
-                  statusStyle = 'bg-amber-950/80 border-amber-500 text-amber-300';
-                  statusIcon = <Star size={14} className="fill-amber-400 text-amber-400" />;
-                }
-
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveRepIndex(idx)}
-                    className={`py-1.5 px-1 rounded-lg border flex flex-col items-center justify-center cursor-pointer transition ${statusStyle} ${
-                      isActive ? 'ring-2 ring-zinc-300 font-bold' : ''
-                    }`}
-                  >
-                    <span className="text-[10px] font-mono">Rep {idx + 1}</span>
-                    <div className="h-4 flex items-center justify-center mt-0.5">
-                      {statusIcon}
-                    </div>
-                  </button>
-                );
-              })}
+            {/* Session Type Switcher */}
+            <div className="bg-zinc-950 p-1 rounded-lg border border-zinc-800 flex items-center gap-1 mb-3">
+              <button
+                type="button"
+                onClick={() => setSessionType('practice')}
+                className={`flex-1 py-1.5 rounded text-xs font-semibold transition cursor-pointer ${
+                  sessionType === 'practice' ? 'bg-zinc-800 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                Practice (5 Reps)
+              </button>
+              <button
+                type="button"
+                onClick={() => setSessionType('cold')}
+                className={`flex-1 py-1.5 rounded text-xs font-semibold transition flex items-center justify-center gap-1 cursor-pointer ${
+                  sessionType === 'cold' ? 'bg-amber-950 text-amber-300 border border-amber-600/70 font-bold' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <Star size={12} className={sessionType === 'cold' ? 'fill-amber-300' : ''} />
+                <span>Cold Test</span>
+              </button>
             </div>
+
+            <button
+              type="button"
+              onClick={() => startSession(1, 'zen', 1, sessionType)}
+              className="w-full py-2.5 bg-zinc-100 hover:bg-white text-zinc-950 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow"
+            >
+              <span>{sessionType === 'cold' ? 'Start Cold Test Certification' : 'Start 5-Minute Practice Session'}</span>
+              <ArrowRight size={14} />
+            </button>
+          </div>
+
+          {/* Session History */}
+          <HistoryList history={history} />
+        </main>
+      )}
+
+      {/* =========================================================================
+          PAGE 1B: CUSTOM TRAINING (CURRICULUM ACCORDION)
+         ========================================================================= */}
+      {route === 'custom' && (
+        <CustomTrainingView onStartSession={startSession} />
+      )}
+
+      {/* =========================================================================
+          PAGE 1C: REFERENCE LIBRARY (SUE'S GENERAL RULES)
+         ========================================================================= */}
+      {route === 'library' && (
+        <main className="p-4 flex-1 text-left space-y-3">
+          <div className="text-xs font-semibold text-zinc-200">Sue Ailsby Master Guidelines</div>
+          <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-zinc-300 space-y-2">
+            <span className="font-bold text-white block">Pre-Brief, Be Brief, Debrief:</span>
+            <p>1. Count out 5-10 treats beforehand.</p>
+            <p>2. Keep active drills under 5 minutes.</p>
+            <p>3. Aim for 80% compliance (4/5 reps) before advancing.</p>
+            <p>4. Cold tests must be attempted on a separate day with zero warm-up.</p>
+          </div>
+        </main>
+      )}
+
+      {/* =========================================================================
+          PAGE 1D: DOG PROFILE
+         ========================================================================= */}
+      {route === 'dog' && (
+        <main className="p-4 flex-1 text-left space-y-3">
+          <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl text-center">
+            <h2 className="text-sm font-bold text-white">Barnaby</h2>
+            <p className="text-xs text-zinc-400">Level 1 • Golden Retriever</p>
+          </div>
+        </main>
+      )}
+
+      {/* =========================================================================
+          PAGE 2: IN-SESSION DRILL (CLEAN CENTER + ALL-IN-ONE BOTTOM BAR)
+         ========================================================================= */}
+      {route === 'session' && (
+        <div className="flex-1 flex flex-col justify-between">
+          {/* Minimal Session Header */}
+          <header className="sticky top-0 z-30 bg-zinc-900 border-b border-zinc-800 px-4 py-2.5 flex items-center justify-between">
+            <button
+              onClick={() => setRoute('home')}
+              className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white cursor-pointer"
+            >
+              <ChevronLeft size={16} />
+              <span>Exit</span>
+            </button>
+
+            <div className="text-xs font-semibold text-zinc-200">
+              Level {sessionLevel} {currentBehavior.title} • Step {currentStep.stepNumber}
+            </div>
+
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
+              {sessionType === 'cold' ? 'Cold Test' : 'Practice'}
+            </span>
           </header>
 
-          {/* Main: Active Rep Criterion & Method */}
-          <main className="px-4 py-3 flex-1 text-left space-y-3">
-            {/* Completion Banner if all reps logged */}
-            {isAllLogged && (
-              <div className={`p-3 rounded-xl border text-xs flex items-center justify-between ${
-                isGoalMet
-                  ? 'bg-emerald-950/70 border-emerald-600 text-emerald-200'
-                  : 'bg-zinc-900 border-zinc-700 text-zinc-300'
+          {/* Clean Main Viewport: Criterion & Methodology Button */}
+          <main className="px-4 py-4 flex-1 text-left space-y-3">
+            {/* Session Finished Card */}
+            {isFinished && (
+              <div className={`p-3.5 rounded-xl border text-xs flex items-center justify-between ${
+                isGoalMet ? 'bg-emerald-950/80 border-emerald-600 text-emerald-200' : 'bg-zinc-900 border-zinc-700 text-zinc-300'
               }`}>
                 <div>
                   <span className="font-bold block">
-                    {isGoalMet ? '✓ 4/5 Passed — Target Achieved!' : `Session Finished (${passCount}/5)`}
+                    {sessionType === 'cold'
+                      ? isGoalMet ? '✓ Cold Test Certified!' : '✕ Cold Test Missed'
+                      : isGoalMet ? '✓ Target Met (4/5 Passed)' : `Session Completed (${passCount}/5)`}
                   </span>
                   <span className="text-[11px] opacity-80">
-                    {isGoalMet ? 'Ready to attempt Cold Test tomorrow.' : 'Try another 5-rep burst to hit 80% compliance.'}
+                    {isGoalMet ? 'Ready to log completion into history.' : 'Review method in drawer and retry in next session.'}
                   </span>
                 </div>
                 <button
-                  onClick={() => setView('select')}
-                  className="px-2.5 py-1 bg-zinc-100 text-zinc-900 font-bold rounded text-xs cursor-pointer"
+                  onClick={finishSession}
+                  className="px-3 py-1.5 bg-zinc-100 text-zinc-900 font-bold rounded-lg text-xs cursor-pointer shadow"
                 >
-                  Done
+                  Save & Return
                 </button>
               </div>
             )}
 
-            {/* Criterion Box */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold">
-                  Active Goal (Rep {activeRepIndex + 1} of 5)
-                </span>
-                <span className="text-[10px] font-mono text-zinc-400">
-                  Target: 4/5 reps
-                </span>
+            {/* Step Target Box */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+              <div className="text-[10px] font-mono uppercase text-zinc-400 font-bold mb-1">
+                {sessionType === 'cold' ? 'COLD TEST CRITERION (1 ATTEMPT)' : `CRITERION TARGET (REP ${activeRepIndex + 1} OF 5)`}
               </div>
-              <h2 className="text-sm font-semibold text-zinc-100 mb-1.5">
+              <h2 className="text-sm font-semibold text-zinc-100 mb-2">
                 {currentStep.title}
               </h2>
-              <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800/80 text-xs text-zinc-300 leading-relaxed">
-                {currentStep.criterionSummary}
+              <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 text-xs text-zinc-300 leading-relaxed">
+                {sessionType === 'cold' && currentStep.tryItCold ? currentStep.tryItCold : currentStep.criterionSummary}
               </div>
             </div>
 
-            {/* Instruction Snippet */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-3 text-xs text-zinc-400">
-              <span className="font-semibold text-zinc-200 block mb-1">Method:</span>
-              {currentStep.instructionsMarkdown}
-            </div>
+            {/* Methodology & Tips Hidden in Clean Drawer Trigger */}
+            <button
+              type="button"
+              onClick={() => setIsDrawerOpen(true)}
+              className="w-full py-2 px-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs font-semibold text-zinc-300 flex items-center justify-between cursor-pointer"
+            >
+              <span className="flex items-center gap-1.5">
+                <BookOpen size={14} className="text-zinc-400" />
+                <span>View Methodology & Sue's Notes</span>
+              </span>
+              <ChevronUp size={16} className="text-zinc-400" />
+            </button>
           </main>
 
-          {/* Fixed Bottom Arc: Goal Action (Timer/Reps) + Quick Ref Pull-up */}
+          {/* =========================================================================
+              ALL-IN-ONE BOTTOM BAR: TIMER + 5-REP TRACKER + PASS/MISS BUTTONS
+             ========================================================================= */}
           <div className="fixed bottom-14 left-0 right-0 max-w-md mx-auto px-3 z-40">
-            <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-3 flex flex-col gap-2.5 shadow-lg">
-              {/* Quick Reference Button */}
-              <button
-                type="button"
-                onClick={() => setIsDrawerOpen(true)}
-                className="w-full py-1.5 px-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-lg text-xs font-semibold text-zinc-200 flex items-center justify-between cursor-pointer"
-              >
-                <span className="flex items-center gap-1.5">
-                  <BookOpen size={14} className="text-zinc-400" />
-                  Quick Reference & Sue's Tips
-                </span>
-                <ChevronUp size={16} className="text-zinc-400" />
-              </button>
-
-              {/* Dynamic Goal Action based on criteria type */}
+            <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-3 flex flex-col gap-2.5 shadow-xl">
+              {/* 1. Timer if duration based */}
               {criteriaConfig.type === 'timing' && (
-                <div className="flex items-center justify-between gap-2 bg-zinc-950 p-2 rounded-xl border border-zinc-800">
-                  <button
-                    onClick={handleToggleTimer}
-                    className={`flex-1 py-2 rounded-lg font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                      isTimerRunning
-                        ? 'bg-amber-700 text-white'
-                        : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700'
-                    }`}
-                  >
-                    <Clock size={14} />
-                    <span>{isTimerRunning ? `Holding: ${timerSecondsLeft}s` : `Start ${criteriaConfig.durationSeconds || 5}s Timer`}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setTimerSecondsLeft(criteriaConfig.durationSeconds || 5);
-                      setIsTimerRunning(false);
-                    }}
-                    className="p-2 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
-                    title="Reset Timer"
-                  >
-                    <RotateCcw size={14} />
-                  </button>
+                <div className="flex items-center justify-between gap-2 bg-zinc-950 p-1.5 rounded-xl border border-zinc-800">
+                  <span className="font-mono text-xs font-bold text-zinc-200 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">
+                    {timerSecondsLeft}s
+                  </span>
+                  <span className="text-xs text-zinc-400 font-medium">
+                    {criteriaConfig.label}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        setTimerSecondsLeft(criteriaConfig.durationSeconds || 5);
+                        setIsTimerRunning(false);
+                      }}
+                      className="p-1 rounded bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
+                    >
+                      <RotateCcw size={12} />
+                    </button>
+                    <button
+                      onClick={handleToggleTimer}
+                      className={`px-3 py-1 rounded text-xs font-bold transition cursor-pointer ${
+                        isTimerRunning ? 'bg-amber-700 text-white' : 'bg-zinc-100 text-zinc-900'
+                      }`}
+                    >
+                      {isTimerRunning ? 'Pause' : timerSecondsLeft === 0 ? 'Restart' : 'Start'}
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {/* Rep Logging Split Buttons */}
-              <div className="grid grid-cols-3 gap-2">
+              {/* 2. Rep Tracker */}
+              {sessionType === 'practice' && (
+                <div className="grid grid-cols-5 gap-1 bg-zinc-950 p-1.5 rounded-xl border border-zinc-800">
+                  {reps.map((status, idx) => {
+                    const isActive = idx === activeRepIndex;
+                    let icon = <span className="text-[10px] font-mono text-zinc-500">{idx + 1}</span>;
+                    let style = 'bg-zinc-900 border-zinc-800 text-zinc-400';
+
+                    if (status === 'pass') {
+                      style = 'bg-emerald-950 border-emerald-600 text-emerald-300 font-bold';
+                      icon = <Check size={13} className="text-emerald-400" strokeWidth={3} />;
+                    } else if (status === 'miss') {
+                      style = 'bg-rose-950 border-rose-600 text-rose-300 font-bold';
+                      icon = <X size={13} className="text-rose-400" strokeWidth={3} />;
+                    }
+
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => setActiveRepIndex(idx)}
+                        className={`py-1 rounded border flex flex-col items-center justify-center cursor-pointer transition ${style} ${
+                          isActive ? 'ring-2 ring-zinc-300 font-bold' : ''
+                        }`}
+                      >
+                        <span className="text-[9px] font-mono leading-none">R{idx + 1}</span>
+                        <div className="h-3.5 flex items-center justify-center mt-0.5">{icon}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* 3. Pass / Miss Action Buttons */}
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => handleLogRep('pass')}
-                  className="py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                  className="py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow"
                 >
                   <Check size={16} strokeWidth={3} />
-                  <span>Pass</span>
+                  <span>PASS REP</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleLogRep('miss')}
-                  className="py-2.5 bg-rose-800 hover:bg-rose-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                  className="py-2.5 bg-rose-800 hover:bg-rose-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow"
                 >
                   <X size={16} strokeWidth={3} />
-                  <span>Miss</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleLogRep('cold')}
-                  className="py-2.5 bg-amber-700 hover:bg-amber-600 text-black text-xs font-bold rounded-xl flex items-center justify-center gap-1 cursor-pointer active:scale-95"
-                >
-                  <Star size={15} className="fill-black" />
-                  <span>Cold Pass</span>
+                  <span>MISS REP</span>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Quick-Reference Slide-Up Bottom Sheet */}
+          {/* Slide-Up Methodology Drawer */}
           {isDrawerOpen && (
             <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60">
               <div className="absolute inset-0" onClick={() => setIsDrawerOpen(false)} />
@@ -389,7 +400,7 @@ export function VariantA() {
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase">
-                      {currentBehavior.title} Reference
+                      {currentBehavior.title} Methodology
                     </div>
                     <h3 className="text-sm font-semibold text-white">
                       Step {currentStep.stepNumber}: {currentStep.title}
@@ -410,7 +421,7 @@ export function VariantA() {
                       drawerTab === 'tips' ? 'bg-zinc-700 text-white' : 'text-zinc-400'
                     }`}
                   >
-                    Tips ({currentStep.callouts.length})
+                    Instructions & Tips
                   </button>
                   <button
                     onClick={() => setDrawerTab('criteria')}
@@ -434,18 +445,12 @@ export function VariantA() {
                   {drawerTab === 'tips' && (
                     <>
                       <div className="p-2.5 bg-zinc-950 rounded-lg border border-zinc-800 text-zinc-300">
-                        <span className="font-semibold text-zinc-100 block mb-1">Method:</span>
+                        <span className="font-semibold text-zinc-100 block mb-1">Step Method:</span>
                         {currentStep.instructionsMarkdown}
                       </div>
                       {currentStep.callouts.map((c, i) => (
                         <CalloutCard key={i} callout={c} />
                       ))}
-                      {currentStep.tryItCold && (
-                        <div className="p-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-300">
-                          <span className="font-semibold text-zinc-100 block mb-1">Cold Test:</span>
-                          {currentStep.tryItCold}
-                        </div>
-                      )}
                     </>
                   )}
 
@@ -455,7 +460,7 @@ export function VariantA() {
                         <div
                           key={row.step}
                           className={`p-2.5 rounded-lg border ${
-                            row.step === selectedStepNumber
+                            row.step === currentStep.stepNumber
                               ? 'bg-zinc-800 border-zinc-600'
                               : 'bg-zinc-950 border-zinc-800'
                           }`}
