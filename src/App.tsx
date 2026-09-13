@@ -3,6 +3,7 @@ import { VariantA } from './prototypes/VariantA';
 import { VariantB } from './prototypes/VariantB';
 import { VariantC } from './prototypes/VariantC';
 import { PrototypeSwitcher, VariantOption } from './components/PrototypeSwitcher';
+import { PrototypeProvider } from './context/PrototypeContext';
 
 // Prototype Question:
 // "How should the level completion dashboard, behavior step card, one-handed bottom navigation,
@@ -58,21 +59,23 @@ export function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-start text-zinc-100 font-sans antialiased">
-      {/* Active Prototype Render */}
-      <div className="w-full">
-        {currentVariant === 'A' && <VariantA />}
-        {currentVariant === 'B' && <VariantB />}
-        {currentVariant === 'C' && <VariantC />}
-      </div>
+    <PrototypeProvider>
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-start text-zinc-100 font-sans antialiased">
+        {/* Active Prototype Render */}
+        <div className="w-full">
+          {currentVariant === 'A' && <VariantA />}
+          {currentVariant === 'B' && <VariantB />}
+          {currentVariant === 'C' && <VariantC />}
+        </div>
 
-      {/* Floating Prototype Switcher Bar */}
-      <PrototypeSwitcher
-        variants={VARIANTS}
-        currentVariant={currentVariant}
-        onSelectVariant={handleSelectVariant}
-      />
-    </div>
+        {/* Floating Prototype Switcher Bar */}
+        <PrototypeSwitcher
+          variants={VARIANTS}
+          currentVariant={currentVariant}
+          onSelectVariant={handleSelectVariant}
+        />
+      </div>
+    </PrototypeProvider>
   );
 }
 

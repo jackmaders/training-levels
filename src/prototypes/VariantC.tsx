@@ -15,85 +15,38 @@ import { HeaderNavDrawer } from '../components/HeaderNavDrawer';
 import { HistoryList } from '../components/HistoryList';
 import { CustomTrainingView } from '../components/CustomTrainingView';
 import { CalloutCard } from '../components/CalloutCard';
-import { INITIAL_SESSION_HISTORY, SessionHistoryItem } from '../types/session';
+import { usePrototype } from '../context/PrototypeContext';
 
 export function VariantC() {
-  const [route, setRoute] = useState<'home' | 'custom' | 'session' | 'library' | 'dog'>('home');
-  const [isNavOpen, setIsNavOpen] = useState(false);
+  const {
+    route,
+    setRoute,
+    isNavOpen,
+    setIsNavOpen,
+    sessionLevel,
+    sessionBehaviorKey,
+    sessionStepNumber,
+    sessionType,
+    setSessionType,
+    activeRepIndex,
+    setActiveRepIndex,
+    reps,
+    coldResult,
+    timerSecondsLeft,
+    isTimerRunning,
+    history,
+    startSession,
+    handleLogRep,
+    handleToggleTimer,
+    resetTimer,
+    finishSession,
+  } = usePrototype();
 
-  // Selected session setup
-  const [sessionLevel, setSessionLevel] = useState(1);
-  const [sessionBehaviorKey, setSessionBehaviorKey] = useState('zen');
-  const [sessionStepNumber, setSessionStepNumber] = useState(1);
-  const [sessionType, setSessionType] = useState<'practice' | 'cold'>('practice');
-
-  // Active session tracking state
-  const [activeRepIndex, setActiveRepIndex] = useState(0);
-  const [reps, setReps] = useState<('empty' | 'pass' | 'miss')[]>(['empty', 'empty', 'empty', 'empty', 'empty']);
-  const [coldResult, setColdResult] = useState<'pending' | 'pass' | 'miss'>('pending');
   const [isSideDrawerOpen, setIsSideDrawerOpen] = useState(false);
-
-  // Bottom timer state
-  const [timerSecondsLeft, setTimerSecondsLeft] = useState(5);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-
-  // Session history
-  const [history, setHistory] = useState<SessionHistoryItem[]>(INITIAL_SESSION_HISTORY);
 
   const currentBehavior = getBehavior(sessionLevel, sessionBehaviorKey);
   const currentStep = getStep(sessionLevel, sessionBehaviorKey, sessionStepNumber);
   const criteriaConfig = getCriteriaConfig(currentStep.criterionSummary, currentStep.title);
-
-  const startSession = (lvl: number, bKey: string, stepNum: number, type: 'practice' | 'cold') => {
-    setSessionLevel(lvl);
-    setSessionBehaviorKey(bKey);
-    setSessionStepNumber(stepNum);
-    setSessionType(type);
-    setReps(['empty', 'empty', 'empty', 'empty', 'empty']);
-    setActiveRepIndex(0);
-    setColdResult('pending');
-    const cfg = getCriteriaConfig(getStep(lvl, bKey, stepNum).criterionSummary, getStep(lvl, bKey, stepNum).title);
-    setTimerSecondsLeft(cfg.durationSeconds || 5);
-    setIsTimerRunning(false);
-    setRoute('session');
-  };
-
-  const handleLogRep = (status: 'pass' | 'miss') => {
-    if (sessionType === 'cold') {
-      setColdResult(status);
-      return;
-    }
-
-    const updated = [...reps];
-    updated[activeRepIndex] = status;
-    setReps(updated);
-
-    if (activeRepIndex < 4) {
-      setActiveRepIndex(activeRepIndex + 1);
-    }
-  };
-
-  const finishSession = () => {
-    const passCount = reps.filter((r) => r === 'pass').length;
-    const passed = sessionType === 'cold' ? coldResult === 'pass' : passCount >= 4;
-
-    const newLog: SessionHistoryItem = {
-      id: `s-${Date.now()}`,
-      dogName: 'Barnaby',
-      levelNumber: sessionLevel,
-      behaviorTitle: currentBehavior.title,
-      stepNumber: currentStep.stepNumber,
-      stepTitle: currentStep.title,
-      sessionType: sessionType,
-      score: sessionType === 'cold' ? (passed ? 'Passed Cold' : 'Failed') : `${passCount}/5`,
-      passed,
-      date: 'Just now',
-      durationMinutes: 3,
-    };
-
-    setHistory([newLog, ...history]);
-    setRoute('home');
-  };
 
   const passCount = reps.filter((r) => r === 'pass').length;
   const isPracticeDone = reps.every((r) => r !== 'empty');
@@ -309,16 +262,13 @@ export function VariantC() {
                   </span>
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => {
-                        setTimerSecondsLeft(criteriaConfig.durationSeconds || 5);
-                        setIsTimerRunning(false);
-                      }}
+                      onClick={resetTimer}
                       className="p-1 rounded bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
                     >
                       <RotateCcw size={12} />
                     </button>
                     <button
-                      onClick={() => setIsTimerRunning(!isTimerRunning)}
+                      onClick={handleToggleTimer}
                       className={`px-3 py-1 rounded text-xs font-bold cursor-pointer ${
                         isTimerRunning ? 'bg-amber-700 text-white' : 'bg-zinc-100 text-zinc-900'
                       }`}
