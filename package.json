@@ -21,10 +21,13 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^22.13.9",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
+    "lucide-react": "^1.45.0",
+    "tailwindcss": "^4.3.3",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2",
     "vite": "^8.3.0",
