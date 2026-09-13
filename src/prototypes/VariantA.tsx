@@ -308,17 +308,8 @@ export function VariantA() {
                 </div>
               )}
 
-              {/* 3. Pass / Miss Action Buttons */}
+              {/* 3. Pass / Miss Action Buttons (Miss on left, Pass on right) */}
               <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleLogRep('pass')}
-                  className="py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow"
-                >
-                  <Check size={16} strokeWidth={3} />
-                  <span>PASS REP</span>
-                </button>
-
                 <button
                   type="button"
                   onClick={() => handleLogRep('miss')}
@@ -326,6 +317,15 @@ export function VariantA() {
                 >
                   <X size={16} strokeWidth={3} />
                   <span>MISS REP</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleLogRep('pass')}
+                  className="py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow"
+                >
+                  <Check size={16} strokeWidth={3} />
+                  <span>PASS REP</span>
                 </button>
               </div>
             </div>

@@ -311,21 +311,21 @@ export function VariantC() {
                 </div>
               )}
 
-              {/* Pass / Miss Buttons */}
+              {/* Pass / Miss Buttons (Miss on left, Pass on right) */}
               <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => handleLogRep('pass')}
-                  className="py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow"
-                >
-                  <Check size={16} />
-                  <span>PASS REP</span>
-                </button>
                 <button
                   onClick={() => handleLogRep('miss')}
                   className="py-2.5 bg-rose-800 hover:bg-rose-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow"
                 >
                   <X size={16} />
                   <span>MISS REP</span>
+                </button>
+                <button
+                  onClick={() => handleLogRep('pass')}
+                  className="py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow"
+                >
+                  <Check size={16} />
+                  <span>PASS REP</span>
                 </button>
               </div>
             </div>
