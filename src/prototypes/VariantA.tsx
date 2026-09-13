@@ -170,27 +170,65 @@ export function VariantA() {
          ========================================================================= */}
       {route === 'session' && (
         <div className="flex-1 flex flex-col justify-between">
-          {/* Minimal Session Header */}
-          <header className="sticky top-0 z-30 bg-zinc-900 border-b border-zinc-800 px-4 py-2.5 flex items-center justify-between">
-            <button
-              onClick={() => setRoute('home')}
-              className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white cursor-pointer"
-            >
-              <ChevronLeft size={16} />
-              <span>Exit</span>
-            </button>
+          {/* Pinned / Non-scrolling Section: Header + Main Criterion Hero Card */}
+          <div className="sticky top-0 z-30 bg-zinc-950/95 backdrop-blur border-b border-zinc-800">
+            {/* Minimal Session Header */}
+            <header className="bg-zinc-900 border-b border-zinc-800 px-4 py-2.5 flex items-center justify-between">
+              <button
+                onClick={() => setRoute('home')}
+                className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white cursor-pointer"
+              >
+                <ChevronLeft size={16} />
+                <span>Exit</span>
+              </button>
 
-            <div className="text-xs font-semibold text-zinc-200">
-              Level {sessionLevel} {currentBehavior.title} • Step {currentStep.stepNumber}
+              <div className="text-xs font-semibold text-zinc-200">
+                Level {sessionLevel} {currentBehavior.title} • Step {currentStep.stepNumber}
+              </div>
+
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
+                {sessionType === 'cold' ? 'Cold Test' : 'Practice'}
+              </span>
+            </header>
+
+            {/* Pinned Main Criterion Hero Card */}
+            <div className="p-3">
+              <div className="bg-zinc-900 border-2 border-zinc-700 rounded-2xl p-3.5 shadow-xl">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/60">
+                      {sessionType === 'cold' ? 'Cold Test' : `Rep ${activeRepIndex + 1} of 5`}
+                    </span>
+                    <span className="text-[10px] font-mono text-zinc-400">
+                      Goal: 80% (4/5)
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsDrawerOpen(true)}
+                    aria-label="View Exercise Methodology and Notes"
+                    className="flex items-center gap-1 text-[11px] font-medium text-zinc-300 hover:text-white px-2.5 py-0.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 transition cursor-pointer shadow-sm"
+                    title="View Full Exercise Methodology and Tips"
+                  >
+                    <BookOpen size={13} />
+                    <span>Full Guide</span>
+                  </button>
+                </div>
+
+                <h2 className="text-sm font-bold text-white mb-1.5">
+                  {currentStep.title}
+                </h2>
+
+                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800 text-xs text-zinc-200 leading-relaxed font-normal">
+                  {sessionType === 'cold' && currentStep.tryItCold ? currentStep.tryItCold : currentStep.criterionSummary}
+                </div>
+              </div>
             </div>
+          </div>
 
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
-              {sessionType === 'cold' ? 'Cold Test' : 'Practice'}
-            </span>
-          </header>
-
-          {/* Clean Main Viewport: Criterion & Methodology Button */}
-          <main className="px-4 py-4 flex-1 text-left space-y-3">
+          {/* Scrollable Main Viewport for Tips & Callouts */}
+          <main className="px-4 py-2 flex-1 text-left space-y-3 overflow-y-auto">
             {/* Session Finished Card */}
             {isFinished && (
               <div className={`p-3.5 rounded-xl border text-xs flex items-center justify-between ${
@@ -214,39 +252,6 @@ export function VariantA() {
                 </button>
               </div>
             )}
-
-            {/* Main Criterion Hero Card (Distinct & High Hierarchy) */}
-            <div className="bg-zinc-900 border-2 border-zinc-700 rounded-2xl p-4 shadow-xl">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/60">
-                    {sessionType === 'cold' ? 'Cold Test' : `Rep ${activeRepIndex + 1} of 5`}
-                  </span>
-                  <span className="text-[10px] font-mono text-zinc-400">
-                    Goal: 80% (4/5)
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsDrawerOpen(true)}
-                  aria-label="View Exercise Methodology and Notes"
-                  className="flex items-center gap-1 text-[11px] font-medium text-zinc-300 hover:text-white px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 transition cursor-pointer shadow-sm"
-                  title="View Full Exercise Methodology and Tips"
-                >
-                  <BookOpen size={13} />
-                  <span>Full Guide</span>
-                </button>
-              </div>
-
-              <h2 className="text-base font-bold text-white mb-2">
-                {currentStep.title}
-              </h2>
-
-              <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 text-xs text-zinc-200 leading-relaxed font-normal">
-                {sessionType === 'cold' && currentStep.tryItCold ? currentStep.tryItCold : currentStep.criterionSummary}
-              </div>
-            </div>
 
             {/* Secondary Less-Emphasized Tip / Warning Card Below Main Card */}
             <div className={`p-3 rounded-xl border text-xs leading-relaxed transition ${

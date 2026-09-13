@@ -169,25 +169,63 @@ export function VariantC() {
          ========================================================================= */}
       {route === 'session' && (
         <div className="flex-1 flex flex-col justify-between">
-          <header className="sticky top-0 z-30 bg-zinc-900 border-b border-zinc-800 px-4 py-2.5 flex items-center justify-between">
-            <button
-              onClick={() => setRoute('home')}
-              className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white cursor-pointer"
-            >
-              <ChevronLeft size={16} />
-              <span>Back</span>
-            </button>
+          {/* Pinned Header & Main Criterion Hero Card */}
+          <div className="sticky top-0 z-30 bg-zinc-950/95 backdrop-blur border-b border-zinc-800">
+            <header className="bg-zinc-900 border-b border-zinc-800 px-4 py-2.5 flex items-center justify-between">
+              <button
+                onClick={() => setRoute('home')}
+                className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white cursor-pointer"
+              >
+                <ChevronLeft size={16} />
+                <span>Back</span>
+              </button>
 
-            <span className="text-xs font-semibold text-zinc-200">
-              {currentBehavior.title} (Step {currentStep.stepNumber})
-            </span>
+              <span className="text-xs font-semibold text-zinc-200">
+                {currentBehavior.title} (Step {currentStep.stepNumber})
+              </span>
 
-            <span className="text-[10px] font-mono text-zinc-400">
-              {sessionType === 'cold' ? 'Cold Test' : `Score: ${passCount}/5`}
-            </span>
-          </header>
+              <span className="text-[10px] font-mono text-zinc-400">
+                {sessionType === 'cold' ? 'Cold Test' : `Score: ${passCount}/5`}
+              </span>
+            </header>
 
-          <main className="px-4 py-4 flex-1 text-left space-y-3">
+            {/* Pinned Main Criterion Card */}
+            <div className="p-3">
+              <div className="bg-zinc-900 border-2 border-zinc-700 rounded-2xl p-3.5 shadow-xl">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/60">
+                      {sessionType === 'cold' ? 'Cold Test Criterion' : `Target: Rep ${activeRepIndex + 1} of 5`}
+                    </span>
+                    <span className="text-[10px] font-mono text-zinc-400">
+                      Barnaby (L1)
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsSideDrawerOpen(true)}
+                    className="flex items-center gap-1 text-[11px] font-medium text-zinc-300 hover:text-white px-2.5 py-0.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 transition cursor-pointer shadow-sm"
+                    title="View Methodology & Notes"
+                  >
+                    <BookOpen size={13} />
+                    <span>Full Guide</span>
+                  </button>
+                </div>
+
+                <h2 className="text-sm font-bold text-white mb-1.5">
+                  {currentStep.title}
+                </h2>
+
+                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800 text-xs text-zinc-200 leading-relaxed font-normal">
+                  {sessionType === 'cold' && currentStep.tryItCold ? currentStep.tryItCold : currentStep.criterionSummary}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <main className="px-4 py-2 flex-1 text-left space-y-3 overflow-y-auto">
+            {/* Session Finished Card */}
             {isFinished && (
               <div className={`p-3.5 rounded-xl border text-xs flex items-center justify-between ${
                 isGoalMet ? 'bg-emerald-950/80 border-emerald-600 text-emerald-200' : 'bg-zinc-900 border-zinc-700 text-zinc-300'
@@ -204,44 +242,12 @@ export function VariantC() {
                 </div>
                 <button
                   onClick={finishSession}
-                  className="px-3 py-1.5 bg-zinc-100 text-zinc-900 font-bold rounded-lg text-xs cursor-pointer"
+                  className="px-3 py-1.5 bg-zinc-100 text-zinc-900 font-bold rounded-lg text-xs cursor-pointer shadow"
                 >
                   Save & Return
                 </button>
               </div>
             )}
-
-            {/* Prominent Main Criterion Card (Distinct & High Hierarchy) */}
-            <div className="bg-zinc-900 border-2 border-zinc-700 rounded-2xl p-4 shadow-xl">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/60">
-                    {sessionType === 'cold' ? 'Cold Test Criterion' : `Target: Rep ${activeRepIndex + 1} of 5`}
-                  </span>
-                  <span className="text-[10px] font-mono text-zinc-400">
-                    Barnaby (L1)
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsSideDrawerOpen(true)}
-                  className="flex items-center gap-1 text-[11px] font-medium text-zinc-300 hover:text-white px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 transition cursor-pointer shadow-sm"
-                  title="View Methodology & Notes"
-                >
-                  <BookOpen size={13} />
-                  <span>Full Guide</span>
-                </button>
-              </div>
-
-              <h2 className="text-base font-bold text-white mb-2">
-                {currentStep.title}
-              </h2>
-
-              <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 text-xs text-zinc-200 leading-relaxed font-normal">
-                {sessionType === 'cold' && currentStep.tryItCold ? currentStep.tryItCold : currentStep.criterionSummary}
-              </div>
-            </div>
 
             {/* Secondary Less-Emphasized Benchmark & Focus Tip Card Below Main Card */}
             <div className="p-3 bg-zinc-900/50 border border-zinc-800/80 rounded-xl space-y-2 text-xs text-zinc-400">
