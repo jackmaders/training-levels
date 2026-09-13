@@ -215,62 +215,74 @@ export function VariantA() {
               </div>
             )}
 
-            {/* Step Target Box with Info Button */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold">
-                  {sessionType === 'cold' ? 'COLD TEST CRITERION (1 ATTEMPT)' : `CRITERION TARGET (REP ${activeRepIndex + 1} OF 5)`}
-                </span>
+            {/* Main Criterion Hero Card (Distinct & High Hierarchy) */}
+            <div className="bg-zinc-900 border-2 border-zinc-700 rounded-2xl p-4 shadow-xl">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/60">
+                    {sessionType === 'cold' ? 'Cold Test' : `Rep ${activeRepIndex + 1} of 5`}
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-400">
+                    Goal: 80% (4/5)
+                  </span>
+                </div>
 
                 <button
                   type="button"
                   onClick={() => setIsDrawerOpen(true)}
                   aria-label="View Exercise Methodology and Notes"
-                  className="flex items-center gap-1 text-[11px] font-medium text-zinc-400 hover:text-zinc-100 px-2 py-0.5 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition cursor-pointer"
-                  title="View Exercise Methodology and Tips"
+                  className="flex items-center gap-1 text-[11px] font-medium text-zinc-300 hover:text-white px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 transition cursor-pointer shadow-sm"
+                  title="View Full Exercise Methodology and Tips"
                 >
                   <BookOpen size={13} />
-                  <span>Info</span>
+                  <span>Full Guide</span>
                 </button>
               </div>
 
-              <h2 className="text-sm font-semibold text-zinc-100 mb-2">
+              <h2 className="text-base font-bold text-white mb-2">
                 {currentStep.title}
               </h2>
 
-              <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 text-xs text-zinc-300 leading-relaxed">
+              <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 text-xs text-zinc-200 leading-relaxed font-normal">
                 {sessionType === 'cold' && currentStep.tryItCold ? currentStep.tryItCold : currentStep.criterionSummary}
               </div>
             </div>
 
-            {/* In-Session Live Guidance & Adaptive Coaching */}
-            <div className="bg-zinc-900/90 border border-zinc-800 rounded-xl p-3.5 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
-                  Trainer Execution Cue
+            {/* Secondary Less-Emphasized Tip / Warning Card Below Main Card */}
+            <div className={`p-3 rounded-xl border text-xs leading-relaxed transition ${
+              reps.filter((r) => r === 'miss').length >= 2
+                ? 'bg-rose-950/30 border-rose-900/60 text-rose-200'
+                : passCount >= 4
+                ? 'bg-emerald-950/30 border-emerald-900/60 text-emerald-200'
+                : 'bg-zinc-900/50 border-zinc-800/80 text-zinc-400'
+            }`}>
+              <div className="flex items-start gap-2">
+                <span className="text-xs shrink-0">
+                  {reps.filter((r) => r === 'miss').length >= 2 ? '⚠️' : passCount >= 4 ? '🎯' : '💡'}
                 </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
-                  Target: 80% (4/5)
-                </span>
-              </div>
-
-              {/* Dynamic Rep Cue based on dog training principles */}
-              <p className="text-xs text-zinc-300 leading-relaxed">
-                {sessionType === 'cold'
-                  ? '⚡ Cold Test: No treat in sight, no warm-up reps. Test genuine stimulus control.'
-                  : passCount >= 4
-                  ? '🎯 80% goal reached! Finish remaining reps cleanly to lock in graduation.'
-                  : reps.filter((r) => r === 'miss').length >= 2
-                  ? '⚠️ 2 misses logged: If dog misses rep 3, split the criterion (reduce duration or distance).'
-                  : '💡 Click/mark the exact second criterion is satisfied before moving treat hand.'}
-              </p>
-
-              {/* Quick Status / Progress pill */}
-              <div className="pt-2 border-t border-zinc-800 flex items-center justify-between text-[11px]">
-                <span className="text-zinc-400">Current Pace:</span>
-                <span className={`font-mono font-medium ${passCount >= 4 ? 'text-emerald-400' : 'text-zinc-300'}`}>
-                  {passCount} Pass • {reps.filter((r) => r === 'miss').length} Miss • {reps.filter((r) => r === 'empty').length} Remaining
-                </span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="font-semibold text-zinc-300 text-[11px]">
+                      {reps.filter((r) => r === 'miss').length >= 2
+                        ? 'Split Criteria Warning'
+                        : passCount >= 4
+                        ? 'Target Achieved'
+                        : 'Trainer Focus Tip'}
+                    </span>
+                    <span className="text-[10px] font-mono text-zinc-500">
+                      {passCount}P • {reps.filter((r) => r === 'miss').length}M
+                    </span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed">
+                    {sessionType === 'cold'
+                      ? 'No treats visible, no warm-up reps. Mark and treat immediately after successful hold.'
+                      : reps.filter((r) => r === 'miss').length >= 2
+                      ? '2 misses recorded. If rep 3 fails, reduce difficulty or distance immediately.'
+                      : passCount >= 4
+                      ? '4 of 5 reps passed! Finish remaining reps cleanly to complete certification.'
+                      : 'Click/mark the precise second criterion is satisfied before moving treat hand.'}
+                  </p>
+                </div>
               </div>
             </div>
           </main>

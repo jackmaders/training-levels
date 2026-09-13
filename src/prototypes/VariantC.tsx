@@ -211,62 +211,47 @@ export function VariantC() {
               </div>
             )}
 
-            {/* Target Card with Info Button */}
-            <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3.5">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-mono font-bold uppercase text-zinc-400">
-                  {sessionType === 'cold' ? 'Cold Test Criterion' : `Target (Rep ${activeRepIndex + 1} of 5)`}
-                </span>
+            {/* Prominent Main Criterion Card (Distinct & High Hierarchy) */}
+            <div className="bg-zinc-900 border-2 border-zinc-700 rounded-2xl p-4 shadow-xl">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/60">
+                    {sessionType === 'cold' ? 'Cold Test Criterion' : `Target: Rep ${activeRepIndex + 1} of 5`}
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-400">
+                    Barnaby (L1)
+                  </span>
+                </div>
 
                 <button
                   type="button"
                   onClick={() => setIsSideDrawerOpen(true)}
-                  className="flex items-center gap-1 text-[11px] font-medium text-zinc-400 hover:text-zinc-100 px-2 py-0.5 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition cursor-pointer"
+                  className="flex items-center gap-1 text-[11px] font-medium text-zinc-300 hover:text-white px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 transition cursor-pointer shadow-sm"
                   title="View Methodology & Notes"
                 >
-                  <BookOpen size={12} />
-                  <span>Info</span>
+                  <BookOpen size={13} />
+                  <span>Full Guide</span>
                 </button>
               </div>
 
-              <h2 className="text-sm font-semibold text-zinc-100 mb-2">
+              <h2 className="text-base font-bold text-white mb-2">
                 {currentStep.title}
               </h2>
 
-              <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-xs text-zinc-300 leading-relaxed">
+              <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 text-xs text-zinc-200 leading-relaxed font-normal">
                 {sessionType === 'cold' && currentStep.tryItCold ? currentStep.tryItCold : currentStep.criterionSummary}
               </div>
             </div>
 
-            {/* Step Benchmark History & 80% Threshold Indicator */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase text-zinc-400 font-semibold">
-                  Step Benchmark History
-                </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300">
-                  Dog: Barnaby
-                </span>
+            {/* Secondary Less-Emphasized Benchmark & Focus Tip Card Below Main Card */}
+            <div className="p-3 bg-zinc-900/50 border border-zinc-800/80 rounded-xl space-y-2 text-xs text-zinc-400">
+              <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                <span>Last Session: 3/5 (60%)</span>
+                <span className="text-emerald-400">Target: 4/5 (80%)</span>
               </div>
-
-              {/* Benchmark comparison pills */}
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="bg-zinc-950 p-2 rounded-lg border border-zinc-800">
-                  <span className="text-[10px] text-zinc-500 block">Previous Session</span>
-                  <span className="font-semibold text-zinc-200">3/5 Passed (60%)</span>
-                </div>
-                <div className="bg-zinc-950 p-2 rounded-lg border border-zinc-800">
-                  <span className="text-[10px] text-zinc-500 block">Personal Best</span>
-                  <span className="font-semibold text-emerald-400">4/5 Passed (80%)</span>
-                </div>
-              </div>
-
-              {/* Progress to certification */}
-              <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-xs">
-                <span className="text-zinc-400">Step Mastery:</span>
-                <span className="text-[11px] font-mono text-amber-300 font-medium">
-                  {sessionType === 'cold' ? 'Awaiting 1 Cold Pass' : 'Needs 1 More 4/5 Set'}
-                </span>
+              <div className="pt-1.5 border-t border-zinc-800/80 flex items-start gap-1.5 text-zinc-400 text-[11px]">
+                <span className="shrink-0">💡</span>
+                <span>{sessionType === 'cold' ? 'Perform cold with zero prompts or warmups.' : 'Click immediately before the release cue is given.'}</span>
               </div>
             </div>
           </main>

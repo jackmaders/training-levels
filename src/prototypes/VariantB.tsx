@@ -216,79 +216,50 @@ export function VariantB() {
               </div>
             )}
 
-            {/* Target Card with Info Button */}
-            <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3.5">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-mono font-bold uppercase text-zinc-400">
-                  {sessionType === 'cold' ? 'Cold Test Attempt' : `Rep ${activeRepIndex + 1} of 5 Goal`}
-                </span>
+            {/* Prominent Main Criterion Card (Distinct & High Hierarchy) */}
+            <div className="bg-zinc-900 border-2 border-zinc-700 rounded-2xl p-4 shadow-xl">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/60">
+                    {sessionType === 'cold' ? 'Cold Test Attempt' : `Rep ${activeRepIndex + 1} of 5 Goal`}
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-400">
+                    Pass Req: 4/5
+                  </span>
+                </div>
 
                 <button
+                  type="button"
                   onClick={() => setIsFilterDrawerOpen(true)}
-                  className="flex items-center gap-1 text-[11px] font-medium text-zinc-400 hover:text-zinc-100 px-2 py-0.5 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition cursor-pointer"
+                  className="flex items-center gap-1 text-[11px] font-medium text-zinc-300 hover:text-white px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 transition cursor-pointer shadow-sm"
                   title="View Methodology & Notes"
                 >
-                  <BookOpen size={12} />
-                  <span>Info</span>
+                  <BookOpen size={13} />
+                  <span>Full Guide</span>
                 </button>
               </div>
 
-              <h2 className="text-sm font-semibold text-zinc-100 mb-2">
+              <h2 className="text-base font-bold text-white mb-2">
                 {currentStep.title}
               </h2>
 
-              <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-xs text-zinc-300 leading-relaxed">
+              <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 text-xs text-zinc-200 leading-relaxed font-normal">
                 {sessionType === 'cold' && currentStep.tryItCold ? currentStep.tryItCold : currentStep.criterionSummary}
               </div>
             </div>
 
-            {/* Session Context & Generalization Tags (One-Handed Toggles) */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase text-zinc-400 font-semibold">
-                  Session Context & Distraction
+            {/* Secondary Less-Emphasized Tip / Warning Card Below Main Card */}
+            <div className="p-3 bg-zinc-900/50 border border-zinc-800/80 rounded-xl text-xs flex items-start gap-2 text-zinc-400">
+              <span className="text-xs shrink-0">💡</span>
+              <div className="flex-1">
+                <span className="font-semibold block text-zinc-300 text-[11px] mb-0.5">
+                  {sessionType === 'cold' ? 'Cold Protocol Rule' : 'Handler Focus Rule'}
                 </span>
-                <span className="text-[10px] text-zinc-500">Tap to tag</span>
-              </div>
-
-              {/* Location Tags */}
-              <div className="space-y-1">
-                <span className="text-[10px] text-zinc-400 font-medium">Location:</span>
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs">
-                  {['Living Room', 'Kitchen', 'Backyard', 'Park'].map((loc, idx) => (
-                    <button
-                      key={loc}
-                      type="button"
-                      className={`px-2 py-1 rounded-md text-[11px] font-medium border cursor-pointer transition ${
-                        idx === 0
-                          ? 'bg-zinc-800 border-zinc-600 text-zinc-100'
-                          : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
-                      }`}
-                    >
-                      {loc}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Distraction Level Tags */}
-              <div className="space-y-1 pt-1 border-t border-zinc-800/80">
-                <span className="text-[10px] text-zinc-400 font-medium">Distraction:</span>
-                <div className="flex items-center gap-1.5 text-xs">
-                  {['Low / Quiet', 'Moderate', 'High Distraction'].map((dist, idx) => (
-                    <button
-                      key={dist}
-                      type="button"
-                      className={`flex-1 py-1 rounded-md text-[11px] font-medium border text-center cursor-pointer transition ${
-                        idx === 0
-                          ? 'bg-zinc-800 border-zinc-600 text-zinc-100'
-                          : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
-                      }`}
-                    >
-                      {dist}
-                    </button>
-                  ))}
-                </div>
+                <p className="text-[11px] leading-relaxed">
+                  {sessionType === 'cold'
+                    ? 'No treats visible before test. Click on success, then reward.'
+                    : 'Keep hand stationary until click mark is delivered. Avoid inadvertent luring.'}
+                </p>
               </div>
             </div>
           </main>
