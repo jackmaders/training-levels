@@ -1,4 +1,4 @@
-# Training Levels: Steps to Success (Volume 1)
+# Training Levels: Steps to Success (Volumes 1 & 2)
 
 **By Sue Ailsby with Lynn Shrove**  
 _Third Edition — Completely Revised_
@@ -54,11 +54,53 @@ _Third Edition — Completely Revised_
 
 ---
 
-### 03. Appendices
+### 03. Level 3
 
-- [Appendix A: Leading the Dance](03-appendices/appendix-a-leading-the-dance.md) _(pp. 267–269)_
-- [Appendix B: Teaching Your Dog to Eat](03-appendices/appendix-b-teaching-your-dog-to-eat.md) _(pp. 270–271)_
-- [Appendix C: List of Possible Tricks](03-appendices/appendix-c-list-of-possible-tricks.md) _(pp. 272–273)_
-- [Appendix D: List of Resources](03-appendices/appendix-d-list-of-resources.md) _(pp. 274–275)_
-- [Appendix E: Good Advice from a Friend](03-appendices/appendix-e-good-advice-from-a-friend.md) _(pp. 276–278)_
-- [Index](03-appendices/index.md) _(pp. 279–287)_
+- [00. Overview](03-level-3/00-overview.md) _(pp. 306–307)_
+- [01. Zen](03-level-3/01-zen.md) _(pp. 308–317)_
+- [02. Focus](03-level-3/02-focus.md) _(pp. 318–323)_
+- [03. Come](03-level-3/03-come.md) _(pp. 324–331)_
+- [04. Sit](03-level-3/04-sit.md) _(pp. 332–340)_
+- [05. Down](03-level-3/05-down.md) _(pp. 341–348)_
+- [06. Lazy Leash](03-level-3/06-lazy-leash.md) _(pp. 349–357)_
+- [07. Retrieve](03-level-3/07-retrieve.md) _(pp. 358–368)_
+- [08. Target](03-level-3/08-target.md) _(pp. 369–375)_
+- [09. Crate](03-level-3/09-crate.md) _(pp. 376–381)_
+- [10. Relax](03-level-3/10-relax.md) _(pp. 382–388)_
+- [11. Distance](03-level-3/11-distance.md) _(pp. 389–397)_
+- [12. Jump](03-level-3/12-jump.md) _(pp. 398–405)_
+- [13. Go To Mat](03-level-3/13-go-to-mat.md) _(pp. 406–414)_
+- [14. Handling](03-level-3/14-handling.md) _(pp. 415–424)_
+- [15. Communication](03-level-3/15-communication.md) _(pp. 425–434)_
+- [16. Homework](03-level-3/16-homework.md) _(pp. 435–438)_
+
+---
+
+### 04. Level 4
+
+- [00. Overview](04-level-4/00-overview.md) _(pp. 439–440)_
+- [01. Zen](04-level-4/01-zen.md) _(pp. 441–450)_
+- [02. Focus](04-level-4/02-focus.md) _(pp. 451–460)_
+- [03. Come](04-level-4/03-come.md) _(pp. 461–467)_
+- [04. Lazy Leash](04-level-4/04-lazy-leash.md) _(pp. 468–476)_
+- [05. Retrieve](04-level-4/05-retrieve.md) _(pp. 477–484)_
+- [06. Target](04-level-4/06-target.md) _(pp. 485–495)_
+- [07. Crate](04-level-4/07-crate.md) _(pp. 496–502)_
+- [08. Relax](04-level-4/08-relax.md) _(pp. 503–510)_
+- [09. Distance](04-level-4/09-distance.md) _(pp. 511–518)_
+- [10. Go To Mat](04-level-4/10-go-to-mat.md) _(pp. 519–526)_
+- [11. Handling](04-level-4/11-handling.md) _(pp. 527–535)_
+- [12. Communication](04-level-4/12-communication.md) _(pp. 536–548)_
+- [13. Homework](04-level-4/13-homework.md) _(pp. 549–550)_
+
+---
+
+### 05. Appendices & Indices
+
+- [Appendix A: Leading the Dance](05-appendices/appendix-a-leading-the-dance.md) _(pp. 267–269)_
+- [Appendix B: Teaching Your Dog to Eat](05-appendices/appendix-b-teaching-your-dog-to-eat.md) _(pp. 270–271)_
+- [Appendix C: List of Possible Tricks](05-appendices/appendix-c-list-of-possible-tricks.md) _(pp. 272–273)_
+- [Appendix D: List of Resources](05-appendices/appendix-d-list-of-resources.md) _(pp. 274–275)_
+- [Appendix E: Good Advice from a Friend](05-appendices/appendix-e-good-advice-from-a-friend.md) _(pp. 276–278)_
+- [Volume 1 Index](05-appendices/index-volume-1.md) _(pp. 279–287)_
+- [Volume 2 Index](05-appendices/index-volume-2.md) _(pp. 551–558)_
