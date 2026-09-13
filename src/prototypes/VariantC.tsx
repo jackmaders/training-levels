@@ -237,6 +237,38 @@ export function VariantC() {
                 {sessionType === 'cold' && currentStep.tryItCold ? currentStep.tryItCold : currentStep.criterionSummary}
               </div>
             </div>
+
+            {/* Step Benchmark History & 80% Threshold Indicator */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase text-zinc-400 font-semibold">
+                  Step Benchmark History
+                </span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300">
+                  Dog: Barnaby
+                </span>
+              </div>
+
+              {/* Benchmark comparison pills */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-zinc-950 p-2 rounded-lg border border-zinc-800">
+                  <span className="text-[10px] text-zinc-500 block">Previous Session</span>
+                  <span className="font-semibold text-zinc-200">3/5 Passed (60%)</span>
+                </div>
+                <div className="bg-zinc-950 p-2 rounded-lg border border-zinc-800">
+                  <span className="text-[10px] text-zinc-500 block">Personal Best</span>
+                  <span className="font-semibold text-emerald-400">4/5 Passed (80%)</span>
+                </div>
+              </div>
+
+              {/* Progress to certification */}
+              <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-xs">
+                <span className="text-zinc-400">Step Mastery:</span>
+                <span className="text-[11px] font-mono text-amber-300 font-medium">
+                  {sessionType === 'cold' ? 'Awaiting 1 Cold Pass' : 'Needs 1 More 4/5 Set'}
+                </span>
+              </div>
+            </div>
           </main>
 
           {/* Floating Right-Edge Drawer Pull Tab */}

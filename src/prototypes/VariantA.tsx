@@ -242,6 +242,37 @@ export function VariantA() {
                 {sessionType === 'cold' && currentStep.tryItCold ? currentStep.tryItCold : currentStep.criterionSummary}
               </div>
             </div>
+
+            {/* In-Session Live Guidance & Adaptive Coaching */}
+            <div className="bg-zinc-900/90 border border-zinc-800 rounded-xl p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
+                  Trainer Execution Cue
+                </span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
+                  Target: 80% (4/5)
+                </span>
+              </div>
+
+              {/* Dynamic Rep Cue based on dog training principles */}
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                {sessionType === 'cold'
+                  ? '⚡ Cold Test: No treat in sight, no warm-up reps. Test genuine stimulus control.'
+                  : passCount >= 4
+                  ? '🎯 80% goal reached! Finish remaining reps cleanly to lock in graduation.'
+                  : reps.filter((r) => r === 'miss').length >= 2
+                  ? '⚠️ 2 misses logged: If dog misses rep 3, split the criterion (reduce duration or distance).'
+                  : '💡 Click/mark the exact second criterion is satisfied before moving treat hand.'}
+              </p>
+
+              {/* Quick Status / Progress pill */}
+              <div className="pt-2 border-t border-zinc-800 flex items-center justify-between text-[11px]">
+                <span className="text-zinc-400">Current Pace:</span>
+                <span className={`font-mono font-medium ${passCount >= 4 ? 'text-emerald-400' : 'text-zinc-300'}`}>
+                  {passCount} Pass • {reps.filter((r) => r === 'miss').length} Miss • {reps.filter((r) => r === 'empty').length} Remaining
+                </span>
+              </div>
+            </div>
           </main>
 
           {/* =========================================================================

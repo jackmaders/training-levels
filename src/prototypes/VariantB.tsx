@@ -241,6 +241,56 @@ export function VariantB() {
                 {sessionType === 'cold' && currentStep.tryItCold ? currentStep.tryItCold : currentStep.criterionSummary}
               </div>
             </div>
+
+            {/* Session Context & Generalization Tags (One-Handed Toggles) */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase text-zinc-400 font-semibold">
+                  Session Context & Distraction
+                </span>
+                <span className="text-[10px] text-zinc-500">Tap to tag</span>
+              </div>
+
+              {/* Location Tags */}
+              <div className="space-y-1">
+                <span className="text-[10px] text-zinc-400 font-medium">Location:</span>
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs">
+                  {['Living Room', 'Kitchen', 'Backyard', 'Park'].map((loc, idx) => (
+                    <button
+                      key={loc}
+                      type="button"
+                      className={`px-2 py-1 rounded-md text-[11px] font-medium border cursor-pointer transition ${
+                        idx === 0
+                          ? 'bg-zinc-800 border-zinc-600 text-zinc-100'
+                          : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      {loc}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Distraction Level Tags */}
+              <div className="space-y-1 pt-1 border-t border-zinc-800/80">
+                <span className="text-[10px] text-zinc-400 font-medium">Distraction:</span>
+                <div className="flex items-center gap-1.5 text-xs">
+                  {['Low / Quiet', 'Moderate', 'High Distraction'].map((dist, idx) => (
+                    <button
+                      key={dist}
+                      type="button"
+                      className={`flex-1 py-1 rounded-md text-[11px] font-medium border text-center cursor-pointer transition ${
+                        idx === 0
+                          ? 'bg-zinc-800 border-zinc-600 text-zinc-100'
+                          : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      {dist}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </main>
 
           {/* Fixed Bottom Dock with Tracker & Action Buttons Together */}
