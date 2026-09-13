@@ -104,3 +104,10 @@ _Third Edition — Completely Revised_
 - [Appendix E: Good Advice from a Friend](docs/05-appendices/appendix-e-good-advice-from-a-friend.md) _(pp. 276–278)_
 - [Volume 1 Index](docs/05-appendices/index-volume-1.md) _(pp. 279–287)_
 - [Volume 2 Index](docs/05-appendices/index-volume-2.md) _(pp. 551–558)_
+
+---
+
+### Reference & Terminology
+
+- [Domain Glossary & Terminology Guide](GLOSSARY.md)
+
