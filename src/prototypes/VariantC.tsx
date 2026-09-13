@@ -254,6 +254,20 @@ export function VariantC() {
                 <span>{sessionType === 'cold' ? 'Perform cold with zero prompts or warmups.' : 'Click immediately before the release cue is given.'}</span>
               </div>
             </div>
+
+            {/* Step Instructions & All Callouts directly on screen */}
+            <div className="space-y-2 pt-1">
+              <div className="p-3 bg-zinc-900/40 border border-zinc-800/70 rounded-xl text-xs text-zinc-300 leading-relaxed">
+                <span className="text-[10px] font-mono uppercase tracking-wider font-semibold text-zinc-400 block mb-1">
+                  How To Train This Step
+                </span>
+                <p className="text-zinc-300">{currentStep.instructionsMarkdown}</p>
+              </div>
+
+              {currentStep.callouts.map((c, i) => (
+                <CalloutCard key={i} callout={c} />
+              ))}
+            </div>
           </main>
 
           {/* Floating Right-Edge Drawer Pull Tab */}
