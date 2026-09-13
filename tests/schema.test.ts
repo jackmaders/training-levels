@@ -3,7 +3,6 @@ import {
   CalloutSchema,
   StepDataSchema,
   BehaviorDataSchema,
-  TrainingLevelsDataSchema,
 } from "../src/types/curriculum";
 
 describe("Curriculum Schemas", () => {
