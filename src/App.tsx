@@ -11,18 +11,18 @@ import { PrototypeSwitcher, VariantOption } from './components/PrototypeSwitcher
 const VARIANTS: VariantOption[] = [
   {
     key: 'A',
-    name: 'Thumb-Zone Deck & Arc Dock',
-    description: '100% lower-thumb reach arc, slide-up sheet, hold timer',
+    name: 'Card Deck + Bottom Thumb Arc',
+    description: 'Fixed bottom thumb matrix & pull-up reference sheet',
   },
   {
     key: 'B',
-    name: 'StrongLifts Matrix & Split Dock',
-    description: '4-tab bottom navigation dock, behavior progress rings',
+    name: 'Drill Feed + 4-Tab Bottom Dock',
+    description: 'Overview feed with 4-tab nav dock & tag filter drawer',
   },
   {
     key: 'C',
-    name: 'Tactical High-Vis Field HUD',
-    description: '64px+ oversized buttons, sunlight mode, edge swipe tab',
+    name: 'Step Ribbon + Edge Gesture Tab',
+    description: 'High-focus step HUD with side pull tab drawer',
   },
 ];
 
@@ -58,7 +58,7 @@ export function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-start text-slate-100 font-sans antialiased">
+    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-start text-zinc-100 font-sans antialiased">
       {/* Active Prototype Render */}
       <div className="w-full">
         {currentVariant === 'A' && <VariantA />}
