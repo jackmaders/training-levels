@@ -211,15 +211,22 @@ export function VariantC() {
               </div>
             )}
 
-            {/* Target Card */}
+            {/* Target Card with Info Button */}
             <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3.5">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs font-mono font-bold uppercase text-zinc-400">
                   {sessionType === 'cold' ? 'Cold Test Criterion' : `Target (Rep ${activeRepIndex + 1} of 5)`}
                 </span>
-                <span className="text-[10px] font-mono bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded">
-                  Goal: 4/5 reps
-                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setIsSideDrawerOpen(true)}
+                  className="flex items-center gap-1 text-[11px] font-medium text-zinc-400 hover:text-zinc-100 px-2 py-0.5 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition cursor-pointer"
+                  title="View Methodology & Notes"
+                >
+                  <BookOpen size={12} />
+                  <span>Info</span>
+                </button>
               </div>
 
               <h2 className="text-sm font-semibold text-zinc-100 mb-2">
@@ -229,10 +236,6 @@ export function VariantC() {
               <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-xs text-zinc-300 leading-relaxed">
                 {sessionType === 'cold' && currentStep.tryItCold ? currentStep.tryItCold : currentStep.criterionSummary}
               </div>
-            </div>
-
-            <div className="text-xs text-zinc-500 font-mono text-center">
-              Tap right-edge tab anytime to view methodology & Sue's notes.
             </div>
           </main>
 

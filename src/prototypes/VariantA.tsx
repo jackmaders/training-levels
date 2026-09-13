@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { 
-  ChevronUp, 
   ChevronLeft,
   BookOpen,
   Check,
@@ -216,31 +215,33 @@ export function VariantA() {
               </div>
             )}
 
-            {/* Step Target Box */}
+            {/* Step Target Box with Info Button */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-              <div className="text-[10px] font-mono uppercase text-zinc-400 font-bold mb-1">
-                {sessionType === 'cold' ? 'COLD TEST CRITERION (1 ATTEMPT)' : `CRITERION TARGET (REP ${activeRepIndex + 1} OF 5)`}
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold">
+                  {sessionType === 'cold' ? 'COLD TEST CRITERION (1 ATTEMPT)' : `CRITERION TARGET (REP ${activeRepIndex + 1} OF 5)`}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setIsDrawerOpen(true)}
+                  aria-label="View Exercise Methodology and Notes"
+                  className="flex items-center gap-1 text-[11px] font-medium text-zinc-400 hover:text-zinc-100 px-2 py-0.5 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition cursor-pointer"
+                  title="View Exercise Methodology and Tips"
+                >
+                  <BookOpen size={13} />
+                  <span>Info</span>
+                </button>
               </div>
+
               <h2 className="text-sm font-semibold text-zinc-100 mb-2">
                 {currentStep.title}
               </h2>
+
               <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 text-xs text-zinc-300 leading-relaxed">
                 {sessionType === 'cold' && currentStep.tryItCold ? currentStep.tryItCold : currentStep.criterionSummary}
               </div>
             </div>
-
-            {/* Methodology & Tips Hidden in Clean Drawer Trigger */}
-            <button
-              type="button"
-              onClick={() => setIsDrawerOpen(true)}
-              className="w-full py-2 px-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs font-semibold text-zinc-300 flex items-center justify-between cursor-pointer"
-            >
-              <span className="flex items-center gap-1.5">
-                <BookOpen size={14} className="text-zinc-400" />
-                <span>View Methodology & Sue's Notes</span>
-              </span>
-              <ChevronUp size={16} className="text-zinc-400" />
-            </button>
           </main>
 
           {/* =========================================================================

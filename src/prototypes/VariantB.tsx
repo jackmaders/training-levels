@@ -216,15 +216,21 @@ export function VariantB() {
               </div>
             )}
 
-            {/* Target Card */}
+            {/* Target Card with Info Button */}
             <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3.5">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs font-mono font-bold uppercase text-zinc-400">
                   {sessionType === 'cold' ? 'Cold Test Attempt' : `Rep ${activeRepIndex + 1} of 5 Goal`}
                 </span>
-                <span className="text-[10px] font-mono bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded">
-                  Score: {passCount}/5
-                </span>
+
+                <button
+                  onClick={() => setIsFilterDrawerOpen(true)}
+                  className="flex items-center gap-1 text-[11px] font-medium text-zinc-400 hover:text-zinc-100 px-2 py-0.5 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition cursor-pointer"
+                  title="View Methodology & Notes"
+                >
+                  <BookOpen size={12} />
+                  <span>Info</span>
+                </button>
               </div>
 
               <h2 className="text-sm font-semibold text-zinc-100 mb-2">
@@ -235,14 +241,6 @@ export function VariantB() {
                 {sessionType === 'cold' && currentStep.tryItCold ? currentStep.tryItCold : currentStep.criterionSummary}
               </div>
             </div>
-
-            <button
-              onClick={() => setIsFilterDrawerOpen(true)}
-              className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs text-zinc-300 flex items-center justify-between px-3 cursor-pointer"
-            >
-              <span>View Sue's Detailed Notes</span>
-              <BookOpen size={14} className="text-zinc-400" />
-            </button>
           </main>
 
           {/* Fixed Bottom Dock with Tracker & Action Buttons Together */}
