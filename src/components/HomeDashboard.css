@@ -39,6 +39,12 @@
   color: #38bdf8;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .dog-badge {
   font-size: 0.75rem;
   font-weight: 600;
@@ -47,6 +53,26 @@
   padding: 0.2rem 0.6rem;
   border-radius: 9999px;
   border: 1px solid #334155;
+}
+
+.dashboard-settings-btn {
+  background: transparent;
+  border: 1px solid #334155;
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.15rem 0.4rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.dashboard-settings-btn:hover {
+  background-color: #1e293b;
+  border-color: #38bdf8;
+  color: #f8fafc;
 }
 
 .dashboard-title {
