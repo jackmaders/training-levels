@@ -246,6 +246,57 @@
   color: #475569;
 }
 
+/* Split-Criteria Warning Alert */
+.split-criteria-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background-color: #fffbeb;
+  border: 2px solid #f59e0b;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.15);
+  animation: slide-in 0.2s ease-out;
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.split-alert-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.split-alert-content {
+  flex: 1;
+}
+
+.split-alert-title {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #92400e;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.01em;
+}
+
+.split-alert-message {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #78350f;
+}
+
 /* Drill Completion Summary */
 .drill-summary-banner {
   margin-top: 1rem;

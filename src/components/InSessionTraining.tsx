@@ -11,6 +11,8 @@ import {
 import type { TrainingLevelsData, BehaviorData, StepData } from '../types/curriculum'
 import type { Dog, StepProgress, RepResult, StepStatus } from '../types/db'
 import { ReferenceDrawer } from './ReferenceDrawer'
+import { extractStepDurationSeconds } from '../utils/duration'
+import { HoldTimer } from './HoldTimer'
 import './InSessionTraining.css'
 
 export interface InSessionTrainingProps {
@@ -76,6 +78,7 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
   )
 
   const { behavior, step, levelNumber } = findStepAndBehavior(currentStepId)
+  const targetDurationSeconds = extractStepDurationSeconds(step)
 
   // Initialize dog & load progress
   useEffect(() => {
@@ -101,6 +104,14 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
     setReps([])
     setDrillLogId(generateEntityId('log'))
   }, [])
+
+  // Sync initialStepId prop changes
+  useEffect(() => {
+    if (initialStepId && initialStepId !== currentStepId) {
+      setCurrentStepId(initialStepId)
+      resetDrillState()
+    }
+  }, [initialStepId, resetDrillState])
 
   // Reset drill reps when changing step
   const handleSelectStep = (stepId: string) => {
@@ -140,11 +151,25 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
     setStepProgress(res.progress)
   }
 
-  const { passedCount, missedCount, isCompleted: isDrillComplete } =
+  const { passedCount, isCompleted: isDrillComplete } =
     calculateRepScores(reps)
 
   const currentStatusConfig =
     STEP_STATUS_CONFIG[stepProgress?.status || 'not_started']
+
+  // Split-criteria check: 3 consecutive misses in active session
+  const hasThreeConsecutiveMisses = reps.some(
+    (r, i) => r === 'miss' && reps[i + 1] === 'miss' && reps[i + 2] === 'miss'
+  )
+
+  // Real-time pace indicator calculation
+  const passingPercentage =
+    reps.length > 0 ? Math.round((passedCount / reps.length) * 100) : null
+
+  const paceIndicatorText =
+    reps.length > 0
+      ? `${passingPercentage}% Passing Pace (${passedCount}/${reps.length} reps)`
+      : 'Ready (0/5 reps)'
 
   return (
     <div className="in-session-container">
@@ -241,6 +266,27 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
           </button>
         </div>
 
+        {/* Split-Criteria Warning Alert */}
+        {hasThreeConsecutiveMisses && (
+          <div
+            className="split-criteria-alert"
+            data-testid="split-criteria-alert"
+            role="alert"
+          >
+            <div className="split-alert-icon">⚠️</div>
+            <div className="split-alert-content">
+              <strong className="split-alert-title">
+                Split Criteria Warning
+              </strong>
+              <p className="split-alert-message">
+                3 consecutive misses logged. Consider lowering criteria, reducing
+                duration or distance, or sliding down the chute (Chutes &amp;
+                Ladders) to rebuild success!
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Instructions Summary Card */}
         <div className="instructions-card">
           <h3 className="instructions-title">{step?.title}</h3>
@@ -280,15 +326,18 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
         )}
       </main>
 
-      {/* Docked Bottom Hub: 5-Rep Matrix & Fixed One-Thumb Action Buttons */}
+      {/* Docked Bottom Hub: Hold Timer (if duration step), 5-Rep Matrix & Fixed One-Thumb Action Buttons */}
       <footer className="fixed-bottom-hub">
+        {/* Integrated Hold Timer directly above the 5-rep matrix */}
+        {targetDurationSeconds !== null && (
+          <HoldTimer targetSeconds={targetDurationSeconds} />
+        )}
+
         <div className="docked-matrix-wrapper">
           <div className="docked-matrix-header">
             <span className="matrix-title">5-Rep Matrix</span>
-            <span className="matrix-pace">
-              {reps.length > 0
-                ? `${passedCount} Pass / ${missedCount} Miss (${reps.length}/5)`
-                : 'Tap Pass or Miss to record'}
+            <span className="matrix-pace" data-testid="pace-indicator">
+              {paceIndicatorText}
             </span>
           </div>
 
