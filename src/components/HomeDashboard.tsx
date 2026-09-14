@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   type TrainingDatabase,
   db as defaultDb,
@@ -10,6 +10,7 @@ import {
 } from '../db'
 import type { TrainingLevelsData } from '../types/curriculum'
 import type { Dog, SessionLog } from '../types/db'
+import { SettingsModal } from './SettingsModal'
 import './HomeDashboard.css'
 
 export interface HomeDashboardProps {
@@ -31,38 +32,30 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const [recommendedDrill, setRecommendedDrill] = useState<RecommendedDrill | null>(null)
   const [sessionLogs, setSessionLogs] = useState<SessionLog[]>([])
   const [selectedMode, setSelectedMode] = useState<'practice' | 'cold'>('practice')
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    let isMounted = true
-    async function loadDashboardData() {
-      try {
-        const dog = await getOrCreateActiveDog(db)
-        if (isMounted) {
-          setActiveDog(dog)
-          const recommendation = await getRecommendedNextDrill(db, dog.id, curriculumData)
-          if (isMounted) {
-            setRecommendedDrill(recommendation)
-            if (recommendation) {
-              setSelectedMode(recommendation.suggestedMode)
-            }
-          }
-          const logs = await getSessionLogs(db, dog.id)
-          if (isMounted) {
-            setSessionLogs(logs)
-          }
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false)
-        }
+  const loadDashboardData = useCallback(async () => {
+    try {
+      const dog = await getOrCreateActiveDog(db)
+      setActiveDog(dog)
+
+      const recommendation = await getRecommendedNextDrill(db, dog.id, curriculumData)
+      setRecommendedDrill(recommendation)
+      if (recommendation) {
+        setSelectedMode(recommendation.suggestedMode)
       }
-    }
-    loadDashboardData()
-    return () => {
-      isMounted = false
+
+      const logs = await getSessionLogs(db, dog.id)
+      setSessionLogs(logs)
+    } finally {
+      setLoading(false)
     }
   }, [db, curriculumData])
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [loadDashboardData])
 
   const formatLogDate = (dateString: string) => {
     try {
@@ -101,7 +94,18 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             )}
             <span className="brand-title">Training Levels PWA</span>
           </div>
-          <span className="dog-badge">{activeDog?.name || 'Primary Dog'}</span>
+          <div className="header-actions">
+            <span className="dog-badge">{activeDog?.name || 'Primary Dog'}</span>
+            <button
+              type="button"
+              className="dashboard-settings-btn"
+              data-testid="settings-btn"
+              aria-label="Settings"
+              onClick={() => setIsSettingsOpen(true)}
+            >
+              ⚙️
+            </button>
+          </div>
         </div>
         <div className="dashboard-header-title-row">
           <h1 className="dashboard-title">Dashboard</h1>
@@ -288,6 +292,14 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           )}
         </section>
       </main>
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        db={db}
+        activeDog={activeDog}
+        onDataMutated={loadDashboardData}
+      />
     </div>
   )
 }
