@@ -1,9 +1,12 @@
+import { InSessionTraining } from './components/InSessionTraining'
+import trainingData from './data/training-levels.json'
+import type { TrainingLevelsData } from './types/curriculum'
+
 export function App() {
   return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
-      <h1>Training Levels: Steps to Success</h1>
-      <p>PWA App initialized with Vite, Bun & React.</p>
-    </div>
+    <InSessionTraining
+      curriculumData={trainingData as unknown as TrainingLevelsData}
+    />
   )
 }
 
