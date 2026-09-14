@@ -10,6 +10,7 @@ import {
 } from '../db'
 import type { TrainingLevelsData } from '../types/curriculum'
 import type { Dog, SessionLog } from '../types/db'
+import { SettingsModal } from './SettingsModal'
 import './HomeDashboard.css'
 
 export interface HomeDashboardProps {
@@ -27,6 +28,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const [recommendedDrill, setRecommendedDrill] = useState<RecommendedDrill | null>(null)
   const [sessionLogs, setSessionLogs] = useState<SessionLog[]>([])
   const [selectedMode, setSelectedMode] = useState<'practice' | 'cold'>('practice')
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const loadDashboardData = useCallback(async () => {
@@ -75,7 +77,18 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       <header className="dashboard-header">
         <div className="header-brand">
           <span className="brand-title">Training Levels PWA</span>
-          <span className="dog-badge">{activeDog?.name || 'Primary Dog'}</span>
+          <div className="header-actions">
+            <span className="dog-badge">{activeDog?.name || 'Primary Dog'}</span>
+            <button
+              type="button"
+              className="dashboard-settings-btn"
+              data-testid="settings-btn"
+              aria-label="Settings"
+              onClick={() => setIsSettingsOpen(true)}
+            >
+              ⚙️
+            </button>
+          </div>
         </div>
         <h1 className="dashboard-title">Dashboard</h1>
       </header>
@@ -245,6 +258,14 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           )}
         </section>
       </main>
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        db={db}
+        activeDog={activeDog}
+        onDataMutated={loadDashboardData}
+      />
     </div>
   )
 }

@@ -67,6 +67,15 @@ export {
   type StepMetadata,
 } from './recommendations'
 
+export {
+  exportBackup,
+  importBackup,
+  shareOrDownloadBackup,
+  type ExportScopeOptions,
+  type ImportOptions,
+  type ImportResult,
+} from './portability'
+
 export function calculateRepScores(
   reps: RepResult[],
   mode: 'practice' | 'cold' = 'practice'
