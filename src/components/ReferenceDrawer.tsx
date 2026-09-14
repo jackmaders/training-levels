@@ -18,9 +18,13 @@ export const ReferenceDrawer: React.FC<ReferenceDrawerProps> = ({
   step,
   levelNumber,
 }) => {
-  // Handle ESC key press to close drawer
+  const closeBtnRef = React.useRef<HTMLButtonElement>(null)
+
+  // Handle ESC key press to close drawer and focus close button
   useEffect(() => {
     if (!isOpen) return
+
+    closeBtnRef.current?.focus()
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -64,6 +68,7 @@ export const ReferenceDrawer: React.FC<ReferenceDrawerProps> = ({
               </h2>
             </div>
             <button
+              ref={closeBtnRef}
               type="button"
               className="drawer-close-btn"
               onClick={onClose}

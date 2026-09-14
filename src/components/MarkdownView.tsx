@@ -38,13 +38,29 @@ function parseInlineMarkdown(text: string): React.ReactNode[] {
   return parts
 }
 
+function renderList(
+  items: string[],
+  ordered: boolean,
+  keyPrefix: number
+): React.ReactNode {
+  const ListTag = ordered ? 'ol' : 'ul'
+  const listClass = ordered ? 'markdown-ordered-list' : 'markdown-list'
+  return (
+    <ListTag key={keyPrefix} className={listClass}>
+      {items.map((item, itemIdx) => (
+        <li key={itemIdx}>{parseInlineMarkdown(item)}</li>
+      ))}
+    </ListTag>
+  )
+}
+
 export const MarkdownView: React.FC<MarkdownViewProps> = ({
   content,
   className = '',
 }) => {
   if (!content) return null
 
-  // Split into block elements by double newlines or list markers
+  // Split into block elements by double newlines
   const rawBlocks = content.split(/\r?\n\r?\n/)
 
   return (
@@ -53,38 +69,23 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
         const trimmed = block.trim()
         if (!trimmed) return null
 
+        const lines = trimmed.split('\n').map((l) => l.trim()).filter(Boolean)
+
         // Unordered list block
-        if (
-          trimmed.split('\n').every((line) => line.trim().startsWith('- ') || line.trim().startsWith('* '))
-        ) {
-          const items = trimmed.split('\n').map((line) => line.trim().replace(/^[-*]\s+/, ''))
-          return (
-            <ul key={blockIdx} className="markdown-list">
-              {items.map((item, itemIdx) => (
-                <li key={itemIdx}>{parseInlineMarkdown(item)}</li>
-              ))}
-            </ul>
-          )
+        if (lines.length > 0 && lines.every((line) => line.startsWith('- ') || line.startsWith('* '))) {
+          const items = lines.map((line) => line.replace(/^[-*]\s+/, ''))
+          return renderList(items, false, blockIdx)
         }
 
         // Ordered list block
-        if (
-          trimmed.split('\n').every((line) => /^\d+\.\s+/.test(line.trim()))
-        ) {
-          const items = trimmed.split('\n').map((line) => line.trim().replace(/^\d+\.\s+/, ''))
-          return (
-            <ol key={blockIdx} className="markdown-ordered-list">
-              {items.map((item, itemIdx) => (
-                <li key={itemIdx}>{parseInlineMarkdown(item)}</li>
-              ))}
-            </ol>
-          )
+        if (lines.length > 0 && lines.every((line) => /^\d+\.\s+/.test(line))) {
+          const items = lines.map((line) => line.replace(/^\d+\.\s+/, ''))
+          return renderList(items, true, blockIdx)
         }
 
         // Blockquote
         if (trimmed.startsWith('>')) {
-          const quoteText = trimmed
-            .split('\n')
+          const quoteText = lines
             .map((line) => line.replace(/^>\s?/, ''))
             .join('\n')
           return (
