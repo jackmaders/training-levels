@@ -6,6 +6,7 @@ import {
   recordDrillSession,
   getStepProgress,
   generateEntityId,
+  calculateRepScores,
 } from '../db'
 import type { TrainingLevelsData, BehaviorData, StepData } from '../types/curriculum'
 import type { Dog, StepProgress, RepResult, StepStatus } from '../types/db'
@@ -93,12 +94,16 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
     }
   }, [db, currentStepId])
 
-  // Reset drill reps when changing step
-  const handleSelectStep = (stepId: string) => {
-    setCurrentStepId(stepId)
+  const resetDrillState = useCallback(() => {
     repsRef.current = []
     setReps([])
     setDrillLogId(generateEntityId('log'))
+  }, [])
+
+  // Reset drill reps when changing step
+  const handleSelectStep = (stepId: string) => {
+    setCurrentStepId(stepId)
+    resetDrillState()
     if (activeDog) {
       getStepProgress(db, activeDog.id, stepId).then((progress) => {
         setStepProgress(progress || null)
@@ -133,15 +138,8 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
     setStepProgress(res.progress)
   }
 
-  const handleResetDrill = () => {
-    repsRef.current = []
-    setReps([])
-    setDrillLogId(generateEntityId('log'))
-  }
-
-  const passedCount = reps.filter((r) => r === 'pass').length
-  const missedCount = reps.filter((r) => r === 'miss').length
-  const isDrillComplete = reps.length === 5
+  const { passedCount, missedCount, isCompleted: isDrillComplete } =
+    calculateRepScores(reps)
 
   const currentStatusConfig =
     STEP_STATUS_CONFIG[stepProgress?.status || 'not_started']
@@ -258,7 +256,7 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
             <button
               type="button"
               className="new-drill-btn"
-              onClick={handleResetDrill}
+              onClick={resetDrillState}
             >
               Start New 5-Rep Drill
             </button>

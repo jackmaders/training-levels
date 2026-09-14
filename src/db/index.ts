@@ -60,6 +60,22 @@ export function generateEntityId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
 }
 
+export function calculateRepScores(reps: RepResult[]): {
+  passedCount: number
+  missedCount: number
+  isPassed: boolean
+  isCompleted: boolean
+} {
+  const passedCount = reps.filter((r) => r === 'pass').length
+  const missedCount = reps.filter((r) => r === 'miss').length
+  return {
+    passedCount,
+    missedCount,
+    isPassed: passedCount >= 4,
+    isCompleted: reps.length === 5,
+  }
+}
+
 export interface RecordDrillSessionInput {
   logId?: string
   sessionId?: string
@@ -82,10 +98,8 @@ export async function recordDrillSession(
 ): Promise<{ sessionLog: SessionLog; progress: StepProgress }> {
   const now = new Date().toISOString()
   const mode = input.mode || 'practice'
-  const passedCount = input.reps.filter((r) => r === 'pass').length
-  const missedCount = input.reps.filter((r) => r === 'miss').length
-  const isPassed = passedCount >= 4
-  const isCompleted = input.reps.length === 5
+  const { passedCount, missedCount, isPassed, isCompleted } =
+    calculateRepScores(input.reps)
 
   const sessionId = input.sessionId || generateEntityId('session')
   const logId = input.logId || generateEntityId('log')
