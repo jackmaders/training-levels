@@ -17,12 +17,16 @@ export interface HomeDashboardProps {
   db?: TrainingDatabase
   curriculumData: TrainingLevelsData
   onStartDrill: (stepId: string, mode: 'practice' | 'cold') => void
+  onOpenNav?: () => void
+  onNavigateLevel?: (levelNumber: number) => void
 }
 
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   db = defaultDb,
   curriculumData,
   onStartDrill,
+  onOpenNav,
+  onNavigateLevel,
 }) => {
   const [activeDog, setActiveDog] = useState<Dog | null>(null)
   const [recommendedDrill, setRecommendedDrill] = useState<RecommendedDrill | null>(null)
@@ -76,7 +80,20 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       {/* Dog Header */}
       <header className="dashboard-header">
         <div className="header-brand">
-          <span className="brand-title">Training Levels PWA</span>
+          <div className="header-brand-left">
+            {onOpenNav && (
+              <button
+                type="button"
+                className="dashboard-nav-btn"
+                onClick={onOpenNav}
+                aria-label="Open navigation menu"
+                data-testid="dashboard-nav-toggle-btn"
+              >
+                ☰
+              </button>
+            )}
+            <span className="brand-title">Training Levels PWA</span>
+          </div>
           <div className="header-actions">
             <span className="dog-badge">{activeDog?.name || 'Primary Dog'}</span>
             <button
@@ -90,7 +107,24 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             </button>
           </div>
         </div>
-        <h1 className="dashboard-title">Dashboard</h1>
+        <div className="dashboard-header-title-row">
+          <h1 className="dashboard-title">Dashboard</h1>
+          {onNavigateLevel && (
+            <div className="dashboard-quick-levels">
+              {curriculumData.levels.map((lvl) => (
+                <button
+                  key={lvl.level}
+                  type="button"
+                  className="quick-level-chip"
+                  onClick={() => onNavigateLevel(lvl.level)}
+                  data-testid={`quick-level-btn-${lvl.level}`}
+                >
+                  L{lvl.level}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </header>
 
       <main className="dashboard-content">

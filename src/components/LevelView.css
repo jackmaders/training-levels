@@ -1,0 +1,355 @@
+.level-view-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 680px;
+  margin: 0 auto;
+  background-color: #0f172a;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.level-header {
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid #1e293b;
+  background-color: #090e17;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.level-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.level-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-icon-btn {
+  background: none;
+  border: 1px solid #334155;
+  color: #f8fafc;
+  font-size: 1.1rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.header-icon-btn:hover {
+  background-color: #1e293b;
+}
+
+.header-back-btn {
+  background: none;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.header-back-btn:hover {
+  background-color: #1e293b;
+  color: #ffffff;
+}
+
+.level-title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.level-badge-pill {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  background-color: #0284c7;
+  color: #ffffff;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.level-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.level-pages {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.level-switcher-tabs {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-top: 0.25rem;
+}
+
+.level-tab-btn {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.level-tab-btn.active {
+  background-color: #38bdf8;
+  color: #0f172a;
+  border-color: #38bdf8;
+  font-weight: 700;
+}
+
+.level-content {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.overview-toggle-btn {
+  background: none;
+  border: none;
+  color: #38bdf8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.level-overview-section,
+.level-homework-section {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+.overview-content.collapsed {
+  display: none;
+}
+
+.overview-content.expanded {
+  display: block;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+.level-overview-callouts,
+.homework-callouts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.behaviors-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.behavior-summary-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: border-color 0.15s ease;
+}
+
+.behavior-summary-card:hover {
+  border-color: #475569;
+}
+
+.behavior-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.behavior-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.behavior-order-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+  background-color: #0f172a;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.behavior-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.behavior-progress-summary {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #38bdf8;
+}
+
+.mastery-gold {
+  color: #facc15;
+  font-weight: 700;
+}
+
+.behavior-comebefores-snippet {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.behavior-steps-indicators-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.35rem;
+}
+
+.step-indicator-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.3rem 0.2rem;
+  border-radius: 0.375rem;
+  border: 1px solid transparent;
+  text-align: center;
+}
+
+.step-pill-number {
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.step-pill-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.step-indicator-pill.status-not-started {
+  background-color: #0f172a;
+  color: #64748b;
+  border-color: #1e293b;
+}
+
+.step-indicator-pill.status-in-progress {
+  background-color: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+  border-color: #ca8a04;
+}
+
+.step-indicator-pill.status-passed-practice {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border-color: #16a34a;
+}
+
+.step-indicator-pill.status-passed-cold {
+  background-color: rgba(250, 204, 21, 0.25);
+  color: #fef08a;
+  border-color: #eab308;
+}
+
+.step-indicator-pill.status-skipped {
+  background-color: #1e293b;
+  color: #94a3b8;
+  border-color: #475569;
+}
+
+.behavior-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #334155;
+  padding-top: 0.6rem;
+}
+
+.view-behavior-details-btn {
+  background: none;
+  border: none;
+  color: #38bdf8;
+  font-size: 0.825rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+
+.view-behavior-details-btn:hover {
+  text-decoration: underline;
+}
+
+.quick-train-btn {
+  background-color: #0284c7;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.quick-train-btn:hover {
+  background-color: #0369a1;
+}
+
+.homework-body {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.homework-pages {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}

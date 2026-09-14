@@ -1,0 +1,171 @@
+.reference-chapter-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 680px;
+  margin: 0 auto;
+  background-color: #0f172a;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.chapter-header {
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid #1e293b;
+  background-color: #090e17;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.chapter-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chapter-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chapter-category-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: #0284c7;
+  color: #ffffff;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+}
+
+.chapter-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.chapter-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chapter-volume-tag,
+.chapter-pages-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background-color: #1e293b;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.chapter-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.chapter-content {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.chapter-markdown-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #e2e8f0;
+}
+
+.chapter-markdown-card p {
+  margin-bottom: 1rem;
+}
+
+.chapter-markdown-card h1,
+.chapter-markdown-card h2,
+.chapter-markdown-card h3 {
+  color: #f8fafc;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.chapter-callouts-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.callouts-section-heading {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.chapter-pagination-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #1e293b;
+}
+
+.chapter-page-btn {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.chapter-page-btn:hover {
+  background-color: #273549;
+  border-color: #38bdf8;
+}
+
+.chapter-page-btn.next-btn {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.btn-dir {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #38bdf8;
+}
+
+.btn-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f8fafc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.btn-placeholder {
+  visibility: hidden;
+}

@@ -10,10 +10,11 @@ import {
   findCurriculumStep,
 } from '../db'
 import type { TrainingLevelsData } from '../types/curriculum'
-import type { Dog, StepProgress, RepResult, StepStatus } from '../types/db'
+import type { Dog, StepProgress, RepResult } from '../types/db'
 import { ReferenceDrawer } from './ReferenceDrawer'
 import { extractStepDurationSeconds } from '../utils/duration'
 import { HoldTimer } from './HoldTimer'
+import { STEP_STATUS_MAP } from '../utils/statusConfig'
 import './InSessionTraining.css'
 
 export interface InSessionTrainingProps {
@@ -22,20 +23,6 @@ export interface InSessionTrainingProps {
   initialMode?: 'practice' | 'cold'
   curriculumData: TrainingLevelsData
   onBackToDashboard?: () => void
-}
-
-const STEP_STATUS_CONFIG: Record<
-  StepStatus,
-  { label: string; className: string }
-> = {
-  not_started: { label: 'Not Started', className: 'status-not-started' },
-  in_progress: { label: 'In Progress', className: 'status-in-progress' },
-  passed_practice: {
-    label: 'Passed Practice',
-    className: 'status-passed-practice',
-  },
-  passed_cold: { label: 'Passed Cold', className: 'status-passed-cold' },
-  skipped: { label: 'Skipped', className: 'status-skipped' },
 }
 
 export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
@@ -151,7 +138,7 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
     calculateRepScores(reps, mode)
 
   const currentStatusConfig =
-    STEP_STATUS_CONFIG[stepProgress?.status || 'not_started']
+    STEP_STATUS_MAP[stepProgress?.status || 'not_started']
 
   // Split-criteria check: 3 consecutive misses in active session
   const hasThreeConsecutiveMisses = reps.some(

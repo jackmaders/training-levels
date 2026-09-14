@@ -5,6 +5,7 @@ import {
   getOrCreateActiveDog,
   recordDrillSession,
   getStepProgress,
+  getAllStepProgress,
   getSessionLogs,
 } from '../src/db/index'
 
@@ -84,4 +85,32 @@ describe('Dexie Database & Persistence (Seam 1)', () => {
     expect(progress?.status).toBe('in_progress')
     expect(progress?.passedPracticeAt).toBeUndefined()
   })
+
+  it('retrieves all step progress records mapped by stepId for a dog', async () => {
+    const dog = await getOrCreateActiveDog(db)
+    await recordDrillSession(db, {
+      dogId: dog.id,
+      stepId: 'level-1-zen-step-1',
+      levelId: 1,
+      behaviorKey: 'zen',
+      stepNumber: 1,
+      reps: ['pass', 'pass', 'pass', 'pass', 'pass'],
+      mode: 'practice',
+    })
+
+    await recordDrillSession(db, {
+      dogId: dog.id,
+      stepId: 'level-1-zen-step-2',
+      levelId: 1,
+      behaviorKey: 'zen',
+      stepNumber: 2,
+      reps: ['pass'],
+      mode: 'cold',
+    })
+
+    const allProgress = await getAllStepProgress(db, dog.id)
+    expect(allProgress['level-1-zen-step-1']?.status).toBe('passed_practice')
+    expect(allProgress['level-1-zen-step-2']?.status).toBe('passed_cold')
+  })
 })
+
