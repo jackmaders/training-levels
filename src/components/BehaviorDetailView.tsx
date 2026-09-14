@@ -9,6 +9,7 @@ import {
 } from '../db'
 import { MarkdownView } from './MarkdownView'
 import { CalloutCard } from './CalloutCard'
+import { STEP_STATUS_MAP } from '../utils/statusConfig'
 import './BehaviorDetailView.css'
 
 export interface BehaviorDetailViewProps {
@@ -20,17 +21,6 @@ export interface BehaviorDetailViewProps {
   onStartDrill: (stepId: string, mode: 'practice' | 'cold') => void
   onOpenNav?: () => void
   onBackToDashboard?: () => void
-}
-
-const STEP_STATUS_CONFIG: Record<
-  StepStatus,
-  { label: string; className: string }
-> = {
-  not_started: { label: 'Not Started', className: 'status-not-started' },
-  in_progress: { label: 'In Progress', className: 'status-in-progress' },
-  passed_practice: { label: 'Passed Practice', className: 'status-passed-practice' },
-  passed_cold: { label: 'Passed Cold', className: 'status-passed-cold' },
-  skipped: { label: 'Skipped', className: 'status-skipped' },
 }
 
 export const BehaviorDetailView: React.FC<BehaviorDetailViewProps> = ({
@@ -208,7 +198,7 @@ export const BehaviorDetailView: React.FC<BehaviorDetailViewProps> = ({
                 {behavior.steps.map((step) => {
                   const stepProg = progressMap[step.id]
                   const status: StepStatus = stepProg?.status || 'not_started'
-                  const statusCfg = STEP_STATUS_CONFIG[status]
+                  const statusCfg = STEP_STATUS_MAP[status]
 
                   return (
                     <tr key={step.stepNumber} className="criteria-row">
@@ -251,7 +241,7 @@ export const BehaviorDetailView: React.FC<BehaviorDetailViewProps> = ({
             {behavior.steps.map((step: StepData) => {
               const stepProg = progressMap[step.id]
               const status: StepStatus = stepProg?.status || 'not_started'
-              const statusCfg = STEP_STATUS_CONFIG[status]
+              const statusCfg = STEP_STATUS_MAP[status]
 
               return (
                 <article

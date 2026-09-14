@@ -9,6 +9,7 @@ import {
 } from '../db'
 import { MarkdownView } from './MarkdownView'
 import { CalloutCard } from './CalloutCard'
+import { STEP_STATUS_MAP } from '../utils/statusConfig'
 import './LevelView.css'
 
 export interface LevelViewProps {
@@ -20,17 +21,6 @@ export interface LevelViewProps {
   onOpenNav?: () => void
   onBackToDashboard?: () => void
   onSelectLevel?: (levelNumber: number) => void
-}
-
-const STEP_STATUS_MAP: Record<
-  StepStatus,
-  { label: string; className: string; icon: string }
-> = {
-  not_started: { label: 'Not Started', className: 'status-not-started', icon: '⚪' },
-  in_progress: { label: 'In Progress', className: 'status-in-progress', icon: '🟡' },
-  passed_practice: { label: 'Passed Practice', className: 'status-passed-practice', icon: '🟢' },
-  passed_cold: { label: 'Passed Cold', className: 'status-passed-cold', icon: '⭐' },
-  skipped: { label: 'Skipped', className: 'status-skipped', icon: '⏭️' },
 }
 
 export const LevelView: React.FC<LevelViewProps> = ({

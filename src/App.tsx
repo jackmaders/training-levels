@@ -4,10 +4,8 @@ import { InSessionTraining } from './components/InSessionTraining'
 import { LevelView } from './components/LevelView'
 import { BehaviorDetailView } from './components/BehaviorDetailView'
 import { ReferenceChapterView } from './components/ReferenceChapterView'
-import {
-  NavigationDrawer,
-  type AppNavTarget,
-} from './components/NavigationDrawer'
+import { NavigationDrawer } from './components/NavigationDrawer'
+import type { AppNavTarget } from './types/navigation'
 import { db as defaultDb, type TrainingDatabase } from './db'
 import trainingData from './data/training-levels.json'
 import type { TrainingLevelsData } from './types/curriculum'

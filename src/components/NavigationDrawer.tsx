@@ -1,13 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import type { TrainingLevelsData } from '../types/curriculum'
+import type { AppNavTarget } from '../types/navigation'
 import './NavigationDrawer.css'
 
-export type AppNavTarget =
-  | { type: 'dashboard' }
-  | { type: 'level'; levelNumber: number }
-  | { type: 'behavior'; levelNumber: number; behaviorKey: string }
-  | { type: 'chapter'; chapterId: string; category: 'foundation' | 'appendix' }
-  | { type: 'training'; stepId: string; mode: 'practice' | 'cold' }
+export type { AppNavTarget } from '../types/navigation'
 
 export interface NavigationDrawerProps {
   isOpen: boolean
