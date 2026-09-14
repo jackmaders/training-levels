@@ -76,7 +76,7 @@ describe('Recommendation Engine & Cold Test Mode (Seam 1)', () => {
 
       expect(result.sessionLog.mode).toBe('cold')
       expect(result.sessionLog.passed).toBe(false)
-      expect(result.progress.status).toBe('in_progress')
+      expect(result.progress.status).toBe('not_started')
       expect(result.progress.passedColdAt).toBeUndefined()
     })
   })

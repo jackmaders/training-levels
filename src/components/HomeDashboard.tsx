@@ -5,6 +5,7 @@ import {
   getOrCreateActiveDog,
   getSessionLogs,
   getRecommendedNextDrill,
+  findCurriculumStep,
   type RecommendedDrill,
 } from '../db'
 import type { TrainingLevelsData } from '../types/curriculum'
@@ -49,25 +50,6 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   useEffect(() => {
     loadDashboardData()
   }, [loadDashboardData])
-
-  // Helper to find titles for session logs
-  const getStepLogTitles = (stepId: string) => {
-    for (const level of curriculumData.levels) {
-      for (const behavior of level.behaviors) {
-        const step = behavior.steps.find((s) => s.id === stepId)
-        if (step) {
-          return {
-            levelNumber: level.level,
-            levelTitle: level.title,
-            behaviorTitle: behavior.title,
-            stepTitle: step.title,
-            stepNumber: step.stepNumber,
-          }
-        }
-      }
-    }
-    return null
-  }
 
   const formatLogDate = (dateString: string) => {
     try {
@@ -195,7 +177,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           ) : (
             <div className="history-logs-list">
               {sessionLogs.map((log) => {
-                const stepMeta = getStepLogTitles(log.stepId)
+                const stepMeta = findCurriculumStep(curriculumData, log.stepId)
                 const isCold = log.mode === 'cold'
 
                 let complianceBadgeClass = 'badge-pass'
@@ -232,7 +214,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                         </span>
                         <h3 className="log-step-title">
                           {stepMeta
-                            ? `${stepMeta.behaviorTitle} — Step ${stepMeta.stepNumber}: ${stepMeta.stepTitle}`
+                            ? `${stepMeta.behaviorTitle} — Step ${stepMeta.step.stepNumber}: ${stepMeta.step.title}`
                             : `${log.behaviorKey} — Step ${log.stepNumber}`}
                         </h3>
                       </div>

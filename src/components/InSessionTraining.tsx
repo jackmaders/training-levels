@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   type TrainingDatabase,
   db as defaultDb,
@@ -7,8 +7,9 @@ import {
   getStepProgress,
   generateEntityId,
   calculateRepScores,
+  findCurriculumStep,
 } from '../db'
-import type { TrainingLevelsData, BehaviorData, StepData } from '../types/curriculum'
+import type { TrainingLevelsData } from '../types/curriculum'
 import type { Dog, StepProgress, RepResult, StepStatus } from '../types/db'
 import './InSessionTraining.css'
 
@@ -48,7 +49,7 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
       'level-1-zen-step-1'
   )
   const [reps, setReps] = useState<RepResult[]>([])
-  const repsRef = React.useRef<RepResult[]>([])
+  const repsRef = useRef<RepResult[]>([])
   const [stepProgress, setStepProgress] = useState<StepProgress | null>(null)
   const [mode, setMode] = useState<'practice' | 'cold'>(initialMode)
   const [drillLogId, setDrillLogId] = useState<string>(() =>
@@ -57,29 +58,10 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
 
   const maxReps = mode === 'cold' ? 1 : 5
 
-  // Find step and behavior in curriculumData
-  const findStepAndBehavior = useCallback(
-    (
-      stepId: string
-    ): {
-      behavior?: BehaviorData
-      step?: StepData
-      levelNumber?: number
-    } => {
-      for (const level of curriculumData.levels) {
-        for (const behavior of level.behaviors) {
-          const step = behavior.steps.find((s) => s.id === stepId)
-          if (step) {
-            return { behavior, step, levelNumber: level.level }
-          }
-        }
-      }
-      return {}
-    },
-    [curriculumData]
-  )
-
-  const { behavior, step, levelNumber } = findStepAndBehavior(currentStepId)
+  const stepMeta = findCurriculumStep(curriculumData, currentStepId)
+  const behavior = stepMeta ? { behaviorKey: stepMeta.behaviorKey, title: stepMeta.behaviorTitle } : undefined
+  const step = stepMeta?.step
+  const levelNumber = stepMeta?.levelNumber
 
   // Initialize dog & load progress
   useEffect(() => {

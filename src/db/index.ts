@@ -60,7 +60,12 @@ export function generateEntityId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
 }
 
-export { getRecommendedNextDrill, type RecommendedDrill } from './recommendations'
+export {
+  getRecommendedNextDrill,
+  findCurriculumStep,
+  type RecommendedDrill,
+  type StepMetadata,
+} from './recommendations'
 
 export function calculateRepScores(
   reps: RepResult[],
@@ -166,8 +171,6 @@ export async function recordDrillSession(
       if (mode === 'cold') {
         if (isPassed && isCompleted) {
           nextStatus = 'passed_cold'
-        } else if (nextStatus === 'not_started') {
-          nextStatus = 'in_progress'
         }
       } else {
         if (isPassed && isCompleted) {
