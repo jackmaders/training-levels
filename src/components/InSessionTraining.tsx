@@ -5,6 +5,7 @@ import {
   getOrCreateActiveDog,
   recordDrillSession,
   getStepProgress,
+  generateEntityId,
 } from '../db'
 import type { TrainingLevelsData, BehaviorData, StepData } from '../types/curriculum'
 import type { Dog, StepProgress, RepResult, StepStatus } from '../types/db'
@@ -14,6 +15,20 @@ export interface InSessionTrainingProps {
   db?: TrainingDatabase
   initialStepId?: string
   curriculumData: TrainingLevelsData
+}
+
+const STEP_STATUS_CONFIG: Record<
+  StepStatus,
+  { label: string; className: string }
+> = {
+  not_started: { label: 'Not Started', className: 'status-not-started' },
+  in_progress: { label: 'In Progress', className: 'status-in-progress' },
+  passed_practice: {
+    label: 'Passed Practice',
+    className: 'status-passed-practice',
+  },
+  passed_cold: { label: 'Passed Cold', className: 'status-passed-cold' },
+  skipped: { label: 'Skipped', className: 'status-skipped' },
 }
 
 export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
@@ -28,12 +43,22 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
       'level-1-zen-step-1'
   )
   const [reps, setReps] = useState<RepResult[]>([])
+  const repsRef = React.useRef<RepResult[]>([])
   const [stepProgress, setStepProgress] = useState<StepProgress | null>(null)
   const [mode, setMode] = useState<'practice' | 'cold'>('practice')
+  const [drillLogId, setDrillLogId] = useState<string>(() =>
+    generateEntityId('log')
+  )
 
   // Find step and behavior in curriculumData
   const findStepAndBehavior = useCallback(
-    (stepId: string): { behavior?: BehaviorData; step?: StepData; levelNumber?: number } => {
+    (
+      stepId: string
+    ): {
+      behavior?: BehaviorData
+      step?: StepData
+      levelNumber?: number
+    } => {
       for (const level of curriculumData.levels) {
         for (const behavior of level.behaviors) {
           const step = behavior.steps.find((s) => s.id === stepId)
@@ -68,15 +93,12 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
     }
   }, [db, currentStepId])
 
-  const [drillLogId, setDrillLogId] = useState<string>(
-    () => `log-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
-  )
-
   // Reset drill reps when changing step
   const handleSelectStep = (stepId: string) => {
     setCurrentStepId(stepId)
+    repsRef.current = []
     setReps([])
-    setDrillLogId(`log-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`)
+    setDrillLogId(generateEntityId('log'))
     if (activeDog) {
       getStepProgress(db, activeDog.id, stepId).then((progress) => {
         setStepProgress(progress || null)
@@ -86,76 +108,51 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
 
   // Record Rep Tap
   const handleLogRep = async (result: RepResult) => {
-    if (!behavior || !step) return
+    if (!behavior || !step || repsRef.current.length >= 5) return
+
+    const nextReps = [...repsRef.current, result]
+    repsRef.current = nextReps
+    setReps(nextReps)
 
     const dog = activeDog || (await getOrCreateActiveDog(db))
     if (!activeDog) {
       setActiveDog(dog)
     }
 
-    setReps((prevReps) => {
-      if (prevReps.length >= 5) return prevReps
-      const newReps = [...prevReps, result]
-
-      // Atomically persist drill to Dexie
-      recordDrillSession(db, {
-        logId: drillLogId,
-        dogId: dog.id,
-        stepId: step.id,
-        levelId: levelNumber || 1,
-        behaviorKey: behavior.behaviorKey,
-        stepNumber: step.stepNumber,
-        reps: newReps,
-        mode,
-      }).then((res) => {
-        setStepProgress(res.progress)
-      })
-
-      return newReps
+    const res = await recordDrillSession(db, {
+      logId: drillLogId,
+      dogId: dog.id,
+      stepId: step.id,
+      levelId: levelNumber || 1,
+      behaviorKey: behavior.behaviorKey,
+      stepNumber: step.stepNumber,
+      reps: nextReps,
+      mode,
     })
+
+    setStepProgress(res.progress)
   }
 
   const handleResetDrill = () => {
+    repsRef.current = []
     setReps([])
-    setDrillLogId(`log-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`)
+    setDrillLogId(generateEntityId('log'))
   }
 
   const passedCount = reps.filter((r) => r === 'pass').length
   const missedCount = reps.filter((r) => r === 'miss').length
   const isDrillComplete = reps.length === 5
 
-  const formatStatus = (status?: StepStatus) => {
-    switch (status) {
-      case 'passed_cold':
-        return 'Passed Cold'
-      case 'passed_practice':
-        return 'Passed Practice'
-      case 'in_progress':
-        return 'In Progress'
-      case 'skipped':
-        return 'Skipped'
-      default:
-        return 'Not Started'
-    }
-  }
-
-  const getStatusClass = (status?: StepStatus) => {
-    switch (status) {
-      case 'passed_cold':
-        return 'status-passed-cold'
-      case 'passed_practice':
-        return 'status-passed-practice'
-      case 'in_progress':
-        return 'status-in-progress'
-      default:
-        return 'status-not-started'
-    }
-  }
+  const currentStatusConfig =
+    STEP_STATUS_CONFIG[stepProgress?.status || 'not_started']
 
   return (
     <div className="in-session-container">
       {/* Pinned Top Criterion Header */}
-      <header className="pinned-criterion-header" data-testid="criterion-header">
+      <header
+        className="pinned-criterion-header"
+        data-testid="criterion-header"
+      >
         <div className="header-top-row">
           <div className="behavior-step-label">
             <span className="behavior-title" data-testid="behavior-title">
@@ -167,10 +164,10 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
           </div>
 
           <div
-            className={`status-badge ${getStatusClass(stepProgress?.status)}`}
+            className={`status-badge ${currentStatusConfig.className}`}
             data-testid="step-status-badge"
           >
-            {formatStatus(stepProgress?.status)}
+            {currentStatusConfig.label}
           </div>
         </div>
 
@@ -184,7 +181,7 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
         {/* Quick step picker dropdown */}
         <div className="step-selector-row">
           <label htmlFor="step-select" className="step-selector-label">
-            Change Step:
+            Step:
           </label>
           <select
             id="step-select"
@@ -193,7 +190,10 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
             className="step-select"
           >
             {curriculumData.levels.map((lvl) => (
-              <optgroup key={lvl.level} label={`Level ${lvl.level}: ${lvl.title}`}>
+              <optgroup
+                key={lvl.level}
+                label={`Level ${lvl.level}: ${lvl.title}`}
+              >
                 {lvl.behaviors.map((beh) =>
                   beh.steps.map((st) => (
                     <option key={st.id} value={st.id}>
@@ -207,33 +207,74 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
         </div>
       </header>
 
-      {/* Mode Switcher */}
-      <div className="mode-toggle-container">
-        <button
-          type="button"
-          className={`mode-btn ${mode === 'practice' ? 'active' : ''}`}
-          onClick={() => setMode('practice')}
-        >
-          Practice Mode
-        </button>
-        <button
-          type="button"
-          className={`mode-btn ${mode === 'cold' ? 'active' : ''}`}
-          onClick={() => setMode('cold')}
-        >
-          Cold Test
-        </button>
-      </div>
-
-      {/* Middle Viewport: 5-Rep Matrix & Feedback */}
+      {/* Middle Viewport */}
       <main className="training-viewport">
-        <div className="matrix-card">
-          <div className="matrix-header">
-            <h2 className="matrix-title">5-Rep Matrix</h2>
+        {/* Mode Switcher */}
+        <div className="mode-toggle-container">
+          <button
+            type="button"
+            className={`mode-btn ${mode === 'practice' ? 'active' : ''}`}
+            onClick={() => setMode('practice')}
+          >
+            Practice Mode
+          </button>
+          <button
+            type="button"
+            className={`mode-btn ${mode === 'cold' ? 'active' : ''}`}
+            onClick={() => setMode('cold')}
+          >
+            Cold Test
+          </button>
+        </div>
+
+        {/* Instructions Summary Card */}
+        <div className="instructions-card">
+          <h3 className="instructions-title">{step?.title}</h3>
+          <p className="instructions-summary">
+            {step?.instructionsMarkdown
+              ? step.instructionsMarkdown.substring(0, 240) + '...'
+              : 'Follow the pass criterion for each repetition.'}
+          </p>
+        </div>
+
+        {/* Drill Completion Feedback */}
+        {isDrillComplete && (
+          <div
+            className={`drill-summary-banner ${
+              passedCount >= 4 ? 'summary-passed' : 'summary-failed'
+            }`}
+          >
+            {passedCount >= 4 ? (
+              <p>
+                🎉 <strong>Drill Passed!</strong> ({passedCount}/5 reps passed) —
+                Saved to progress!
+              </p>
+            ) : (
+              <p>
+                ⚠️ <strong>Drill Incomplete</strong> ({passedCount}/5 passes).
+                Keep practicing or split criteria!
+              </p>
+            )}
+            <button
+              type="button"
+              className="new-drill-btn"
+              onClick={handleResetDrill}
+            >
+              Start New 5-Rep Drill
+            </button>
+          </div>
+        )}
+      </main>
+
+      {/* Docked Bottom Hub: 5-Rep Matrix & Fixed One-Thumb Action Buttons */}
+      <footer className="fixed-bottom-hub">
+        <div className="docked-matrix-wrapper">
+          <div className="docked-matrix-header">
+            <span className="matrix-title">5-Rep Matrix</span>
             <span className="matrix-pace">
               {reps.length > 0
-                ? `${passedCount} Pass / ${missedCount} Miss (${reps.length}/5 reps)`
-                : 'Ready to start'}
+                ? `${passedCount} Pass / ${missedCount} Miss (${reps.length}/5)`
+                : 'Tap Pass or Miss to record'}
             </span>
           </div>
 
@@ -263,60 +304,31 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
               )
             })}
           </div>
-
-          {/* Drill completion summary feedback */}
-          {isDrillComplete && (
-            <div
-              className={`drill-summary-banner ${
-                passedCount >= 4 ? 'summary-passed' : 'summary-failed'
-              }`}
-            >
-              {passedCount >= 4 ? (
-                <p>
-                  🎉 <strong>Drill Passed!</strong> ({passedCount}/5 reps passed) — Saved
-                  to progress!
-                </p>
-              ) : (
-                <p>
-                  ⚠️ <strong>Drill Incomplete</strong> ({passedCount}/5 passes). Keep
-                  practicing or consider splitting criteria!
-                </p>
-              )}
-              <button
-                type="button"
-                className="new-drill-btn"
-                onClick={handleResetDrill}
-              >
-                Start New 5-Rep Drill
-              </button>
-            </div>
-          )}
         </div>
-      </main>
 
-      {/* Fixed Bottom Action Bar */}
-      <footer className="fixed-bottom-actions">
-        <button
-          type="button"
-          className="action-btn miss-btn"
-          disabled={isDrillComplete}
-          onClick={() => handleLogRep('miss')}
-          aria-label="Miss"
-        >
-          <span className="btn-icon">✕</span>
-          <span className="btn-label">Miss</span>
-        </button>
+        <div className="action-buttons-row">
+          <button
+            type="button"
+            className="action-btn miss-btn"
+            disabled={isDrillComplete}
+            onClick={() => handleLogRep('miss')}
+            aria-label="Miss"
+          >
+            <span className="btn-icon">✕</span>
+            <span className="btn-label">Miss</span>
+          </button>
 
-        <button
-          type="button"
-          className="action-btn pass-btn"
-          disabled={isDrillComplete}
-          onClick={() => handleLogRep('pass')}
-          aria-label="Pass"
-        >
-          <span className="btn-icon">✓</span>
-          <span className="btn-label">Pass</span>
-        </button>
+          <button
+            type="button"
+            className="action-btn pass-btn"
+            disabled={isDrillComplete}
+            onClick={() => handleLogRep('pass')}
+            aria-label="Pass"
+          >
+            <span className="btn-icon">✓</span>
+            <span className="btn-label">Pass</span>
+          </button>
+        </div>
       </footer>
     </div>
   )

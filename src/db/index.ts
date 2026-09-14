@@ -56,6 +56,10 @@ export async function getOrCreateActiveDog(database: TrainingDatabase = db): Pro
   return dog
 }
 
+export function generateEntityId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
+}
+
 export interface RecordDrillSessionInput {
   logId?: string
   sessionId?: string
@@ -83,10 +87,8 @@ export async function recordDrillSession(
   const isPassed = passedCount >= 4
   const isCompleted = input.reps.length === 5
 
-  const sessionId =
-    input.sessionId || `session-${now}-${Math.random().toString(36).substring(2, 8)}`
-  const logId =
-    input.logId || `log-${now}-${Math.random().toString(36).substring(2, 8)}`
+  const sessionId = input.sessionId || generateEntityId('session')
+  const logId = input.logId || generateEntityId('log')
 
   const sessionLog: SessionLog = {
     id: logId,

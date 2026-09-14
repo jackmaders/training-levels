@@ -4,7 +4,7 @@ import '@testing-library/jest-dom'
 import 'fake-indexeddb/auto'
 import { InSessionTraining } from '../src/components/InSessionTraining'
 import { TrainingDatabase, getStepProgress, getSessionLogs } from '../src/db/index'
-import trainingData from '../src/data/training-content.json'
+import trainingData from '../src/data/training-levels.json'
 
 describe('In-Session Training Surface (Seam 2)', () => {
   let db: TrainingDatabase
@@ -153,10 +153,10 @@ describe('In-Session Training Surface (Seam 2)', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/change step/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/^step:/i)).toBeInTheDocument()
     })
 
-    const select = screen.getByLabelText(/change step/i)
+    const select = screen.getByLabelText(/^step:/i)
     fireEvent.change(select, { target: { value: 'level-1-come-step-1' } })
 
     await waitFor(() => {
