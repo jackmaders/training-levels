@@ -10,6 +10,7 @@ import {
 } from '../db'
 import type { TrainingLevelsData, BehaviorData, StepData } from '../types/curriculum'
 import type { Dog, StepProgress, RepResult, StepStatus } from '../types/db'
+import { ReferenceDrawer } from './ReferenceDrawer'
 import './InSessionTraining.css'
 
 export interface InSessionTrainingProps {
@@ -47,6 +48,7 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
   const repsRef = React.useRef<RepResult[]>([])
   const [stepProgress, setStepProgress] = useState<StepProgress | null>(null)
   const [mode, setMode] = useState<'practice' | 'cold'>('practice')
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false)
   const [drillLogId, setDrillLogId] = useState<string>(() =>
     generateEntityId('log')
   )
@@ -161,11 +163,25 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
             </span>
           </div>
 
-          <div
-            className={`status-badge ${currentStatusConfig.className}`}
-            data-testid="step-status-badge"
-          >
-            {currentStatusConfig.label}
+          <div className="header-actions">
+            <button
+              type="button"
+              className="full-guide-btn"
+              onClick={() => setIsDrawerOpen(true)}
+              aria-label="Full Guide"
+              aria-expanded={isDrawerOpen}
+              data-testid="full-guide-trigger"
+            >
+              <span className="guide-icon" aria-hidden="true">📖</span>
+              <span className="guide-label">Full Guide</span>
+            </button>
+
+            <div
+              className={`status-badge ${currentStatusConfig.className}`}
+              data-testid="step-status-badge"
+            >
+              {currentStatusConfig.label}
+            </div>
           </div>
         </div>
 
@@ -328,6 +344,15 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
           </button>
         </div>
       </footer>
+
+      {/* Slide-Up Quick Reference Drawer */}
+      <ReferenceDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        behavior={behavior}
+        step={step}
+        levelNumber={levelNumber}
+      />
     </div>
   )
 }
