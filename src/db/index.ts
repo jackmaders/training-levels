@@ -60,7 +60,12 @@ export function generateEntityId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
 }
 
-export function calculateRepScores(reps: RepResult[]): {
+export { getRecommendedNextDrill, type RecommendedDrill } from './recommendations'
+
+export function calculateRepScores(
+  reps: RepResult[],
+  mode: 'practice' | 'cold' = 'practice'
+): {
   passedCount: number
   missedCount: number
   isPassed: boolean
@@ -68,6 +73,16 @@ export function calculateRepScores(reps: RepResult[]): {
 } {
   const passedCount = reps.filter((r) => r === 'pass').length
   const missedCount = reps.filter((r) => r === 'miss').length
+
+  if (mode === 'cold') {
+    return {
+      passedCount,
+      missedCount,
+      isPassed: passedCount >= 1,
+      isCompleted: reps.length >= 1,
+    }
+  }
+
   return {
     passedCount,
     missedCount,
@@ -90,7 +105,7 @@ export interface RecordDrillSessionInput {
 }
 
 /**
- * Record a 5-rep drill session atomically and update step progress.
+ * Record a 5-rep drill or 1-rep cold test session atomically and update step progress.
  */
 export async function recordDrillSession(
   database: TrainingDatabase = db,
@@ -99,7 +114,7 @@ export async function recordDrillSession(
   const now = new Date().toISOString()
   const mode = input.mode || 'practice'
   const { passedCount, missedCount, isPassed, isCompleted } =
-    calculateRepScores(input.reps)
+    calculateRepScores(input.reps, mode)
 
   const sessionId = input.sessionId || generateEntityId('session')
   const logId = input.logId || generateEntityId('log')
@@ -151,6 +166,8 @@ export async function recordDrillSession(
       if (mode === 'cold') {
         if (isPassed && isCompleted) {
           nextStatus = 'passed_cold'
+        } else if (nextStatus === 'not_started') {
+          nextStatus = 'in_progress'
         }
       } else {
         if (isPassed && isCompleted) {
