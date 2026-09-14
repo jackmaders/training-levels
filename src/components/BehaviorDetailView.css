@@ -1,0 +1,351 @@
+.behavior-detail-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 680px;
+  margin: 0 auto;
+  background-color: #0f172a;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.behavior-detail-header {
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid #1e293b;
+  background-color: #090e17;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.behavior-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.behavior-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-dash-btn {
+  background: none;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.header-dash-btn:hover {
+  background-color: #1e293b;
+  color: #ffffff;
+}
+
+.behavior-header-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.behavior-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.behavior-order-pill,
+.book-pages-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background-color: #1e293b;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.behavior-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.behavior-detail-content {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.detail-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-card-heading {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.detail-card-body {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+.about-cues-block {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #334155;
+}
+
+.cues-subheading {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #38bdf8;
+  margin: 0 0 0.35rem;
+}
+
+.criteria-table-container {
+  overflow-x: auto;
+}
+
+.behavior-criteria-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-top: 0.35rem;
+}
+
+.behavior-criteria-table th {
+  background-color: #0f172a;
+  color: #94a3b8;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-bottom: 1px solid #334155;
+}
+
+.behavior-criteria-table td {
+  padding: 0.6rem;
+  border-bottom: 1px solid #334155;
+  color: #cbd5e1;
+  vertical-align: top;
+}
+
+.step-num-cell {
+  font-weight: 700;
+  color: #f8fafc;
+  white-space: nowrap;
+}
+
+.status-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.status-pill.status-not-started {
+  background-color: #0f172a;
+  color: #64748b;
+  border: 1px solid #334155;
+}
+
+.status-pill.status-in-progress {
+  background-color: rgba(234, 179, 8, 0.2);
+  color: #facc15;
+  border: 1px solid #ca8a04;
+}
+
+.status-pill.status-passed-practice {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid #16a34a;
+}
+
+.status-pill.status-passed-cold {
+  background-color: rgba(250, 204, 21, 0.25);
+  color: #fef08a;
+  border: 1px solid #eab308;
+}
+
+.behavior-callouts-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.behavior-steps-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.steps-section-heading {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.step-detail-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.step-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.step-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.step-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  background-color: #0284c7;
+  color: #ffffff;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.step-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.step-criterion-box {
+  background-color: #090e17;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+}
+
+.criterion-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-bottom: 0.2rem;
+}
+
+.step-criterion-text {
+  font-size: 0.875rem;
+  color: #f1f5f9;
+  margin: 0;
+  font-weight: 500;
+}
+
+.step-section-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-bottom: 0.25rem;
+}
+
+.step-instructions {
+  font-size: 0.875rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.step-meta-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  background-color: rgba(15, 23, 42, 0.6);
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+}
+
+.step-callouts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.step-launchers-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  border-top: 1px solid #334155;
+  padding-top: 0.75rem;
+}
+
+.step-launch-btn {
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-practice {
+  background-color: #22c55e;
+  color: #0f172a;
+}
+
+.btn-practice:hover {
+  background-color: #16a34a;
+}
+
+.btn-cold {
+  background-color: #0284c7;
+  color: #ffffff;
+}
+
+.btn-cold:hover {
+  background-color: #0369a1;
+}

@@ -217,6 +217,22 @@ export async function getStepProgress(
   return await database.stepProgress.get([dogId, stepId])
 }
 
+export async function getAllStepProgress(
+  database: TrainingDatabase = db,
+  dogId: string
+): Promise<Record<string, StepProgress>> {
+  const records = await database.stepProgress
+    .where('dogId')
+    .equals(dogId)
+    .toArray()
+
+  const map: Record<string, StepProgress> = {}
+  for (const record of records) {
+    map[record.stepId] = record
+  }
+  return map
+}
+
 export async function getSessionLogs(
   database: TrainingDatabase = db,
   dogId: string,
@@ -235,3 +251,4 @@ export async function getSessionLogs(
     .reverse()
     .sortBy('startedAt')
 }
+

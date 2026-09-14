@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   type TrainingDatabase,
   db as defaultDb,
@@ -16,12 +16,16 @@ export interface HomeDashboardProps {
   db?: TrainingDatabase
   curriculumData: TrainingLevelsData
   onStartDrill: (stepId: string, mode: 'practice' | 'cold') => void
+  onOpenNav?: () => void
+  onNavigateLevel?: (levelNumber: number) => void
 }
 
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   db = defaultDb,
   curriculumData,
   onStartDrill,
+  onOpenNav,
+  onNavigateLevel,
 }) => {
   const [activeDog, setActiveDog] = useState<Dog | null>(null)
   const [recommendedDrill, setRecommendedDrill] = useState<RecommendedDrill | null>(null)
@@ -29,27 +33,36 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const [selectedMode, setSelectedMode] = useState<'practice' | 'cold'>('practice')
   const [loading, setLoading] = useState(true)
 
-  const loadDashboardData = useCallback(async () => {
-    try {
-      const dog = await getOrCreateActiveDog(db)
-      setActiveDog(dog)
-
-      const recommendation = await getRecommendedNextDrill(db, dog.id, curriculumData)
-      setRecommendedDrill(recommendation)
-      if (recommendation) {
-        setSelectedMode(recommendation.suggestedMode)
+  useEffect(() => {
+    let isMounted = true
+    async function loadDashboardData() {
+      try {
+        const dog = await getOrCreateActiveDog(db)
+        if (isMounted) {
+          setActiveDog(dog)
+          const recommendation = await getRecommendedNextDrill(db, dog.id, curriculumData)
+          if (isMounted) {
+            setRecommendedDrill(recommendation)
+            if (recommendation) {
+              setSelectedMode(recommendation.suggestedMode)
+            }
+          }
+          const logs = await getSessionLogs(db, dog.id)
+          if (isMounted) {
+            setSessionLogs(logs)
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
       }
-
-      const logs = await getSessionLogs(db, dog.id)
-      setSessionLogs(logs)
-    } finally {
-      setLoading(false)
+    }
+    loadDashboardData()
+    return () => {
+      isMounted = false
     }
   }, [db, curriculumData])
-
-  useEffect(() => {
-    loadDashboardData()
-  }, [loadDashboardData])
 
   const formatLogDate = (dateString: string) => {
     try {
@@ -74,10 +87,40 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       {/* Dog Header */}
       <header className="dashboard-header">
         <div className="header-brand">
-          <span className="brand-title">Training Levels PWA</span>
+          <div className="header-brand-left">
+            {onOpenNav && (
+              <button
+                type="button"
+                className="dashboard-nav-btn"
+                onClick={onOpenNav}
+                aria-label="Open navigation menu"
+                data-testid="dashboard-nav-toggle-btn"
+              >
+                ☰
+              </button>
+            )}
+            <span className="brand-title">Training Levels PWA</span>
+          </div>
           <span className="dog-badge">{activeDog?.name || 'Primary Dog'}</span>
         </div>
-        <h1 className="dashboard-title">Dashboard</h1>
+        <div className="dashboard-header-title-row">
+          <h1 className="dashboard-title">Dashboard</h1>
+          {onNavigateLevel && (
+            <div className="dashboard-quick-levels">
+              {curriculumData.levels.map((lvl) => (
+                <button
+                  key={lvl.level}
+                  type="button"
+                  className="quick-level-chip"
+                  onClick={() => onNavigateLevel(lvl.level)}
+                  data-testid={`quick-level-btn-${lvl.level}`}
+                >
+                  L{lvl.level}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </header>
 
       <main className="dashboard-content">
