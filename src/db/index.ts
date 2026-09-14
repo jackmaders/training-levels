@@ -70,11 +70,12 @@ export {
 export {
   exportBackup,
   importBackup,
-  shareOrDownloadBackup,
   type ExportScopeOptions,
   type ImportOptions,
   type ImportResult,
 } from './portability'
+
+export { shareOrDownloadBackup } from '../utils/share'
 
 export function calculateRepScores(
   reps: RepResult[],

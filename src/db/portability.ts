@@ -1,5 +1,6 @@
+import type { Table } from 'dexie'
 import type { TrainingDatabase } from './index'
-import type { StepProgress, StepStatus } from '../types/db'
+import type { StepProgress, TrainingSession, SessionLog, AppState, StepStatus } from '../types/db'
 import {
   type BackupEnvelope,
   CURRENT_BACKUP_SCHEMA_VERSION,
@@ -30,6 +31,22 @@ const STATUS_RANK: Record<StepStatus, number> = {
   in_progress: 2,
   passed_practice: 3,
   passed_cold: 4,
+}
+
+/**
+ * Generic helper to insert records into a Dexie table if key doesn't already exist.
+ */
+async function mergeUniqueRecords<T, K>(
+  table: Table<T, K>,
+  records: T[],
+  getKey: (item: T) => K
+): Promise<void> {
+  for (const item of records) {
+    const existing = await table.get(getKey(item))
+    if (!existing) {
+      await table.put(item)
+    }
+  }
 }
 
 /**
@@ -125,22 +142,35 @@ export async function importBackup(
         envelope.data
 
       if (options.mode === 'overwrite') {
-        // Clear all tables for clean restore
-        await Promise.all([
-          database.dogs.clear(),
-          database.stepProgress.clear(),
-          database.sessions.clear(),
-          database.sessionLogs.clear(),
-          database.appState.clear(),
-        ])
+        if (envelope.exportScope === 'dog' && envelope.dogId) {
+          const targetDogId = envelope.dogId
+          // Scoped overwrite: replace only this dog's records
+          await database.stepProgress.where('dogId').equals(targetDogId).delete()
+          await database.sessions.where('dogId').equals(targetDogId).delete()
+          await database.sessionLogs.where('dogId').equals(targetDogId).delete()
 
-        if (dogs.length > 0) await database.dogs.bulkPut(dogs)
-        if (stepProgress.length > 0)
-          await database.stepProgress.bulkPut(stepProgress)
-        if (sessions.length > 0) await database.sessions.bulkPut(sessions)
-        if (sessionLogs.length > 0)
-          await database.sessionLogs.bulkPut(sessionLogs)
-        if (appState.length > 0) await database.appState.bulkPut(appState)
+          if (dogs.length > 0) await database.dogs.bulkPut(dogs)
+          if (stepProgress.length > 0) await database.stepProgress.bulkPut(stepProgress)
+          if (sessions.length > 0) await database.sessions.bulkPut(sessions)
+          if (sessionLogs.length > 0) await database.sessionLogs.bulkPut(sessionLogs)
+        } else {
+          // Full overwrite: clear all tables for clean restore
+          await Promise.all([
+            database.dogs.clear(),
+            database.stepProgress.clear(),
+            database.sessions.clear(),
+            database.sessionLogs.clear(),
+            database.appState.clear(),
+          ])
+
+          if (dogs.length > 0) await database.dogs.bulkPut(dogs)
+          if (stepProgress.length > 0)
+            await database.stepProgress.bulkPut(stepProgress)
+          if (sessions.length > 0) await database.sessions.bulkPut(sessions)
+          if (sessionLogs.length > 0)
+            await database.sessionLogs.bulkPut(sessionLogs)
+          if (appState.length > 0) await database.appState.bulkPut(appState)
+        }
 
         return {
           success: true,
@@ -158,6 +188,9 @@ export async function importBackup(
         const existingDog = await database.dogs.get(dog.id)
         if (!existingDog) {
           await database.dogs.put(dog)
+        } else if (dog.name && dog.name !== existingDog.name) {
+          // Update profile attributes while preserving existing entity
+          await database.dogs.put({ ...existingDog, name: dog.name, isArchived: dog.isArchived })
         }
       }
 
@@ -202,29 +235,22 @@ export async function importBackup(
         }
       }
 
-      // 3. Merge sessions
-      for (const session of sessions) {
-        const existing = await database.sessions.get(session.id)
-        if (!existing) {
-          await database.sessions.put(session)
-        }
-      }
-
-      // 4. Merge session logs
-      for (const log of sessionLogs) {
-        const existing = await database.sessionLogs.get(log.id)
-        if (!existing) {
-          await database.sessionLogs.put(log)
-        }
-      }
-
-      // 5. Merge appState without overriding existing local preferences
-      for (const state of appState) {
-        const existing = await database.appState.get(state.key)
-        if (!existing) {
-          await database.appState.put(state)
-        }
-      }
+      // 3. Merge sessions, session logs, and appState
+      await mergeUniqueRecords<TrainingSession, string>(
+        database.sessions,
+        sessions,
+        (s) => s.id
+      )
+      await mergeUniqueRecords<SessionLog, string>(
+        database.sessionLogs,
+        sessionLogs,
+        (l) => l.id
+      )
+      await mergeUniqueRecords<AppState, string>(
+        database.appState,
+        appState,
+        (a) => a.key
+      )
 
       return {
         success: true,
@@ -236,71 +262,4 @@ export async function importBackup(
       }
     }
   )
-}
-
-/**
- * Triggers native Web Share API where supported, or falls back to direct JSON file download.
- */
-export async function shareOrDownloadBackup(
-  envelope: BackupEnvelope,
-  customFilename?: string,
-  navigatorObj: Navigator = typeof navigator !== 'undefined'
-    ? navigator
-    : ({} as Navigator)
-): Promise<{ method: 'share' | 'download' }> {
-  const jsonString = JSON.stringify(envelope, null, 2)
-  const defaultDate = new Date().toISOString().split('T')[0]
-  const filename =
-    customFilename ||
-    `training-levels-backup-${
-      envelope.exportScope === 'dog' && envelope.dogId
-        ? envelope.dogId
-        : 'all'
-    }-${defaultDate}.json`
-
-  const blob = new Blob([jsonString], { type: 'application/json' })
-
-  // Check if Web Share API with files is supported
-  if (
-    typeof navigatorObj?.canShare === 'function' &&
-    typeof navigatorObj?.share === 'function' &&
-    typeof File !== 'undefined'
-  ) {
-    try {
-      const file = new File([blob], filename, { type: 'application/json' })
-      if (navigatorObj.canShare({ files: [file] })) {
-        await navigatorObj.share({
-          title: 'Training Levels Backup',
-          text: `Training Levels data export (${envelope.exportScope})`,
-          files: [file],
-        })
-        return { method: 'share' }
-      }
-    } catch (err: unknown) {
-      // If user aborted or share failed, proceed with fallback if not an explicit cancel
-      if (err instanceof Error && err.name === 'AbortError') {
-        return { method: 'share' }
-      }
-    }
-  }
-
-  // Fallback: direct download via anchor
-  if (
-    typeof document !== 'undefined' &&
-    typeof URL !== 'undefined' &&
-    typeof URL.createObjectURL === 'function'
-  ) {
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = filename
-    document.body.appendChild(anchor)
-    anchor.click()
-    document.body.removeChild(anchor)
-    if (typeof URL.revokeObjectURL === 'function') {
-      URL.revokeObjectURL(url)
-    }
-  }
-
-  return { method: 'download' }
 }

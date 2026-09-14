@@ -226,17 +226,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 📤 Export All Data
               </button>
 
-              {activeDog && (
-                <button
-                  type="button"
-                  className="settings-btn settings-btn-secondary"
-                  data-testid="export-dog-btn"
-                  disabled={isProcessing}
-                  onClick={handleExportDog}
-                >
-                  🐶 Export {activeDog.name} Progress
-                </button>
-              )}
+              <button
+                type="button"
+                className="settings-btn settings-btn-secondary"
+                data-testid="export-dog-btn"
+                disabled={isProcessing || !activeDog}
+                onClick={handleExportDog}
+              >
+                🐶 {activeDog ? `Export ${activeDog.name} Progress` : 'Export Current Dog Progress'}
+              </button>
             </div>
           </section>
 

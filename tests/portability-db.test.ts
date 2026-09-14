@@ -4,8 +4,8 @@ import { TrainingDatabase, recordDrillSession } from '../src/db'
 import {
   exportBackup,
   importBackup,
-  shareOrDownloadBackup,
 } from '../src/db/portability'
+import { shareOrDownloadBackup } from '../src/utils/share'
 
 describe('Portability Engine & DB Integration (Seam 1 - Slice 2)', () => {
   let db: TrainingDatabase
@@ -129,6 +129,56 @@ describe('Portability Engine & DB Integration (Seam 1 - Slice 2)', () => {
 
     const activeDogState = await db.appState.get('activeDogId')
     expect(activeDogState?.value).toBe('dog-restored')
+  })
+
+  it('restores single-dog backup with Overwrite mode, scoping replacement to that dog only', async () => {
+    // Current state: db has dog-bella and dog-max
+    const singleDogBackup = {
+      schemaVersion: 1,
+      appVersion: '1.0.0',
+      exportedAt: '2026-03-01T00:00:00.000Z',
+      exportScope: 'dog' as const,
+      dogId: 'dog-bella',
+      data: {
+        dogs: [
+          {
+            id: 'dog-bella',
+            name: 'Bella Champion',
+            createdAt: '2026-02-01T00:00:00.000Z',
+            isArchived: false,
+          },
+        ],
+        stepProgress: [
+          {
+            dogId: 'dog-bella',
+            stepId: 'level-1-sit-step-1',
+            levelId: 1,
+            behaviorKey: 'sit',
+            status: 'passed_cold' as const,
+            attemptsCount: 1,
+            passedColdAt: '2026-03-01T00:00:00.000Z',
+            updatedAt: '2026-03-01T00:00:00.000Z',
+          },
+        ],
+        sessions: [],
+        sessionLogs: [],
+        appState: [],
+      },
+    }
+
+    const result = await importBackup(db, singleDogBackup, {
+      mode: 'overwrite',
+    })
+    expect(result.success).toBe(true)
+
+    // Max should remain untouched in DB
+    const maxDog = await db.dogs.get('dog-max')
+    expect(maxDog).toBeDefined()
+
+    // Bella's progress should be replaced with sit step
+    const bellaProgress = await db.stepProgress.where('dogId').equals('dog-bella').toArray()
+    expect(bellaProgress).toHaveLength(1)
+    expect(bellaProgress[0].stepId).toBe('level-1-sit-step-1')
   })
 
   it('merges backup data with existing records without data loss or key collision', async () => {
