@@ -11,6 +11,9 @@ import {
 } from '../db'
 import type { TrainingLevelsData } from '../types/curriculum'
 import type { Dog, StepProgress, RepResult, StepStatus } from '../types/db'
+import { ReferenceDrawer } from './ReferenceDrawer'
+import { extractStepDurationSeconds } from '../utils/duration'
+import { HoldTimer } from './HoldTimer'
 import './InSessionTraining.css'
 
 export interface InSessionTrainingProps {
@@ -52,6 +55,7 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
   const repsRef = useRef<RepResult[]>([])
   const [stepProgress, setStepProgress] = useState<StepProgress | null>(null)
   const [mode, setMode] = useState<'practice' | 'cold'>(initialMode)
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false)
   const [drillLogId, setDrillLogId] = useState<string>(() =>
     generateEntityId('log')
   )
@@ -59,9 +63,10 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
   const maxReps = mode === 'cold' ? 1 : 5
 
   const stepMeta = findCurriculumStep(curriculumData, currentStepId)
-  const behavior = stepMeta ? { behaviorKey: stepMeta.behaviorKey, title: stepMeta.behaviorTitle } : undefined
+  const behavior = stepMeta?.behavior
   const step = stepMeta?.step
   const levelNumber = stepMeta?.levelNumber
+  const targetDurationSeconds = extractStepDurationSeconds(step)
 
   // Initialize dog & load progress
   useEffect(() => {
@@ -87,6 +92,14 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
     setReps([])
     setDrillLogId(generateEntityId('log'))
   }, [])
+
+  // Sync initialStepId prop changes
+  useEffect(() => {
+    if (initialStepId && initialStepId !== currentStepId) {
+      setCurrentStepId(initialStepId)
+      resetDrillState()
+    }
+  }, [initialStepId, resetDrillState])
 
   // Reset drill reps when changing step
   const handleSelectStep = (stepId: string) => {
@@ -134,11 +147,25 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
     setStepProgress(res.progress)
   }
 
-  const { passedCount, missedCount, isCompleted: isDrillComplete } =
+  const { passedCount, missedCount: _missedCount, isCompleted: isDrillComplete } =
     calculateRepScores(reps, mode)
 
   const currentStatusConfig =
     STEP_STATUS_CONFIG[stepProgress?.status || 'not_started']
+
+  // Split-criteria check: 3 consecutive misses in active session
+  const hasThreeConsecutiveMisses = reps.some(
+    (r, i) => r === 'miss' && reps[i + 1] === 'miss' && reps[i + 2] === 'miss'
+  )
+
+  // Real-time pace indicator calculation
+  const passingPercentage =
+    reps.length > 0 ? Math.round((passedCount / reps.length) * 100) : null
+
+  const paceIndicatorText =
+    reps.length > 0
+      ? `${passingPercentage}% Passing Pace (${passedCount}/${reps.length} reps)`
+      : 'Ready (0/5 reps)'
 
   return (
     <div className="in-session-container">
@@ -178,11 +205,25 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
             </span>
           </div>
 
-          <div
-            className={`status-badge ${currentStatusConfig.className}`}
-            data-testid="step-status-badge"
-          >
-            {currentStatusConfig.label}
+          <div className="header-actions">
+            <button
+              type="button"
+              className="full-guide-btn"
+              onClick={() => setIsDrawerOpen(true)}
+              aria-label="Full Guide"
+              aria-expanded={isDrawerOpen}
+              data-testid="full-guide-trigger"
+            >
+              <span className="guide-icon" aria-hidden="true">📖</span>
+              <span className="guide-label">Full Guide</span>
+            </button>
+
+            <div
+              className={`status-badge ${currentStatusConfig.className}`}
+              data-testid="step-status-badge"
+            >
+              {currentStatusConfig.label}
+            </div>
           </div>
         </div>
 
@@ -242,6 +283,27 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
           </button>
         </div>
 
+        {/* Split-Criteria Warning Alert */}
+        {hasThreeConsecutiveMisses && (
+          <div
+            className="split-criteria-alert"
+            data-testid="split-criteria-alert"
+            role="alert"
+          >
+            <div className="split-alert-icon">⚠️</div>
+            <div className="split-alert-content">
+              <strong className="split-alert-title">
+                Split Criteria Warning
+              </strong>
+              <p className="split-alert-message">
+                3 consecutive misses logged. Consider lowering criteria, reducing
+                duration or distance, or sliding down the chute (Chutes &amp;
+                Ladders) to rebuild success!
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Instructions Summary Card */}
         <div className="instructions-card">
           <h3 className="instructions-title">{step?.title}</h3>
@@ -295,23 +357,26 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
         )}
       </main>
 
-      {/* Docked Bottom Hub: Matrix & Fixed One-Thumb Action Buttons */}
+      {/* Docked Bottom Hub: Hold Timer (if duration step), Matrix & Fixed One-Thumb Action Buttons */}
       <footer className="fixed-bottom-hub">
+        {/* Integrated Hold Timer directly above the 5-rep matrix */}
+        {targetDurationSeconds !== null && (
+          <HoldTimer targetSeconds={targetDurationSeconds} />
+        )}
+
         <div className="docked-matrix-wrapper">
           <div className="docked-matrix-header">
             <span className="matrix-title">
               {mode === 'cold' ? 'Cold Retention Test (1 Rep)' : '5-Rep Matrix'}
             </span>
-            <span className="matrix-pace">
+            <span className="matrix-pace" data-testid="pace-indicator">
               {mode === 'cold'
                 ? reps.length > 0
                   ? passedCount === 1
                     ? '✓ Passed Cold'
                     : '✕ Missed Cold'
                   : '1 Cold Rep (0 warmups)'
-                : reps.length > 0
-                  ? `${passedCount} Pass / ${missedCount} Miss (${reps.length}/5)`
-                  : 'Tap Pass or Miss to record'}
+                : paceIndicatorText}
             </span>
           </div>
 
@@ -367,6 +432,15 @@ export const InSessionTraining: React.FC<InSessionTrainingProps> = ({
           </button>
         </div>
       </footer>
+
+      {/* Slide-Up Quick Reference Drawer */}
+      <ReferenceDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        behavior={behavior}
+        step={step}
+        levelNumber={levelNumber}
+      />
     </div>
   )
 }

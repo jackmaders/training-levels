@@ -1,4 +1,4 @@
-import type { TrainingLevelsData, StepData } from '../types/curriculum'
+import type { TrainingLevelsData, BehaviorData, StepData } from '../types/curriculum'
 import type { StepProgress, StepStatus } from '../types/db'
 import type { TrainingDatabase } from './index'
 
@@ -7,6 +7,7 @@ export interface StepMetadata {
   levelTitle: string
   behaviorKey: string
   behaviorTitle: string
+  behavior: BehaviorData
   step: StepData
 }
 
@@ -32,6 +33,7 @@ export function findCurriculumStep(
           levelTitle: level.title,
           behaviorKey: behavior.behaviorKey,
           behaviorTitle: behavior.title,
+          behavior,
           step,
         }
       }
@@ -96,6 +98,7 @@ export async function getRecommendedNextDrill(
             levelTitle: level.title,
             behaviorKey: behavior.behaviorKey,
             behaviorTitle: behavior.title,
+            behavior,
             step,
             status: 'passed_practice',
             suggestedMode: 'cold',
@@ -110,6 +113,7 @@ export async function getRecommendedNextDrill(
               levelTitle: level.title,
               behaviorKey: behavior.behaviorKey,
               behaviorTitle: behavior.title,
+              behavior,
               step,
             },
             status,
@@ -141,6 +145,7 @@ export async function getRecommendedNextDrill(
       levelTitle: firstLevel.title,
       behaviorKey: firstBehavior.behaviorKey,
       behaviorTitle: firstBehavior.title,
+      behavior: firstBehavior,
       step: firstStep,
       status: progressMap.get(firstStep.id)?.status || 'not_started',
       suggestedMode: 'practice',

@@ -1,0 +1,121 @@
+/* Hold Timer Styling */
+
+.hold-timer-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f1f5f9;
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.hold-timer-container.timer-running {
+  background-color: #eff6ff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+}
+
+.hold-timer-container.timer-complete {
+  background-color: #dcfce7;
+  border-color: #16a34a;
+  box-shadow: 0 0 12px rgba(22, 163, 74, 0.35);
+  animation: pulse-complete 1s ease infinite alternate;
+}
+
+@keyframes pulse-complete {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.015);
+  }
+}
+
+.hold-timer-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.hold-timer-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.hold-timer-display {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
+.hold-timer-container.timer-running .hold-timer-display {
+  color: #2563eb;
+}
+
+.hold-timer-container.timer-complete .hold-timer-display {
+  color: #15803d;
+}
+
+.hold-timer-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.timer-control-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 42px;
+  padding: 0 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  transition: all 0.15s ease;
+}
+
+.timer-btn-icon {
+  font-size: 1rem;
+}
+
+.primary-timer-btn.start-btn {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #1d4ed8;
+}
+
+.primary-timer-btn.start-btn:active {
+  background-color: #1d4ed8;
+}
+
+.primary-timer-btn.pause-btn {
+  background-color: #f59e0b;
+  color: #ffffff;
+  border-color: #d97706;
+}
+
+.primary-timer-btn.pause-btn:active {
+  background-color: #d97706;
+}
+
+.reset-timer-btn {
+  background-color: #ffffff;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.reset-timer-btn:active {
+  background-color: #e2e8f0;
+}
