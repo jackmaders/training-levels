@@ -1,41 +1,24 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import type { UserRole } from "../../db/schema";
-import { hasPermission } from "../permissions";
+import { hasPermission, type Permission } from "../permissions";
+
+const ALL_PERMISSIONS = [
+  "todos:read",
+  "todos:create",
+  "todos:update",
+  "todos:delete",
+  "curriculum:read",
+  "progress:update",
+] as const satisfies readonly Permission[];
 
 describe("hasPermission authorization helper", () => {
-  describe("admin role", () => {
-    it.each([
-      "todos:read",
-      "todos:create",
-      "todos:update",
-      "todos:delete",
-      "curriculum:read",
-      "progress:update",
-    ] as const)("grants %s permission", (permission) => {
+  describe.each(["admin", "user"] as const)("%s role", (role) => {
+    it.each(ALL_PERMISSIONS)("grants %s permission", (permission) => {
       expect.assertions(1);
 
       // Act
-      const result = hasPermission("admin", permission);
-
-      // Assert
-      expect(result).toBe(true);
-    });
-  });
-
-  describe("user role", () => {
-    it.each([
-      "todos:read",
-      "todos:create",
-      "todos:update",
-      "todos:delete",
-      "curriculum:read",
-      "progress:update",
-    ] as const)("grants %s permission", (permission) => {
-      expect.assertions(1);
-
-      // Act
-      const result = hasPermission("user", permission);
+      const result = hasPermission(role, permission);
 
       // Assert
       expect(result).toBe(true);

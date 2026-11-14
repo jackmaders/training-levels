@@ -61,16 +61,14 @@ describe("dogs schema", () => {
     const db = getDb(env.DB);
 
     // Act
-    const cause = await db
-      .insert(dogs)
-      .values({ userId: "missing-user" })
-      .then(
-        () => null,
-        (error: unknown) => (error as Error).cause,
-      );
+    const action = db.insert(dogs).values({ userId: "missing-user" });
 
     // Assert
-    expect(String(cause)).toContain("FOREIGN KEY constraint failed");
+    await expect(action).rejects.toMatchObject({
+      cause: {
+        message: expect.stringContaining("FOREIGN KEY constraint failed") as unknown,
+      },
+    });
   });
 
   it("cascades user deletion to owned dogs without affecting other users", async () => {

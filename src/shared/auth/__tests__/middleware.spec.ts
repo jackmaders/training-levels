@@ -14,6 +14,20 @@ import {
 vi.mock(import("@/shared/auth/session.server"));
 vi.mock(import("@/shared/auth/permissions"), { spy: true });
 
+const ALL_PERMISSIONS = [
+  "todos:read",
+  "todos:create",
+  "todos:update",
+  "todos:delete",
+  "curriculum:read",
+  "progress:update",
+] as const satisfies readonly Permission[];
+
+const ROLE_SESSION_CASES = [
+  { role: "admin", sessionFixture: TEST_ADMIN_SESSION },
+  { role: "user", sessionFixture: TEST_SESSION },
+] as const;
+
 function getPermissionServerMiddleware(permission: Permission) {
   const serverFn = permissionMiddleware(permission).options.server;
   if (!serverFn) {
@@ -25,61 +39,37 @@ function getPermissionServerMiddleware(permission: Permission) {
 type MiddlewareInput = Parameters<ReturnType<typeof getPermissionServerMiddleware>>[0];
 
 describe("permissionMiddleware behavior", () => {
-  it.each<Permission>([
-    "todos:read",
-    "todos:create",
-    "todos:update",
-    "todos:delete",
-    "curriculum:read",
-    "progress:update",
-  ])("passes the session to next when an admin has %s", async (permission) => {
-    expect.assertions(2);
+  it.each(
+    ALL_PERMISSIONS.flatMap((permission) =>
+      ROLE_SESSION_CASES.map(({ role, sessionFixture }) => ({
+        permission,
+        role,
+        sessionFixture,
+      })),
+    ),
+  )(
+    "passes the session to next when $role has $permission",
+    async ({ permission, sessionFixture }) => {
+      expect.assertions(2);
 
-    // Arrange
-    vi.mocked(ensureSession).mockResolvedValueOnce(TEST_ADMIN_SESSION);
-    const next = vi.fn<() => Promise<{ status: string }>>().mockResolvedValueOnce({
-      status: "success",
-    });
-    const serverFn = getPermissionServerMiddleware(permission);
-    const input = { context: {}, next } as unknown as MiddlewareInput;
+      // Arrange
+      vi.mocked(ensureSession).mockResolvedValueOnce(sessionFixture);
+      const next = vi.fn<() => Promise<{ status: string }>>().mockResolvedValueOnce({
+        status: "success",
+      });
+      const serverFn = getPermissionServerMiddleware(permission);
+      const input = { context: {}, next } as unknown as MiddlewareInput;
 
-    // Act
-    const result = await serverFn(input);
+      // Act
+      const result = await serverFn(input);
 
-    // Assert
-    expect(next).toHaveBeenCalledWith({
-      context: { session: TEST_ADMIN_SESSION.session, user: TEST_ADMIN_SESSION.user },
-    });
-    expect(result).toStrictEqual({ status: "success" });
-  });
-
-  it.each<Permission>([
-    "todos:read",
-    "todos:create",
-    "todos:update",
-    "todos:delete",
-    "curriculum:read",
-    "progress:update",
-  ])("passes the session to next when a user has %s", async (permission) => {
-    expect.assertions(2);
-
-    // Arrange
-    vi.mocked(ensureSession).mockResolvedValueOnce(TEST_SESSION);
-    const next = vi.fn<() => Promise<{ status: string }>>().mockResolvedValueOnce({
-      status: "success",
-    });
-    const serverFn = getPermissionServerMiddleware(permission);
-    const input = { context: {}, next } as unknown as MiddlewareInput;
-
-    // Act
-    const result = await serverFn(input);
-
-    // Assert
-    expect(next).toHaveBeenCalledWith({
-      context: { session: TEST_SESSION.session, user: TEST_SESSION.user },
-    });
-    expect(result).toStrictEqual({ status: "success" });
-  });
+      // Assert
+      expect(next).toHaveBeenCalledWith({
+        context: { session: sessionFixture.session, user: sessionFixture.user },
+      });
+      expect(result).toStrictEqual({ status: "success" });
+    },
+  );
 
   it("rejects when hasPermission returns false and does not call next", async () => {
     expect.assertions(3);

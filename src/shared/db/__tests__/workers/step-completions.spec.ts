@@ -48,7 +48,29 @@ describe("stepCompletions schema", () => {
     expect(created?.completedAt.getTime()).toBeGreaterThan(MILLISECOND_EPOCH_THRESHOLD);
   });
 
-  it("rejects duplicate (dog_id, step_id) while allowing the same step_id for another dog", async () => {
+  it("rejects duplicate (dog_id, step_id) for the same dog", async () => {
+    expect.assertions(1);
+
+    // Arrange
+    const db = getDb(env.DB);
+    await db.insert(stepCompletions).values({ dogId: "dog-a", stepId: "level-1/zen:step-1" });
+
+    // Act
+    const action = db
+      .insert(stepCompletions)
+      .values({ dogId: "dog-a", stepId: "level-1/zen:step-1" });
+
+    // Assert
+    await expect(action).rejects.toMatchObject({
+      cause: {
+        message: expect.stringContaining(
+          "UNIQUE constraint failed: step_completions.dog_id, step_completions.step_id",
+        ) as unknown,
+      },
+    });
+  });
+
+  it("allows another dog to complete the same step_id", async () => {
     expect.assertions(2);
 
     // Arrange
@@ -56,23 +78,17 @@ describe("stepCompletions schema", () => {
     await db.insert(stepCompletions).values({ dogId: "dog-a", stepId: "level-1/zen:step-1" });
 
     // Act
-    const duplicateCause = await db
-      .insert(stepCompletions)
-      .values({ dogId: "dog-a", stepId: "level-1/zen:step-1" })
-      .then(
-        () => null,
-        (error: unknown) => (error as Error).cause,
-      );
     const sameStepForOtherDog = await db
       .insert(stepCompletions)
       .values({ dogId: "dog-b", stepId: "level-1/zen:step-1" })
       .returning();
 
     // Assert
-    expect(String(duplicateCause)).toContain(
-      "UNIQUE constraint failed: step_completions.dog_id, step_completions.step_id",
-    );
     expect(sameStepForOtherDog).toHaveLength(1);
+    expect(sameStepForOtherDog[0]).toMatchObject({
+      dogId: "dog-b",
+      stepId: "level-1/zen:step-1",
+    });
   });
 
   it("rejects inserting a step completion for a nonexistent dog", async () => {
@@ -82,16 +98,16 @@ describe("stepCompletions schema", () => {
     const db = getDb(env.DB);
 
     // Act
-    const cause = await db
+    const action = db
       .insert(stepCompletions)
-      .values({ dogId: "missing-dog", stepId: "level-1/zen:step-1" })
-      .then(
-        () => null,
-        (error: unknown) => (error as Error).cause,
-      );
+      .values({ dogId: "missing-dog", stepId: "level-1/zen:step-1" });
 
     // Assert
-    expect(String(cause)).toContain("FOREIGN KEY constraint failed");
+    await expect(action).rejects.toMatchObject({
+      cause: {
+        message: expect.stringContaining("FOREIGN KEY constraint failed") as unknown,
+      },
+    });
   });
 
   it("cascades deletion from dog to stepCompletions without affecting other dogs", async () => {
