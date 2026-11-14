@@ -5,85 +5,98 @@ import { getCurriculumPageInputSchema, toggleStepInputSchema } from "../curricul
 const OVER_MAX_SLUG_LENGTH = 130;
 const OVER_MAX_STEP_ID_LENGTH = 170;
 
-describe("curriculum-schema", () => {
-  it("accepts and trims valid curriculum page slugs including unknown stems", () => {
-    expect.assertions(4);
+describe("getCurriculumPageInputSchema validation", () => {
+  it.each([
+    ["  level-1/zen  ", "level-1/zen"],
+    ["theory/01-foreword", "theory/01-foreword"],
+    ["appendices/appendix-a-leading-the-dance", "appendices/appendix-a-leading-the-dance"],
+    ["level-1/nonexistent", "level-1/nonexistent"],
+  ] as const)(
+    "accepts and trims valid curriculum page slug %j",
+    (rawPageSlug, expectedPageSlug) => {
+      expect.assertions(1);
 
-    // Arrange
-    const zenInput = { pageSlug: "  level-1/zen  " };
-    const theoryInput = { pageSlug: "theory/01-foreword" };
-    const appendixInput = { pageSlug: "appendices/appendix-a-leading-the-dance" };
-    const unknownStemInput = { pageSlug: "level-1/nonexistent" };
+      // Arrange
+      const input = { pageSlug: rawPageSlug };
 
-    // Act & Assert
-    expect(getCurriculumPageInputSchema.parse(zenInput)).toStrictEqual({ pageSlug: "level-1/zen" });
-    expect(getCurriculumPageInputSchema.parse(theoryInput)).toStrictEqual({
-      pageSlug: "theory/01-foreword",
-    });
-    expect(getCurriculumPageInputSchema.parse(appendixInput)).toStrictEqual({
-      pageSlug: "appendices/appendix-a-leading-the-dance",
-    });
-    expect(getCurriculumPageInputSchema.parse(unknownStemInput)).toStrictEqual({
-      pageSlug: "level-1/nonexistent",
-    });
-  });
+      // Act
+      const parsed = getCurriculumPageInputSchema.parse(input);
 
-  it("rejects malformed curriculum page slugs", () => {
-    expect.assertions(5);
+      // Assert
+      expect(parsed).toStrictEqual({ pageSlug: expectedPageSlug });
+    },
+  );
 
-    // Arrange
-    const emptySlug = { pageSlug: "   " };
-    const missingSection = { pageSlug: "zen" };
-    const invalidSection = { pageSlug: "level-5/zen" };
-    const pathTraversal = { pageSlug: "../theory/01-foreword" };
-    const overlongSlug = { pageSlug: `level-1/${"a".repeat(OVER_MAX_SLUG_LENGTH)}` };
+  it.each([
+    ["blank whitespace", "   ", "Page slug is required"],
+    ["missing section", "zen", "Invalid curriculum page slug"],
+    ["unsupported level section", "level-5/zen", "Invalid curriculum page slug"],
+    ["path traversal", "../theory/01-foreword", "Invalid curriculum page slug"],
+    [
+      "exceeding max length",
+      `level-1/${"a".repeat(OVER_MAX_SLUG_LENGTH)}`,
+      "Page slug is too long",
+    ],
+  ] as const)(
+    "rejects malformed curriculum page slug (%s)",
+    (_label, pageSlug, expectedMessage) => {
+      expect.assertions(1);
 
-    // Act & Assert
-    expect(() => getCurriculumPageInputSchema.parse(emptySlug)).toThrow("Page slug is required");
-    expect(() => getCurriculumPageInputSchema.parse(missingSection)).toThrow(
-      "Invalid curriculum page slug",
-    );
-    expect(() => getCurriculumPageInputSchema.parse(invalidSection)).toThrow(
-      "Invalid curriculum page slug",
-    );
-    expect(() => getCurriculumPageInputSchema.parse(pathTraversal)).toThrow(
-      "Invalid curriculum page slug",
-    );
-    expect(() => getCurriculumPageInputSchema.parse(overlongSlug)).toThrow("Page slug is too long");
-  });
+      // Arrange
+      const input = { pageSlug };
 
-  it("accepts and trims valid toggleStep inputs", () => {
-    expect.assertions(2);
+      // Act
+      function parse() {
+        getCurriculumPageInputSchema.parse(input);
+      }
 
-    // Arrange
-    const checkInput = { completed: true, stepId: "  level-1/zen:step-1  " };
-    const uncheckInput = { completed: false, stepId: "level-4/communication:step-5" };
+      // Assert
+      expect(parse).toThrow(expectedMessage);
+    },
+  );
+});
 
-    // Act & Assert
-    expect(toggleStepInputSchema.parse(checkInput)).toStrictEqual({
-      completed: true,
-      stepId: "level-1/zen:step-1",
-    });
-    expect(toggleStepInputSchema.parse(uncheckInput)).toStrictEqual({
-      completed: false,
-      stepId: "level-4/communication:step-5",
-    });
-  });
+describe("toggleStepInputSchema validation", () => {
+  it.each([
+    [true, "  level-1/zen:step-1  ", "level-1/zen:step-1"],
+    [false, "level-4/communication:step-5", "level-4/communication:step-5"],
+  ] as const)(
+    "accepts and trims valid toggleStep input (completed=%s)",
+    (completed, rawStepId, expectedStepId) => {
+      expect.assertions(1);
 
-  it("rejects empty, overlong, or non-boolean toggleStep inputs", () => {
-    expect.assertions(3);
+      // Arrange
+      const input = { completed, stepId: rawStepId };
 
-    // Arrange
-    const blankStepId = { completed: true, stepId: "   " };
-    const overlongStepId = {
-      completed: true,
-      stepId: `level-1/${"a".repeat(OVER_MAX_STEP_ID_LENGTH)}`,
-    };
-    const invalidCompleted = { completed: "true", stepId: "level-1/zen:step-1" };
+      // Act
+      const parsed = toggleStepInputSchema.parse(input);
 
-    // Act & Assert
-    expect(() => toggleStepInputSchema.parse(blankStepId)).toThrow("Step ID is required");
-    expect(() => toggleStepInputSchema.parse(overlongStepId)).toThrow("Step ID is too long");
-    expect(() => toggleStepInputSchema.parse(invalidCompleted)).toThrow(/expected boolean/u);
+      // Assert
+      expect(parsed).toStrictEqual({ completed, stepId: expectedStepId });
+    },
+  );
+
+  it.each([
+    ["blank stepId", { completed: true, stepId: "   " }, "Step ID is required"],
+    [
+      "overlong stepId",
+      { completed: true, stepId: `level-1/${"a".repeat(OVER_MAX_STEP_ID_LENGTH)}` },
+      "Step ID is too long",
+    ],
+    [
+      "non-boolean completed",
+      { completed: "true", stepId: "level-1/zen:step-1" },
+      /expected boolean/u,
+    ],
+  ] as const)("rejects invalid toggleStep input (%s)", (_label, rawInput, expectedError) => {
+    expect.assertions(1);
+
+    // Act
+    function parse() {
+      toggleStepInputSchema.parse(rawInput);
+    }
+
+    // Assert
+    expect(parse).toThrow(expectedError);
   });
 });

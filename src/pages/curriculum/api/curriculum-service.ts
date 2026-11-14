@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 
 import type { CurriculumPage, CurriculumSyllabus } from "@/shared/curriculum-data";
 import {
@@ -21,44 +21,6 @@ export type CurriculumUserContext = DbContext & {
 export interface ToggleStepResult {
   completed: boolean;
   stepId: string;
-}
-
-async function findPrimaryDogId(db: Database, userId: string): Promise<string | null> {
-  const [dog] = await db
-    .select({ id: dogs.id })
-    .from(dogs)
-    .where(eq(dogs.userId, userId))
-    .orderBy(asc(dogs.createdAt), asc(dogs.id))
-    .limit(1);
-
-  return dog?.id ?? null;
-}
-
-interface MarkStepCompletedParams {
-  db: Database;
-  existingDogId: string | null;
-  stepId: string;
-  userId: string;
-}
-
-async function markStepCompleted({
-  db,
-  existingDogId,
-  stepId,
-  userId,
-}: MarkStepCompletedParams): Promise<ToggleStepResult> {
-  let dogId = existingDogId;
-  if (dogId === null) {
-    dogId = crypto.randomUUID();
-    await db.insert(dogs).values({ id: dogId, name: DEFAULT_DOG_NAME, userId });
-  }
-
-  await db
-    .insert(stepCompletions)
-    .values({ dogId, stepId })
-    .onConflictDoNothing({ target: [stepCompletions.dogId, stepCompletions.stepId] });
-
-  return { completed: true, stepId };
 }
 
 export function getSyllabus(): CurriculumSyllabus {
@@ -97,18 +59,77 @@ export async function toggleStep(
     });
   }
 
-  const existingDogId = await findPrimaryDogId(db, userId);
   if (input.completed) {
-    return await markStepCompleted({ db, existingDogId, stepId: input.stepId, userId });
+    return await markStepCompleted({ db, stepId: input.stepId, userId });
   }
 
+  return await unmarkStepCompleted({ db, stepId: input.stepId, userId });
+}
+
+interface StepMutationParams {
+  db: Database;
+  stepId: string;
+  userId: string;
+}
+
+async function findPrimaryDogId(db: Database, userId: string): Promise<string | null> {
+  const [dog] = await db
+    .select({ id: dogs.id })
+    .from(dogs)
+    .where(eq(dogs.userId, userId))
+    .orderBy(asc(dogs.createdAt), asc(dogs.id))
+    .limit(1);
+
+  return dog?.id ?? null;
+}
+
+async function markStepCompleted({
+  db,
+  stepId,
+  userId,
+}: StepMutationParams): Promise<ToggleStepResult> {
+  const nowMs = Date.now();
+  const newDogId = crypto.randomUUID();
+  const newCompletionId = crypto.randomUUID();
+
+  await db.batch([
+    db
+      .insert(dogs, "createdAt", "id", "name", "updatedAt", "userId")
+      .select(
+        sql`SELECT ${nowMs}, ${newDogId}, ${DEFAULT_DOG_NAME}, ${nowMs}, ${userId} WHERE NOT EXISTS (SELECT 1 FROM ${dogs} WHERE ${dogs.userId} = ${userId})`,
+      ),
+    db
+      .insert(stepCompletions)
+      .select((qb) =>
+        qb
+          .select({
+            completedAt: sql<Date>`${nowMs}`.as("completed_at"),
+            dogId: dogs.id,
+            id: sql<string>`${newCompletionId}`.as("id"),
+            stepId: sql<string>`${stepId}`.as("step_id"),
+          })
+          .from(dogs)
+          .where(eq(dogs.userId, userId))
+          .orderBy(asc(dogs.createdAt), asc(dogs.id))
+          .limit(1),
+      )
+      .onConflictDoNothing({ target: [stepCompletions.dogId, stepCompletions.stepId] }),
+  ]);
+
+  return { completed: true, stepId };
+}
+
+async function unmarkStepCompleted({
+  db,
+  stepId,
+  userId,
+}: StepMutationParams): Promise<ToggleStepResult> {
+  const existingDogId = await findPrimaryDogId(db, userId);
   if (existingDogId !== null) {
     await db
       .delete(stepCompletions)
-      .where(
-        and(eq(stepCompletions.dogId, existingDogId), eq(stepCompletions.stepId, input.stepId)),
-      );
+      .where(and(eq(stepCompletions.dogId, existingDogId), eq(stepCompletions.stepId, stepId)));
   }
 
-  return { completed: false, stepId: input.stepId };
+  return { completed: false, stepId };
 }

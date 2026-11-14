@@ -19,14 +19,14 @@ vi.mock(import("@/shared/auth/session.server"));
 vi.mock(import("@/shared/auth/permissions"), { spy: true });
 vi.mock(import("../curriculum-service"));
 
-const MOCK_SYLLABUS: CurriculumSyllabus = {
+const TEST_SYLLABUS: CurriculumSyllabus = {
   sections: [],
   totalBehaviors: 0,
   totalPages: 0,
   totalSteps: 0,
 };
 
-const MOCK_PAGE: CurriculumPage = {
+const TEST_PAGE: CurriculumPage = {
   blocks: [],
   href: "/theory/01-foreword",
   kind: "theory",
@@ -41,12 +41,12 @@ beforeEach(() => {
   vi.mocked(ensureSession).mockResolvedValue(TEST_SESSION);
 });
 
-describe("curriculum server functions", () => {
-  it("delegates getCurriculumSyllabusFn after checking curriculum:read permission", async () => {
+describe("curriculum functions getCurriculumSyllabusFn", () => {
+  it("delegates to getSyllabus after checking curriculum:read permission", async () => {
     expect.assertions(3);
 
     // Arrange
-    vi.mocked(getSyllabus).mockReturnValueOnce(MOCK_SYLLABUS);
+    vi.mocked(getSyllabus).mockReturnValueOnce(TEST_SYLLABUS);
 
     // Act
     const result = await getCurriculumSyllabusFn();
@@ -54,67 +54,110 @@ describe("curriculum server functions", () => {
     // Assert
     expect(hasPermission).toHaveBeenCalledWith(TEST_SESSION.user.role, "curriculum:read");
     expect(getSyllabus).toHaveBeenCalledOnce();
-    expect(result).toStrictEqual(MOCK_SYLLABUS);
+    expect(result).toStrictEqual(TEST_SYLLABUS);
   });
 
-  it("rejects unauthenticated or forbidden callers on getCurriculumSyllabusFn", async () => {
+  it("rejects unauthenticated callers with USER_UNAUTHENTICATED without calling getSyllabus", async () => {
     expect.assertions(2);
 
     // Arrange
     vi.mocked(ensureSession).mockRejectedValueOnce(new ApplicationError("USER_UNAUTHENTICATED"));
 
-    // Act & Assert
-    await expect(getCurriculumSyllabusFn()).rejects.toMatchObject({ code: "USER_UNAUTHENTICATED" });
+    // Act
+    const action = getCurriculumSyllabusFn();
 
-    vi.mocked(hasPermission).mockReturnValueOnce(false);
-    await expect(getCurriculumSyllabusFn()).rejects.toMatchObject({ code: "USER_FORBIDDEN" });
+    // Assert
+    await expect(action).rejects.toMatchObject({ code: "USER_UNAUTHENTICATED" });
+    expect(getSyllabus).not.toHaveBeenCalled();
   });
 
-  it("validates pageSlug and delegates getCurriculumPageFn with curriculum:read permission", async () => {
-    expect.assertions(5);
+  it("rejects forbidden callers with USER_FORBIDDEN without calling getSyllabus", async () => {
+    expect.assertions(2);
 
     // Arrange
-    vi.mocked(getPage).mockReturnValueOnce(MOCK_PAGE);
-    vi.mocked(getPage).mockReturnValueOnce(null);
+    vi.mocked(hasPermission).mockReturnValueOnce(false);
 
     // Act
-    const found = await getCurriculumPageFn({ data: { pageSlug: "  theory/01-foreword  " } });
-    const missing = await getCurriculumPageFn({ data: { pageSlug: "level-1/nonexistent" } });
+    const action = getCurriculumSyllabusFn();
+
+    // Assert
+    await expect(action).rejects.toMatchObject({ code: "USER_FORBIDDEN" });
+    expect(getSyllabus).not.toHaveBeenCalled();
+  });
+});
+
+describe("curriculum functions getCurriculumPageFn", () => {
+  it("trims pageSlug and delegates to getPage after checking curriculum:read permission", async () => {
+    expect.assertions(3);
+
+    // Arrange
+    vi.mocked(getPage).mockReturnValueOnce(TEST_PAGE);
+
+    // Act
+    const result = await getCurriculumPageFn({ data: { pageSlug: "  theory/01-foreword  " } });
 
     // Assert
     expect(hasPermission).toHaveBeenCalledWith(TEST_SESSION.user.role, "curriculum:read");
-    expect(getPage).toHaveBeenNthCalledWith(1, "theory/01-foreword");
-    expect(getPage).toHaveBeenNthCalledWith(2, "level-1/nonexistent");
-    expect(found).toStrictEqual(MOCK_PAGE);
-    expect(missing).toBeNull();
+    expect(getPage).toHaveBeenCalledWith("theory/01-foreword");
+    expect(result).toStrictEqual(TEST_PAGE);
   });
 
-  it("rejects unauthorized and malformed requests on getCurriculumPageFn", async () => {
-    expect.assertions(3);
+  it("returns null when getPage finds no matching page", async () => {
+    expect.assertions(2);
+
+    // Arrange
+    vi.mocked(getPage).mockReturnValueOnce(null);
+
+    // Act
+    const result = await getCurriculumPageFn({ data: { pageSlug: "level-1/nonexistent" } });
+
+    // Assert
+    expect(getPage).toHaveBeenCalledWith("level-1/nonexistent");
+    expect(result).toBeNull();
+  });
+
+  it("rejects unauthenticated callers with USER_UNAUTHENTICATED without calling getPage", async () => {
+    expect.assertions(2);
 
     // Arrange
     vi.mocked(ensureSession).mockRejectedValueOnce(new ApplicationError("USER_UNAUTHENTICATED"));
 
-    // Act & Assert
-    await expect(
-      getCurriculumPageFn({ data: { pageSlug: "theory/01-foreword" } }),
-    ).rejects.toMatchObject({
-      code: "USER_UNAUTHENTICATED",
-    });
+    // Act
+    const action = getCurriculumPageFn({ data: { pageSlug: "theory/01-foreword" } });
 
-    vi.mocked(hasPermission).mockReturnValueOnce(false);
-    await expect(
-      getCurriculumPageFn({ data: { pageSlug: "theory/01-foreword" } }),
-    ).rejects.toMatchObject({
-      code: "USER_FORBIDDEN",
-    });
-
-    await expect(getCurriculumPageFn({ data: { pageSlug: "../bad" } })).rejects.toThrow(
-      "Invalid curriculum page slug",
-    );
+    // Assert
+    await expect(action).rejects.toMatchObject({ code: "USER_UNAUTHENTICATED" });
+    expect(getPage).not.toHaveBeenCalled();
   });
 
-  it("delegates getStepProgressFn with authenticated userId after checking curriculum:read", async () => {
+  it("rejects forbidden callers with USER_FORBIDDEN without calling getPage", async () => {
+    expect.assertions(2);
+
+    // Arrange
+    vi.mocked(hasPermission).mockReturnValueOnce(false);
+
+    // Act
+    const action = getCurriculumPageFn({ data: { pageSlug: "theory/01-foreword" } });
+
+    // Assert
+    await expect(action).rejects.toMatchObject({ code: "USER_FORBIDDEN" });
+    expect(getPage).not.toHaveBeenCalled();
+  });
+
+  it("rejects malformed page slugs during input validation without calling getPage", async () => {
+    expect.assertions(2);
+
+    // Act
+    const action = getCurriculumPageFn({ data: { pageSlug: "../bad" } });
+
+    // Assert
+    await expect(action).rejects.toThrow("Invalid curriculum page slug");
+    expect(getPage).not.toHaveBeenCalled();
+  });
+});
+
+describe("curriculum functions getStepProgressFn", () => {
+  it("delegates to getStepProgress with authenticated userId after checking curriculum:read", async () => {
     expect.assertions(3);
 
     // Arrange
@@ -129,20 +172,37 @@ describe("curriculum server functions", () => {
     expect(result).toStrictEqual(["level-1/zen:step-1"]);
   });
 
-  it("rejects unauthenticated or forbidden callers on getStepProgressFn", async () => {
+  it("rejects unauthenticated callers with USER_UNAUTHENTICATED without calling getStepProgress", async () => {
     expect.assertions(2);
 
     // Arrange
     vi.mocked(ensureSession).mockRejectedValueOnce(new ApplicationError("USER_UNAUTHENTICATED"));
 
-    // Act & Assert
-    await expect(getStepProgressFn()).rejects.toMatchObject({ code: "USER_UNAUTHENTICATED" });
+    // Act
+    const action = getStepProgressFn();
 
-    vi.mocked(hasPermission).mockReturnValueOnce(false);
-    await expect(getStepProgressFn()).rejects.toMatchObject({ code: "USER_FORBIDDEN" });
+    // Assert
+    await expect(action).rejects.toMatchObject({ code: "USER_UNAUTHENTICATED" });
+    expect(getStepProgress).not.toHaveBeenCalled();
   });
 
-  it("validates and delegates toggleStepFn after checking progress:update permission", async () => {
+  it("rejects forbidden callers with USER_FORBIDDEN without calling getStepProgress", async () => {
+    expect.assertions(2);
+
+    // Arrange
+    vi.mocked(hasPermission).mockReturnValueOnce(false);
+
+    // Act
+    const action = getStepProgressFn();
+
+    // Assert
+    await expect(action).rejects.toMatchObject({ code: "USER_FORBIDDEN" });
+    expect(getStepProgress).not.toHaveBeenCalled();
+  });
+});
+
+describe("curriculum functions toggleStepFn", () => {
+  it("validates and delegates to toggleStep after checking progress:update permission", async () => {
     expect.assertions(3);
 
     // Arrange
@@ -162,28 +222,42 @@ describe("curriculum server functions", () => {
     expect(result).toStrictEqual({ completed: true, stepId: "level-1/zen:step-1" });
   });
 
-  it("rejects unauthenticated, forbidden, and malformed requests on toggleStepFn", async () => {
-    expect.assertions(3);
+  it("rejects unauthenticated callers with USER_UNAUTHENTICATED without calling toggleStep", async () => {
+    expect.assertions(2);
 
     // Arrange
     vi.mocked(ensureSession).mockRejectedValueOnce(new ApplicationError("USER_UNAUTHENTICATED"));
 
-    // Act & Assert
-    await expect(
-      toggleStepFn({ data: { completed: true, stepId: "level-1/zen:step-1" } }),
-    ).rejects.toMatchObject({
-      code: "USER_UNAUTHENTICATED",
-    });
+    // Act
+    const action = toggleStepFn({ data: { completed: true, stepId: "level-1/zen:step-1" } });
 
+    // Assert
+    await expect(action).rejects.toMatchObject({ code: "USER_UNAUTHENTICATED" });
+    expect(toggleStep).not.toHaveBeenCalled();
+  });
+
+  it("rejects forbidden callers with USER_FORBIDDEN without calling toggleStep", async () => {
+    expect.assertions(2);
+
+    // Arrange
     vi.mocked(hasPermission).mockReturnValueOnce(false);
-    await expect(
-      toggleStepFn({ data: { completed: true, stepId: "level-1/zen:step-1" } }),
-    ).rejects.toMatchObject({
-      code: "USER_FORBIDDEN",
-    });
 
-    await expect(toggleStepFn({ data: { completed: true, stepId: "   " } })).rejects.toThrow(
-      "Step ID is required",
-    );
+    // Act
+    const action = toggleStepFn({ data: { completed: true, stepId: "level-1/zen:step-1" } });
+
+    // Assert
+    await expect(action).rejects.toMatchObject({ code: "USER_FORBIDDEN" });
+    expect(toggleStep).not.toHaveBeenCalled();
+  });
+
+  it("rejects blank step IDs during input validation without calling toggleStep", async () => {
+    expect.assertions(2);
+
+    // Act
+    const action = toggleStepFn({ data: { completed: true, stepId: "   " } });
+
+    // Assert
+    await expect(action).rejects.toThrow("Step ID is required");
+    expect(toggleStep).not.toHaveBeenCalled();
   });
 });

@@ -1,58 +1,60 @@
 import { describe, expect, it } from "vite-plus/test";
 
+import { LEVEL_NUMBERS } from "../curriculum.constants";
 import { CURRICULUM_SECTIONS } from "../sections";
 
-const EXPECTED_SECTIONS = [
-  {
-    folder: "00-theory",
-    href: "/theory",
-    sectionSlug: "theory",
-    title: "Theory",
-  },
-  {
-    folder: "level-1",
-    href: "/levels/level-1",
-    levelNumber: 1,
-    sectionSlug: "level-1",
-    title: "Level 1",
-  },
-  {
-    folder: "level-2",
-    href: "/levels/level-2",
-    levelNumber: 2,
-    sectionSlug: "level-2",
-    title: "Level 2",
-  },
-  {
-    folder: "level-3",
-    href: "/levels/level-3",
-    levelNumber: 3,
-    sectionSlug: "level-3",
-    title: "Level 3",
-  },
-  {
-    folder: "level-4",
-    href: "/levels/level-4",
-    levelNumber: 4,
-    sectionSlug: "level-4",
-    title: "Level 4",
-  },
-  {
-    folder: "appendices",
-    href: "/appendices",
-    sectionSlug: "appendices",
-    title: "Appendices",
-  },
-] as const;
-
 describe("curriculum sections metadata", () => {
-  it("defines canonical folders, slugs, titles, level numbers, and hrefs in book order", () => {
+  it("lists sections in canonical book order", () => {
     expect.assertions(1);
 
-    // Arrange & Act
-    const sections = CURRICULUM_SECTIONS;
+    // Act
+    const sectionSlugs = CURRICULUM_SECTIONS.map((section) => section.sectionSlug);
 
     // Assert
-    expect(sections).toStrictEqual(EXPECTED_SECTIONS);
+    expect(sectionSlugs).toStrictEqual([
+      "theory",
+      "level-1",
+      "level-2",
+      "level-3",
+      "level-4",
+      "appendices",
+    ]);
   });
+
+  it("derives level section metadata consistently from LEVEL_NUMBERS", () => {
+    expect.assertions(1);
+
+    // Arrange
+    const expectedLevelSections = LEVEL_NUMBERS.map((levelNumber) => ({
+      folder: `level-${levelNumber}`,
+      href: `/levels/level-${levelNumber}`,
+      levelNumber,
+      sectionSlug: `level-${levelNumber}`,
+      title: `Level ${levelNumber}`,
+    }));
+
+    // Act
+    const levelSections = CURRICULUM_SECTIONS.filter(
+      (section) => section.levelNumber !== undefined,
+    );
+
+    // Assert
+    expect(levelSections).toStrictEqual(expectedLevelSections);
+  });
+
+  it.each([
+    { folder: "00-theory", href: "/theory", sectionSlug: "theory", title: "Theory" },
+    { folder: "appendices", href: "/appendices", sectionSlug: "appendices", title: "Appendices" },
+  ] as const)(
+    "defines non-level $sectionSlug section metadata without levelNumber",
+    ({ folder, href, sectionSlug, title }) => {
+      expect.assertions(1);
+
+      // Act
+      const section = CURRICULUM_SECTIONS.find((entry) => entry.sectionSlug === sectionSlug);
+
+      // Assert
+      expect(section).toStrictEqual({ folder, href, sectionSlug, title });
+    },
+  );
 });

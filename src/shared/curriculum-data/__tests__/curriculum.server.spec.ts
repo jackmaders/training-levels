@@ -16,7 +16,7 @@ import type {
   SyllabusPageEntry,
   SyllabusSection,
 } from "../curriculum.types";
-import { CURRICULUM_SECTIONS, type CurriculumSectionMeta } from "../sections";
+import { CURRICULUM_SECTIONS } from "../sections";
 
 const THEORY_PAGE_COUNT = 9;
 const LEVEL_1_PAGE_COUNT = 7;
@@ -35,7 +35,28 @@ const STEP_ONE_INDEX = 0;
 const STEP_FIVE_INDEX = 4;
 const TWO_THINK_ABOUT_SECTIONS = 2;
 
+const CANONICAL_PAGE_HREF_PATTERN = /^\/(?:theory|appendices|levels\/level-[1-4])\/[a-z0-9-]+$/u;
+const CANONICAL_INTERNAL_LINK_PATTERN =
+  /^\/(?:theory|appendices|levels\/level-[1-4])\/[a-z0-9-]+(?:#step-[1-5])?$/u;
+
 type LinkNode = Extract<InlineNode, { type: "link" }>;
+
+function getBehaviorContentBlockSections(page: BehaviorCurriculumPage): readonly ContentBlock[][] {
+  return [
+    page.introBlocks,
+    page.comebefores,
+    page.whereWeAreGoing.extraBlocks,
+    page.equipment,
+    ...page.thinkAbout.map((section) => section.blocks),
+    page.aboutTheCues ?? [],
+    page.stepsIntroBlocks,
+    ...page.steps.flatMap((step) => [
+      step.tryItCold ?? [],
+      step.instructions,
+      step.comeafters ?? [],
+    ]),
+  ];
+}
 
 function collectInlineNodesFromBlocks(
   blocks: readonly (ContentBlock | ProseBlock)[],
@@ -64,19 +85,10 @@ function collectAllInlineNodes(page: CurriculumPage): InlineNode[] {
     return collectInlineNodesFromBlocks(page.blocks);
   }
   return [
-    ...collectInlineNodesFromBlocks(page.introBlocks),
-    ...collectInlineNodesFromBlocks(page.comebefores),
     ...page.whereWeAreGoing.steps.flatMap((step) => step.content),
-    ...collectInlineNodesFromBlocks(page.whereWeAreGoing.extraBlocks),
-    ...collectInlineNodesFromBlocks(page.equipment),
-    ...page.thinkAbout.flatMap((section) => collectInlineNodesFromBlocks(section.blocks)),
-    ...(page.aboutTheCues ? collectInlineNodesFromBlocks(page.aboutTheCues) : []),
-    ...collectInlineNodesFromBlocks(page.stepsIntroBlocks),
-    ...page.steps.flatMap((step) => [
-      ...(step.tryItCold ? collectInlineNodesFromBlocks(step.tryItCold) : []),
-      ...collectInlineNodesFromBlocks(step.instructions),
-      ...(step.comeafters ? collectInlineNodesFromBlocks(step.comeafters) : []),
-    ]),
+    ...getBehaviorContentBlockSections(page).flatMap((blocks) =>
+      collectInlineNodesFromBlocks(blocks),
+    ),
   ];
 }
 
@@ -103,23 +115,7 @@ function countCalloutsInBlocks(blocks: readonly (ContentBlock | ProseBlock)[]): 
 }
 
 function countPageCallouts(page: CurriculumPage): number {
-  if (page.kind !== "behavior") {
-    return countCalloutsInBlocks(page.blocks);
-  }
-  const sections: readonly ContentBlock[][] = [
-    page.introBlocks,
-    page.comebefores,
-    page.whereWeAreGoing.extraBlocks,
-    page.equipment,
-    ...page.thinkAbout.map((section) => section.blocks),
-    page.aboutTheCues ?? [],
-    page.stepsIntroBlocks,
-    ...page.steps.flatMap((step) => [
-      step.tryItCold ?? [],
-      step.instructions,
-      step.comeafters ?? [],
-    ]),
-  ];
+  const sections = page.kind === "behavior" ? getBehaviorContentBlockSections(page) : [page.blocks];
   return sections.reduce((total, sectionBlocks) => total + countCalloutsInBlocks(sectionBlocks), 0);
 }
 
@@ -139,6 +135,16 @@ function requireBehaviorPage(pageSlug: string): BehaviorCurriculumPage {
   return page;
 }
 
+function getSyllabusPageEntries(): SyllabusPageEntry[] {
+  return getCurriculumSyllabus().sections.flatMap((section) => section.pages);
+}
+
+function getAllLoadedPages(): CurriculumPage[] {
+  return getSyllabusPageEntries()
+    .map((entry) => getCurriculumPage(entry.pageSlug))
+    .filter((page): page is CurriculumPage => page !== null);
+}
+
 function getInternalHrefs(page: CurriculumPage): string[] {
   return flattenLinks(collectAllInlineNodes(page))
     .filter((link) => !link.external)
@@ -156,10 +162,6 @@ function isUnresolvedMarkdownLink(link: LinkNode): boolean {
 function isExternalLinkTo(link: LinkNode, targetHref: string): boolean {
   return link.external && link.href === targetHref;
 }
-
-const CANONICAL_PAGE_HREF_PATTERN = /^\/(?:theory|appendices|levels\/level-[1-4])\/[a-z0-9-]+$/u;
-const CANONICAL_INTERNAL_LINK_PATTERN =
-  /^\/(?:theory|appendices|levels\/level-[1-4])\/[a-z0-9-]+(?:#step-[1-5])?$/u;
 
 function toCanonicalPageHref(pageSlug: string): string {
   if (pageSlug.startsWith("level-")) {
@@ -198,10 +200,12 @@ function isValidInternalLinkTarget(
   );
 }
 
-function toSectionHeaderSummary(section: SyllabusSection) {
+function toSectionSummary(
+  section: Pick<SyllabusSection, "href" | "levelNumber" | "sectionSlug" | "title">,
+) {
   const summary: {
     href: string;
-    levelNumber?: CurriculumSectionMeta["levelNumber"];
+    levelNumber?: SyllabusSection["levelNumber"];
     sectionSlug: SyllabusSection["sectionSlug"];
     title: string;
   } = {
@@ -215,31 +219,7 @@ function toSectionHeaderSummary(section: SyllabusSection) {
   return summary;
 }
 
-function toExpectedSectionSummary(meta: CurriculumSectionMeta) {
-  const summary: {
-    href: string;
-    levelNumber?: CurriculumSectionMeta["levelNumber"];
-    sectionSlug: CurriculumSectionMeta["sectionSlug"];
-    title: string;
-  } = {
-    href: meta.href,
-    sectionSlug: meta.sectionSlug,
-    title: meta.title,
-  };
-  if (meta.levelNumber !== undefined) {
-    summary.levelNumber = meta.levelNumber;
-  }
-  return summary;
-}
-
-function isCanonicalSyllabusEntry(entry: SyllabusPageEntry): boolean {
-  return (
-    CANONICAL_PAGE_HREF_PATTERN.test(entry.href) &&
-    entry.href === toCanonicalPageHref(entry.pageSlug)
-  );
-}
-
-function isCanonicalCurriculumPage(page: CurriculumPage): boolean {
+function hasCanonicalPageHref(page: { href: string; pageSlug: string }): boolean {
   return (
     CANONICAL_PAGE_HREF_PATTERN.test(page.href) && page.href === toCanonicalPageHref(page.pageSlug)
   );
@@ -263,7 +243,7 @@ describe("curriculum.server", () => {
   it("returns the canonical 69-page syllabus ordered by section and index.md", () => {
     expect.assertions(4);
 
-    // Arrange & Act
+    // Act
     const syllabus = getCurriculumSyllabus();
     const sectionCounts = syllabus.sections.map((section) => ({
       count: section.pages.length,
@@ -288,40 +268,60 @@ describe("curriculum.server", () => {
     expect(syllabus.sections[0]?.pages[0]?.pageSlug).toBe("theory/01-foreword");
   });
 
-  it("exposes 16 unique behavior families with 5 step IDs each", () => {
-    expect.assertions(2);
+  it("exposes 16 unique behavior families across behavior pages", () => {
+    expect.assertions(1);
 
     // Arrange
-    const syllabus = getCurriculumSyllabus();
-    const behaviorEntries = syllabus.sections
-      .flatMap((section) => section.pages)
-      .filter((entry) => entry.kind === "behavior");
+    const behaviorEntries = getSyllabusPageEntries().filter((entry) => entry.kind === "behavior");
 
     // Act
     const uniqueFamilies = new Set(behaviorEntries.map((entry) => entry.behaviorFamily));
+
+    // Assert
+    expect(uniqueFamilies.size).toBe(BEHAVIOR_FAMILY_COUNT);
+  });
+
+  it("assigns 5 step IDs to every behavior page", () => {
+    expect.assertions(1);
+
+    // Arrange
+    const behaviorEntries = getSyllabusPageEntries().filter((entry) => entry.kind === "behavior");
+
+    // Act
     const allHaveFiveSteps = behaviorEntries.every(
       (entry) => entry.stepIds?.length === STEPS_PER_BEHAVIOR,
     );
 
     // Assert
-    expect(uniqueFamilies.size).toBe(BEHAVIOR_FAMILY_COUNT);
     expect(allHaveFiveSteps).toBe(true);
   });
 
-  it("returns null for unknown page slugs", () => {
+  it.each(["level-1/nonexistent", "theory/nonexistent"])(
+    "returns null for unknown page slug %s",
+    (pageSlug) => {
+      expect.assertions(1);
+
+      // Act
+      const page = getCurriculumPage(pageSlug);
+
+      // Assert
+      expect(page).toBeNull();
+    },
+  );
+
+  it("populates previousPage and nextPage navigation refs for behavior pages", () => {
     expect.assertions(2);
 
-    // Arrange & Act
-    const unknownBehavior = getCurriculumPage("level-1/nonexistent");
-    const unknownTheory = getCurriculumPage("theory/nonexistent");
+    // Act
+    const zen = requireBehaviorPage("level-1/zen");
 
     // Assert
-    expect(unknownBehavior).toBeNull();
-    expect(unknownTheory).toBeNull();
+    expect(zen.previousPage?.pageSlug).toBe("level-1/00-overview");
+    expect(zen.nextPage?.pageSlug).toBe("level-1/come");
   });
 
-  it("returns structured behavior pages with rewritten internal links and anchors", () => {
-    expect.assertions(5);
+  it("rewrites internal markdown links to canonical route paths and step anchors", () => {
+    expect.assertions(2);
 
     // Arrange
     const zen = requireBehaviorPage("level-1/zen");
@@ -330,135 +330,235 @@ describe("curriculum.server", () => {
     const internalHrefs = getInternalHrefs(zen);
 
     // Assert
-    expect(zen.previousPage?.pageSlug).toBe("level-1/00-overview");
-    expect(zen.nextPage?.pageSlug).toBe("level-1/come");
     expect(internalHrefs).toContain("/theory/07-the-thinking-of-training");
     expect(internalHrefs).toContain("/levels/level-1/come#step-1");
+  });
+
+  it("parses optional tryItCold sections on behavior steps", () => {
+    expect.assertions(1);
+
+    // Act
+    const zen = requireBehaviorPage("level-1/zen");
+
+    // Assert
     expect(zen.steps[STEP_ONE_INDEX]?.tryItCold).not.toBeNull();
   });
 
-  it("handles level-2/tricks, level-2/go-to-mat, level-1/target callout, and level-4 dividers", () => {
-    expect.assertions(5);
-
-    // Arrange
-    const target = requireBehaviorPage("level-1/target");
-    const tricks = requireBehaviorPage("level-2/tricks");
-    const goToMat = requireBehaviorPage("level-2/go-to-mat");
-    const level4Zen = requireBehaviorPage("level-4/zen");
+  it("preserves where-we-are-going callout blocks on level-1/target", () => {
+    expect.assertions(1);
 
     // Act
-    const allTricksStepsPlain = tricks.steps.every(isPlainInstructionStep);
+    const target = requireBehaviorPage("level-1/target");
 
     // Assert
     expect(target.whereWeAreGoing.extraBlocks[0]?.type).toBe("callout");
+  });
+
+  it("handles missing optional blocks on level-2/tricks", () => {
+    expect.assertions(3);
+
+    // Act
+    const tricks = requireBehaviorPage("level-2/tricks");
+    const allTricksStepsPlain = tricks.steps.every(isPlainInstructionStep);
+
+    // Assert
     expect(tricks.aboutTheCues).toBeNull();
     expect(allTricksStepsPlain).toBe(true);
+    expect(tricks.steps[STEP_FIVE_INDEX]?.instructions.length).toBeGreaterThan(0);
+  });
+
+  it("parses multiple think-about sections on level-2/go-to-mat", () => {
+    expect.assertions(1);
+
+    // Act
+    const goToMat = requireBehaviorPage("level-2/go-to-mat");
+
+    // Assert
     expect(goToMat.thinkAbout).toHaveLength(TWO_THINK_ABOUT_SECTIONS);
+  });
+
+  it("parses all 5 steps when level-4 pages use thematic dividers", () => {
+    expect.assertions(1);
+
+    // Act
+    const level4Zen = requireBehaviorPage("level-4/zen");
+
+    // Assert
     expect(level4Zen.steps).toHaveLength(STEPS_PER_BEHAVIOR);
   });
 
-  it("handles appendix-c title and appendix-d external resource links", () => {
-    expect.assertions(3);
+  it("preserves the appendix-c title", () => {
+    expect.assertions(1);
+
+    // Act
+    const appendixC = getCurriculumPage("appendices/appendix-c-list-of-possible-tricks");
+
+    // Assert
+    expect(appendixC?.title).toBe("Monkey in the Middle");
+  });
+
+  it("preserves external resource links on appendix-d", () => {
+    expect.assertions(1);
 
     // Arrange
-    const tricks = requireBehaviorPage("level-2/tricks");
-    const appendixC = getCurriculumPage("appendices/appendix-c-list-of-possible-tricks");
     const appendixD = requirePage("appendices/appendix-d-list-of-resources");
 
     // Act
     const appendixDLinks = flattenLinks(collectAllInlineNodes(appendixD));
 
     // Assert
-    expect(tricks.steps[STEP_FIVE_INDEX]?.instructions.length).toBeGreaterThan(0);
-    expect(appendixC?.title).toBe("Monkey in the Middle");
     expect(appendixDLinks.some((link) => isExternalLinkTo(link, "https://www.dogwise.com"))).toBe(
       true,
     );
   });
 
-  it("preserves all 227 callouts and leaves zero unresolved .md links across all 69 pages", () => {
-    expect.assertions(3);
-
-    // Arrange
-    const syllabus = getCurriculumSyllabus();
-    const allSlugs = syllabus.sections.flatMap((section) =>
-      section.pages.map((page) => page.pageSlug),
-    );
+  it("loads all 69 pages referenced in the syllabus", () => {
+    expect.assertions(1);
 
     // Act
-    const pages = allSlugs
-      .map((slug) => getCurriculumPage(slug))
-      .filter((page): page is CurriculumPage => page !== null);
+    const pages = getAllLoadedPages();
+
+    // Assert
+    expect(pages).toHaveLength(TOTAL_PAGE_COUNT);
+  });
+
+  it("preserves all 227 callouts across all 69 pages", () => {
+    expect.assertions(1);
+
+    // Arrange
+    const pages = getAllLoadedPages();
+
+    // Act
     const totalCallouts = pages.reduce((sum, page) => sum + countPageCallouts(page), 0);
+
+    // Assert
+    expect(totalCallouts).toBe(EXPECTED_CALLOUT_COUNT);
+  });
+
+  it("leaves zero unresolved .md links across all 69 pages", () => {
+    expect.assertions(1);
+
+    // Arrange
+    const pages = getAllLoadedPages();
+
+    // Act
     const unresolvedLinks = pages
       .flatMap((page) => flattenLinks(collectAllInlineNodes(page)))
       .filter((link) => isUnresolvedMarkdownLink(link));
 
     // Assert
-    expect(pages).toHaveLength(TOTAL_PAGE_COUNT);
-    expect(totalCallouts).toBe(EXPECTED_CALLOUT_COUNT);
     expect(unresolvedLinks).toHaveLength(0);
   });
 
-  it("validates canonical page slugs and step IDs", () => {
-    expect.assertions(5);
+  it.each([
+    ["level-1/zen", true],
+    ["level-1/nonexistent", false],
+  ] as const)("isValidPageSlug(%s) returns %s", (pageSlug, expected) => {
+    expect.assertions(1);
 
-    // Arrange & Act & Assert
-    expect(isValidPageSlug("level-1/zen")).toBe(true);
-    expect(isValidPageSlug("level-1/nonexistent")).toBe(false);
-    expect(isValidStepId("level-1/zen:step-1")).toBe(true);
-    expect(isValidStepId("level-1/zen:step-6")).toBe(false);
-    expect(isValidStepId("level-1/00-overview:step-1")).toBe(false);
+    // Act
+    const result = isValidPageSlug(pageSlug);
+
+    // Assert
+    expect(result).toBe(expected);
   });
 
-  it("matches section metadata and canonical page hrefs across all 69 pages", () => {
-    expect.assertions(3);
+  it.each([
+    ["level-1/zen:step-1", true],
+    ["level-1/zen:step-6", false],
+    ["level-1/00-overview:step-1", false],
+  ] as const)("isValidStepId(%s) returns %s", (stepId, expected) => {
+    expect.assertions(1);
+
+    // Act
+    const result = isValidStepId(stepId);
+
+    // Assert
+    expect(result).toBe(expected);
+  });
+
+  it("matches syllabus section headers against CURRICULUM_SECTIONS metadata", () => {
+    expect.assertions(1);
 
     // Arrange
     const syllabus = getCurriculumSyllabus();
-    const syllabusPages = syllabus.sections.flatMap((section) => section.pages);
-    const pages = syllabusPages
-      .map((entry) => getCurriculumPage(entry.pageSlug))
-      .filter((page): page is CurriculumPage => page !== null);
+    const expectedSections = CURRICULUM_SECTIONS.map((meta) => toSectionSummary(meta));
 
     // Act
-    const sectionHeaders = syllabus.sections.map((section) => toSectionHeaderSummary(section));
-    const expectedSections = CURRICULUM_SECTIONS.map((meta) => toExpectedSectionSummary(meta));
-    const allSyllabusPagesCanonical = syllabusPages.every((entry) =>
-      isCanonicalSyllabusEntry(entry),
-    );
-    const allPagesCanonical = pages.every((page) => isCanonicalCurriculumPage(page));
+    const sectionHeaders = syllabus.sections.map((section) => toSectionSummary(section));
 
     // Assert
     expect(sectionHeaders).toStrictEqual(expectedSections);
+  });
+
+  it("uses canonical route hrefs on all syllabus page entries", () => {
+    expect.assertions(1);
+
+    // Arrange
+    const syllabusPages = getSyllabusPageEntries();
+
+    // Act
+    const allSyllabusPagesCanonical = syllabusPages.every((entry) => hasCanonicalPageHref(entry));
+
+    // Assert
     expect(allSyllabusPagesCanonical).toBe(true);
+  });
+
+  it("uses canonical route hrefs on all loaded curriculum pages", () => {
+    expect.assertions(1);
+
+    // Arrange
+    const pages = getAllLoadedPages();
+
+    // Act
+    const allPagesCanonical = pages.every((page) => hasCanonicalPageHref(page));
+
+    // Assert
     expect(allPagesCanonical).toBe(true);
   });
 
-  it("resolves adjacent navigation refs, internal links, and step IDs across all 69 pages", () => {
-    expect.assertions(3);
+  it("resolves adjacent navigation refs across all 69 pages", () => {
+    expect.assertions(1);
 
     // Arrange
-    const syllabus = getCurriculumSyllabus();
-    const syllabusPages = syllabus.sections.flatMap((section) => section.pages);
-    const pages = syllabusPages
-      .map((entry) => getCurriculumPage(entry.pageSlug))
-      .filter((page): page is CurriculumPage => page !== null);
+    const pages = getAllLoadedPages();
     const hrefBySlug = new Map(pages.map((page) => [page.pageSlug, page.href]));
-    const pageByHref = new Map(pages.map((page) => [page.href, page]));
 
     // Act
     const allNavRefsValid = pages.every((page) => hasValidAdjacentNavRefs(page, hrefBySlug));
+
+    // Assert
+    expect(allNavRefsValid).toBe(true);
+  });
+
+  it("resolves every internal link and fragment anchor across all 69 pages", () => {
+    expect.assertions(1);
+
+    // Arrange
+    const pages = getAllLoadedPages();
+    const pageByHref = new Map(pages.map((page) => [page.href, page]));
+
+    // Act
     const allInternalLinksValid = pages
       .flatMap((page) => getInternalHrefs(page))
       .every((href) => isValidInternalLinkTarget(href, pageByHref));
+
+    // Assert
+    expect(allInternalLinksValid).toBe(true);
+  });
+
+  it("validates every syllabus step ID with isValidStepId", () => {
+    expect.assertions(1);
+
+    // Arrange
+    const syllabusPages = getSyllabusPageEntries();
+
+    // Act
     const allStepIdsValid = syllabusPages
       .flatMap((entry) => getEntryStepIds(entry))
       .every((stepId) => isValidStepId(stepId));
 
     // Assert
-    expect(allNavRefsValid).toBe(true);
-    expect(allInternalLinksValid).toBe(true);
     expect(allStepIdsValid).toBe(true);
   });
 });

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { HEADING_LEVELS, STEP_NUMBERS } from "./curriculum.constants";
+import { HEADING_LEVELS, LEVEL_NUMBERS, STEP_NUMBERS } from "./curriculum.constants";
 import type {
   BehaviorCurriculumPage,
   BehaviorStep,
@@ -22,7 +22,24 @@ import type {
 import rawPages from "./data/pages.json";
 import rawSyllabus from "./data/syllabus.json";
 
-const [LEVEL_ONE, LEVEL_TWO, LEVEL_THREE, LEVEL_FOUR, STEP_FIVE] = STEP_NUMBERS;
+export function getCurriculumSyllabus(): CurriculumSyllabus {
+  return curriculumSyllabus;
+}
+
+export function getCurriculumPage(pageSlug: string): CurriculumPage | null {
+  return pagesBySlug.get(pageSlug) ?? null;
+}
+
+export function isValidPageSlug(pageSlug: string): boolean {
+  return pagesBySlug.has(pageSlug);
+}
+
+export function isValidStepId(stepId: string): boolean {
+  return validStepIds.has(stepId);
+}
+
+const [LEVEL_ONE, LEVEL_TWO, LEVEL_THREE, LEVEL_FOUR] = LEVEL_NUMBERS;
+const [STEP_ONE, STEP_TWO, STEP_THREE, STEP_FOUR, STEP_FIVE] = STEP_NUMBERS;
 const [HEADING_TWO, HEADING_THREE, HEADING_FOUR] = HEADING_LEVELS;
 
 const sectionSlugSchema = z.enum([
@@ -41,10 +58,10 @@ const levelNumberSchema = z.union([
   z.literal(LEVEL_FOUR),
 ]);
 const stepNumberSchema = z.union([
-  z.literal(LEVEL_ONE),
-  z.literal(LEVEL_TWO),
-  z.literal(LEVEL_THREE),
-  z.literal(LEVEL_FOUR),
+  z.literal(STEP_ONE),
+  z.literal(STEP_TWO),
+  z.literal(STEP_THREE),
+  z.literal(STEP_FOUR),
   z.literal(STEP_FIVE),
 ]);
 const headingLevelSchema = z.union([
@@ -121,13 +138,7 @@ const headingBlockSchema = z.object({
   type: z.literal("heading"),
 });
 
-const proseBlockSchema = z.union([
-  paragraphBlockSchema,
-  listBlockSchema,
-  blockquoteBlockSchema,
-  calloutBlockSchema,
-  headingBlockSchema,
-]);
+const proseBlockSchema = z.union([contentBlockSchema, headingBlockSchema]);
 
 const pageNavigationRefSchema = z.object({
   href: z.string(),
@@ -246,19 +257,3 @@ const validStepIds: ReadonlySet<string> = new Set(
     section.pages.flatMap((page) => page.stepIds ?? []),
   ),
 );
-
-export function getCurriculumSyllabus(): CurriculumSyllabus {
-  return curriculumSyllabus;
-}
-
-export function getCurriculumPage(pageSlug: string): CurriculumPage | null {
-  return pagesBySlug.get(pageSlug) ?? null;
-}
-
-export function isValidPageSlug(pageSlug: string): boolean {
-  return pagesBySlug.has(pageSlug);
-}
-
-export function isValidStepId(stepId: string): boolean {
-  return validStepIds.has(stepId);
-}

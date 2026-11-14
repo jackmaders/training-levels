@@ -1,4 +1,3 @@
-/** @public Tracked in #11, #12. */
 export type {
   BehaviorCurriculumPage,
   BehaviorStep,
@@ -29,4 +28,6 @@ export type {
 } from "./curriculum.types";
 
 /** @public Tracked in #11, #12. */
-export { CURRICULUM_SECTIONS, type CurriculumSectionMeta } from "./sections";
+export { CURRICULUM_SECTIONS } from "./sections";
+
+export type { CurriculumSectionMeta } from "./sections";
