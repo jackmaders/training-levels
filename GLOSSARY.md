@@ -48,8 +48,7 @@ The authorization role assigned to a User (`UserRole`), currently either `"user"
 
 **Permission**:
 A granular capability granted to a user role (`Permission`), determining
-allowed actions such as `"todos:read"`, `"todos:create"`, `"todos:update"`,
-or `"todos:delete"`.
+allowed actions such as `"curriculum:read"` or `"progress:update"`.
 
 **Account**:
 An authentication record connecting a User to credentials or an identity
@@ -84,6 +83,52 @@ constraints.
 A Zod parser that defines the accepted shape and constraints of runtime data.
 When fields mirror persisted data, it can be derived from the Drizzle database
 schema and narrowed for the fields a caller may supply.
+
+### Training Curriculum
+
+**Main Quest**:
+The core four-level dog training curriculum in `docs/training/markdown/` comprising Theory, Levels 1 through 4, Homework, and Appendices.
+_Avoid_: Core Track, Primary Levels.
+
+**Side Quest**:
+A post-MVP specialty curriculum in `docs/training/draft/` that builds on Main Quest foundations.
+_Avoid_: Bonus Level, Add-on Module.
+
+**Level**:
+A numbered progression stage (`1` through `4`) in the Main Quest grouping related Behaviors at a given difficulty tier.
+_Avoid_: Tier, Stage, Grade.
+
+**Behavior**:
+A distinct trainable skill within a Level (such as Zen, Sit, Come, or Crate) broken down into sequential Steps.
+_Avoid_: Exercise, Command, Skill.
+
+**Step**:
+A numbered milestone within a Behavior that a handler and dog complete in sequence.
+_Avoid_: Sub-level, Task, Lesson.
+
+**Comebefore**:
+A prerequisite Behavior or Level recommended before starting a Behavior.
+_Avoid_: Prerequisite, Blocker.
+
+**Try It Cold**:
+The pass criterion within a Step testing whether the dog performs the Behavior on the first cue without warm-up repetitions.
+_Avoid_: Pass Test, Final Exam.
+
+**Comeafter**:
+A proofing or generalization prompt within a Step suggesting how to practice the Behavior across varied contexts.
+_Avoid_: Follow-up, Bonus Practice.
+
+**Homework**:
+A handler reflection prompt at the end of a Level.
+_Avoid_: Quiz, Assignment.
+
+**Dog**:
+A canine learner belonging to a User whose progress through Steps is tracked across the curriculum.
+_Avoid_: Pet, Profile, Student.
+
+**Step completion**:
+A persisted record that a Dog has completed a specific Step of a Behavior, from which Behavior and Level progress are derived.
+_Avoid_: Checkmark, Progress log.
 
 ### Tests
 
