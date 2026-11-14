@@ -5,33 +5,41 @@ import { hasPermission } from "../permissions";
 
 describe("hasPermission authorization helper", () => {
   describe("admin role", () => {
-    it.each(["todos:read", "todos:create", "todos:update", "todos:delete"] as const)(
-      "grants %s permission",
-      (permission) => {
-        expect.assertions(1);
+    it.each([
+      "todos:read",
+      "todos:create",
+      "todos:update",
+      "todos:delete",
+      "curriculum:read",
+      "progress:update",
+    ] as const)("grants %s permission", (permission) => {
+      expect.assertions(1);
 
-        // Act
-        const result = hasPermission("admin", permission);
+      // Act
+      const result = hasPermission("admin", permission);
 
-        // Assert
-        expect(result).toBe(true);
-      },
-    );
+      // Assert
+      expect(result).toBe(true);
+    });
   });
 
   describe("user role", () => {
-    it.each(["todos:read", "todos:create", "todos:update", "todos:delete"] as const)(
-      "grants %s permission",
-      (permission) => {
-        expect.assertions(1);
+    it.each([
+      "todos:read",
+      "todos:create",
+      "todos:update",
+      "todos:delete",
+      "curriculum:read",
+      "progress:update",
+    ] as const)("grants %s permission", (permission) => {
+      expect.assertions(1);
 
-        // Act
-        const result = hasPermission("user", permission);
+      // Act
+      const result = hasPermission("user", permission);
 
-        // Assert
-        expect(result).toBe(true);
-      },
-    );
+      // Assert
+      expect(result).toBe(true);
+    });
   });
 
   describe("missing or unrecognized role", () => {
