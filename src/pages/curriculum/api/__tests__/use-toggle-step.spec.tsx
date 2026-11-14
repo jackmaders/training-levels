@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { ApplicationError } from "@/shared/errors";
+import { createDeferred } from "@test/vitest/helpers/deferred";
 import { createTestingWrapper } from "@test/vitest/wrappers/testing-wrapper";
 
 import { stepProgressQueryOptions } from "../curriculum-query-options";
@@ -16,7 +17,7 @@ describe("useToggleStep optimistic mutation hook", () => {
     expect.hasAssertions();
 
     // Arrange
-    const deferred = Promise.withResolvers<ToggleStepResult>();
+    const deferred = createDeferred<ToggleStepResult>();
     vi.mocked(toggleStepFn).mockReturnValueOnce(deferred.promise);
     const { queryClient, wrapper } = createTestingWrapper();
     const progressKey = stepProgressQueryOptions().queryKey;

@@ -23,7 +23,9 @@ function useToggleStep() {
         queryClient.setQueryData<string[]>(progressQueryKey, context.previousStepIds);
       }
     },
-    onSettled: async () => await queryClient.invalidateQueries({ queryKey: progressQueryKey }),
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: progressQueryKey });
+    },
   };
 
   return useMutation({

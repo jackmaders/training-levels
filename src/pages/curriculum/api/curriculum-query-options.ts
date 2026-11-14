@@ -23,7 +23,7 @@ function curriculumSyllabusQueryOptions() {
 
 function curriculumPageQueryOptions(pageSlug: string) {
   return queryOptions({
-    queryFn: () => getCurriculumPageFn({ data: { pageSlug } }),
+    queryFn: async () => await getCurriculumPageFn({ data: { pageSlug } }),
     queryKey: curriculumKeys.page(pageSlug),
     staleTime: Infinity,
   });
