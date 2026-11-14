@@ -7,6 +7,7 @@ import {
   getBehaviorProgress,
   getLevelAdjacentPages,
   getLevelSections,
+  getSectionFirstBehavior,
   getSectionFirstPage,
   getSectionProgress,
   isLevelSectionSlug,
@@ -320,6 +321,53 @@ describe("curriculum-levels model", () => {
 
       // Assert
       expect(firstPage).toBeNull();
+    });
+
+    it("returns the first behavior page entry in a section", () => {
+      expect.assertions(1);
+
+      // Arrange
+      const level1 = requireFirst(getLevelSections(TEST_SYLLABUS));
+
+      // Act
+      const firstBehavior = getSectionFirstBehavior(level1);
+
+      // Assert
+      expect(firstBehavior?.pageSlug).toBe("level-1/zen");
+    });
+
+    it("returns null when section has no behavior pages", () => {
+      expect.assertions(1);
+
+      // Arrange
+      const overviewOnlySyllabus = createSyllabusFixture({
+        sections: [
+          {
+            href: "/levels/level-1",
+            levelNumber: 1,
+            pages: [
+              {
+                href: "/levels/level-1/00-overview",
+                kind: "overview",
+                levelNumber: 1,
+                order: 0,
+                pageSlug: "level-1/00-overview",
+                sectionSlug: "level-1",
+                title: "Level 1 Overview",
+              },
+            ],
+            sectionSlug: "level-1",
+            title: "Level 1",
+          },
+        ],
+      });
+      const overviewOnlySection = requireFirst(getLevelSections(overviewOnlySyllabus));
+
+      // Act
+      const firstBehavior = getSectionFirstBehavior(overviewOnlySection);
+
+      // Assert
+      expect(firstBehavior).toBeNull();
     });
   });
 });

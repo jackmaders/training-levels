@@ -172,3 +172,7 @@ export function getLevelAdjacentPages(
 export function getSectionFirstPage(section: SyllabusSection): SyllabusPageEntry | null {
   return section.pages[0] ?? null;
 }
+
+export function getSectionFirstBehavior(section: SyllabusSection): SyllabusPageEntry | null {
+  return section.pages.find((entry) => entry.kind === "behavior") ?? null;
+}

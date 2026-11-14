@@ -14,8 +14,10 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedTodosRouteImport } from './routes/_authenticated/todos'
+import { Route as AuthenticatedLevelsIndexRouteImport } from './routes/_authenticated/levels/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiImagesSplatRouteImport } from './routes/api/images/$'
+import { Route as AuthenticatedLevelsSectionPageRouteImport } from './routes/_authenticated/levels/$section.$page'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,6 +43,12 @@ const AuthenticatedTodosRoute = AuthenticatedTodosRouteImport.update({
   path: '/todos',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedLevelsIndexRoute =
+  AuthenticatedLevelsIndexRouteImport.update({
+    id: '/levels/',
+    path: '/levels/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -51,6 +59,12 @@ const ApiImagesSplatRoute = ApiImagesSplatRouteImport.update({
   path: '/api/images/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedLevelsSectionPageRoute =
+  AuthenticatedLevelsSectionPageRouteImport.update({
+    id: '/levels/$section/$page',
+    path: '/levels/$section/$page',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -59,6 +73,8 @@ export interface FileRoutesByFullPath {
   '/todos': typeof AuthenticatedTodosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/images/$': typeof ApiImagesSplatRoute
+  '/levels/': typeof AuthenticatedLevelsIndexRoute
+  '/levels/$section/$page': typeof AuthenticatedLevelsSectionPageRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -67,6 +83,8 @@ export interface FileRoutesByTo {
   '/todos': typeof AuthenticatedTodosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/images/$': typeof ApiImagesSplatRoute
+  '/levels': typeof AuthenticatedLevelsIndexRoute
+  '/levels/$section/$page': typeof AuthenticatedLevelsSectionPageRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,13 +95,30 @@ export interface FileRoutesById {
   '/_authenticated/todos': typeof AuthenticatedTodosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/images/$': typeof ApiImagesSplatRoute
+  '/_authenticated/levels/': typeof AuthenticatedLevelsIndexRoute
+  '/_authenticated/levels/$section/$page': typeof AuthenticatedLevelsSectionPageRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/about' | '/profile' | '/todos' | '/api/auth/$' | '/api/images/$'
+    | '/'
+    | '/about'
+    | '/profile'
+    | '/todos'
+    | '/api/auth/$'
+    | '/api/images/$'
+    | '/levels/'
+    | '/levels/$section/$page'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/profile' | '/todos' | '/api/auth/$' | '/api/images/$'
+  to:
+    | '/'
+    | '/about'
+    | '/profile'
+    | '/todos'
+    | '/api/auth/$'
+    | '/api/images/$'
+    | '/levels'
+    | '/levels/$section/$page'
   id:
     | '__root__'
     | '/'
@@ -93,6 +128,8 @@ export interface FileRouteTypes {
     | '/_authenticated/todos'
     | '/api/auth/$'
     | '/api/images/$'
+    | '/_authenticated/levels/'
+    | '/_authenticated/levels/$section/$page'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -140,6 +177,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTodosRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/levels/': {
+      id: '/_authenticated/levels/'
+      path: '/levels'
+      fullPath: '/levels/'
+      preLoaderRoute: typeof AuthenticatedLevelsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -154,17 +198,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiImagesSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/levels/$section/$page': {
+      id: '/_authenticated/levels/$section/$page'
+      path: '/levels/$section/$page'
+      fullPath: '/levels/$section/$page'
+      preLoaderRoute: typeof AuthenticatedLevelsSectionPageRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedTodosRoute: typeof AuthenticatedTodosRoute
+  AuthenticatedLevelsIndexRoute: typeof AuthenticatedLevelsIndexRoute
+  AuthenticatedLevelsSectionPageRoute: typeof AuthenticatedLevelsSectionPageRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedTodosRoute: AuthenticatedTodosRoute,
+  AuthenticatedLevelsIndexRoute: AuthenticatedLevelsIndexRoute,
+  AuthenticatedLevelsSectionPageRoute: AuthenticatedLevelsSectionPageRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

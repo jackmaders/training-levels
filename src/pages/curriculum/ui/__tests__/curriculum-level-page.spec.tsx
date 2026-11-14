@@ -20,7 +20,7 @@ import {
   stepProgressQueryOptions,
 } from "../../api/curriculum-query-options";
 import type { ToggleStepResult } from "../../api/curriculum-service";
-import { toggleStepFn } from "../../api/curriculum.functions";
+import { getStepProgressFn, toggleStepFn } from "../../api/curriculum.functions";
 import { CurriculumLevelPage } from "../curriculum-level-page";
 
 vi.mock(import("../../api/curriculum.functions"));
@@ -29,10 +29,7 @@ const LEVEL_ROUTE_PATHS = ["/", "/levels/$section/$page"];
 
 function seedLevelQueries({
   initialLocation = "/levels/level-1/zen",
-  page = TEST_BEHAVIOR_PAGE as
-    | ReturnType<typeof createProsePageFixture>
-    | typeof TEST_BEHAVIOR_PAGE
-    | null,
+  page = TEST_BEHAVIOR_PAGE,
   pageSlug = "level-1/zen",
   progress = [] as string[],
   syllabus = TEST_SYLLABUS,
@@ -55,6 +52,7 @@ function seedLevelQueries({
   queryClient.setQueryData(curriculumSyllabusQueryOptions().queryKey, syllabus);
   queryClient.setQueryData(curriculumPageQueryOptions(pageSlug).queryKey, page);
   queryClient.setQueryData(stepProgressQueryOptions().queryKey, progress);
+  vi.mocked(getStepProgressFn).mockResolvedValue(progress);
   const ui = useRouteLocationOnly ? (
     <CurriculumLevelPage />
   ) : (

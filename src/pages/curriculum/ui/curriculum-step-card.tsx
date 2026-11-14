@@ -47,12 +47,7 @@ function StepCardHeader({
         }}
       />
       <CollapsibleTrigger className="group/step-trigger flex flex-1 items-center justify-between gap-3 rounded-md text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-        <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-          <span className="text-xs font-medium text-muted-foreground">
-            {`Step ${String(step.stepNumber)}`}
-          </span>
-          <span className="font-semibold text-foreground">{summary}</span>
-        </span>
+        <span className="font-semibold text-foreground">{summary}</span>
         <ChevronDown
           aria-hidden="true"
           className="size-4 shrink-0 text-muted-foreground transition-transform group-aria-expanded/step-trigger:rotate-180"

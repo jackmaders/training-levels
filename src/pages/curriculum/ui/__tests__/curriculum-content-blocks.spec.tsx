@@ -159,7 +159,7 @@ describe("curriculum content blocks lists, blockquotes, and callouts", () => {
     const lists = screen.getAllByRole("list");
     expect(lists).toHaveLength(4);
     expect(screen.getByText("Nested item")).toBeDefined();
-    expect((lists[2] as HTMLElement).style.listStyleType).toBe("lower-roman");
+    expect(lists[2]?.style.listStyleType).toBe("lower-roman");
     expect(lists[3]?.className).toContain("list-decimal");
   });
 

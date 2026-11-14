@@ -124,6 +124,25 @@ describe("curriculum behavior article structure", () => {
     expect(screen.getByRole("heading", { name: "Where We Are Going" })).toBeDefined();
     expect(screen.getByText("Summary overview note.")).toBeDefined();
   });
+
+  it("renders whereWeAreGoing with steps summary list only when extra blocks are empty", () => {
+    expect.assertions(2);
+
+    // Arrange
+    const stepsOnlyPage = createBehaviorPageFixture({
+      whereWeAreGoing: {
+        extraBlocks: [],
+        steps: TEST_BEHAVIOR_PAGE.whereWeAreGoing.steps,
+      },
+    });
+
+    // Act
+    renderBehaviorArticle({ page: stepsOnlyPage });
+
+    // Assert
+    expect(screen.getByRole("heading", { name: "Where We Are Going" })).toBeDefined();
+    expect(screen.getByText(/Closed fist impulse check/u)).toBeDefined();
+  });
 });
 
 describe("curriculum behavior article step cards and toggling", () => {
@@ -135,7 +154,7 @@ describe("curriculum behavior article step cards and toggling", () => {
     expect(screen.queryByText("Practice briefly in a quiet room.")).toBeNull();
 
     // Act
-    await user.click(screen.getByRole("button", { name: /Open palm slightly without grabbing/u }));
+    await user.click(screen.getByRole("button", { name: "Open palm slightly without grabbing" }));
 
     // Assert
     expect(screen.getByText("Hold a treat in your closed hand.")).toBeDefined();
