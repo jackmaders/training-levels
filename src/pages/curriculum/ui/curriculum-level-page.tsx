@@ -20,7 +20,10 @@ interface CurriculumLevelPageProps {
 
 function CurriculumLevelPage({ pageSlug }: CurriculumLevelPageProps) {
   const { hash, pathname } = useRouterState({
-    select: (state) => ({ hash: state.location.hash, pathname: state.location.pathname }),
+    select: (state) => {
+      const location = state.resolvedLocation ?? state.location;
+      return { hash: location.hash, pathname: location.pathname };
+    },
   });
   const resolvedPageSlug = resolvePageSlug(pageSlug, pathname);
   const { data: syllabus } = useSuspenseQuery(curriculumSyllabusQueryOptions());

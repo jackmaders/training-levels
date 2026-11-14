@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { ApplicationError } from "@/shared/errors";
@@ -12,7 +12,7 @@ import {
   createSyllabusFixture,
 } from "@test/vitest/fixtures/curriculum";
 import { createDeferred } from "@test/vitest/helpers/deferred";
-import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
+import { createTestingWrapper, renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
 
 import {
   curriculumPageQueryOptions,
@@ -20,7 +20,11 @@ import {
   stepProgressQueryOptions,
 } from "../../api/curriculum-query-options";
 import type { ToggleStepResult } from "../../api/curriculum-service";
-import { getStepProgressFn, toggleStepFn } from "../../api/curriculum.functions";
+import {
+  getCurriculumPageFn,
+  getStepProgressFn,
+  toggleStepFn,
+} from "../../api/curriculum.functions";
 import { CurriculumLevelPage } from "../curriculum-level-page";
 
 vi.mock(import("../../api/curriculum.functions"));
@@ -111,6 +115,38 @@ describe("curriculum level page behavior view and optimistic sync", () => {
 
     // Assert
     expect(screen.getByRole("heading", { name: "Page Not Found" })).toBeDefined();
+  });
+
+  it("keeps rendering resolved location while a client navigation is pending", async () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const { queryClient, router, wrapper } = createTestingWrapper({
+      initialLocation: "/levels/level-1/zen",
+      routePaths: LEVEL_ROUTE_PATHS,
+    });
+    queryClient.setQueryDefaults(["curriculum"], { staleTime: Infinity });
+    queryClient.setQueryData(curriculumSyllabusQueryOptions().queryKey, TEST_SYLLABUS);
+    queryClient.setQueryData(
+      curriculumPageQueryOptions("level-1/zen").queryKey,
+      TEST_BEHAVIOR_PAGE,
+    );
+    queryClient.setQueryData(stepProgressQueryOptions().queryKey, []);
+    await router.load();
+    render(<CurriculumLevelPage />, { wrapper });
+
+    // Act
+    act(() => {
+      router.stores.location.set((previous) => ({
+        ...previous,
+        href: "/levels/level-1/nonexistent",
+        pathname: "/levels/level-1/nonexistent",
+      }));
+    });
+
+    // Assert
+    expect(screen.getByRole("heading", { level: 1, name: "Zen" })).toBeDefined();
+    expect(getCurriculumPageFn).not.toHaveBeenCalled();
   });
 });
 
