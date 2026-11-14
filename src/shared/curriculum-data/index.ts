@@ -27,7 +27,6 @@ export type {
   SyllabusStepSummary,
 } from "./curriculum.types";
 
-/** @public Tracked in #11, #12. */
 export { CURRICULUM_SECTIONS } from "./sections";
 
 export type { CurriculumSectionMeta } from "./sections";

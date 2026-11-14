@@ -37,7 +37,7 @@ function MobileDrawer({ authActions, links, ...props }: MobileDrawerProps) {
           {links.map((link) => (
             <DrawerClose
               nativeButton={false}
-              key={link.to ?? link.href}
+              key={link.to}
               render={
                 // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- Link renders an anchor; override DrawerClose's button role.
                 <Link {...link} role="link" />

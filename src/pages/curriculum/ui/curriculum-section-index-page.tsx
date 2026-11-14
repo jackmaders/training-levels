@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/shadcn/car
 import {
   curriculumSyllabusQueryOptions,
   type ArticleSectionSlug,
-} from "../api/curriculum-article-query-options";
+} from "../api/curriculum-query-options";
 import { getCurriculumSectionMeta } from "../model/curriculum-sections";
 
 const SECTION_DETAILS: Record<ArticleSectionSlug, { description: string; itemLabel: string }> = {

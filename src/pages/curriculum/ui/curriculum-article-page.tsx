@@ -11,9 +11,9 @@ import {
   curriculumPageQueryOptions,
   isMatchingProseArticle,
   type ArticleSectionSlug,
-} from "../api/curriculum-article-query-options";
+} from "../api/curriculum-query-options";
 import { getCurriculumSectionMeta } from "../model/curriculum-sections";
-import { CurriculumProseBlocks } from "./curriculum-prose-blocks";
+import { CurriculumContentBlocks } from "./curriculum-content-blocks";
 
 interface CurriculumArticlePageProps extends ComponentProps<"article"> {
   page: string;
@@ -41,7 +41,7 @@ function CurriculumArticlePage({
           {article.title}
         </h1>
       </header>
-      <CurriculumProseBlocks blocks={article.blocks} />
+      <CurriculumContentBlocks blocks={article.blocks} />
       <ArticleFooterNavigation nextPage={article.nextPage} previousPage={article.previousPage} />
     </article>
   );

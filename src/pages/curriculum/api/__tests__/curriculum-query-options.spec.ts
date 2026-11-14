@@ -12,14 +12,19 @@ import {
 } from "@test/vitest/fixtures/curriculum";
 
 import {
-  curriculumArticleKeys,
+  curriculumKeys,
   curriculumPageQueryOptions,
   curriculumSyllabusQueryOptions,
   isMatchingProseArticle,
   loadCurriculumArticle,
   normalizeCurriculumPageSlug,
-} from "../curriculum-article-query-options";
-import { getCurriculumPageFn, getCurriculumSyllabusFn } from "../curriculum.functions";
+  stepProgressQueryOptions,
+} from "../curriculum-query-options";
+import {
+  getCurriculumPageFn,
+  getCurriculumSyllabusFn,
+  getStepProgressFn,
+} from "../curriculum.functions";
 
 vi.mock(import("../curriculum.functions"));
 
@@ -27,18 +32,14 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe("curriculum article query keys and options", () => {
-  it("constructs hierarchical query keys for syllabus and pages", () => {
-    expect.assertions(3);
+describe("curriculum query options", () => {
+  it("constructs hierarchical curriculum query keys", () => {
+    expect.assertions(4);
 
-    // Assert
-    expect(curriculumArticleKeys.all).toStrictEqual(["curriculum"]);
-    expect(curriculumArticleKeys.syllabus()).toStrictEqual(["curriculum", "syllabus"]);
-    expect(curriculumArticleKeys.page("theory/01-foreword")).toStrictEqual([
-      "curriculum",
-      "page",
-      "theory/01-foreword",
-    ]);
+    expect(curriculumKeys.all).toStrictEqual(["curriculum"]);
+    expect(curriculumKeys.syllabus()).toStrictEqual(["curriculum", "syllabus"]);
+    expect(curriculumKeys.page("level-1/zen")).toStrictEqual(["curriculum", "page", "level-1/zen"]);
+    expect(curriculumKeys.stepProgress()).toStrictEqual(["curriculum", "step-progress"]);
   });
 
   it("normalizes valid and invalid curriculum page slugs", () => {
@@ -49,7 +50,7 @@ describe("curriculum article query keys and options", () => {
     expect(normalizeCurriculumPageSlug("  ../bad  ")).toBe("../bad");
   });
 
-  it("builds curriculumSyllabusQueryOptions delegating to getCurriculumSyllabusFn", async () => {
+  it("builds curriculumSyllabusQueryOptions and delegates to getCurriculumSyllabusFn", async () => {
     expect.assertions(3);
 
     // Arrange
@@ -63,6 +64,22 @@ describe("curriculum article query keys and options", () => {
     expect(options.queryKey).toStrictEqual(["curriculum", "syllabus"]);
     expect(getCurriculumSyllabusFn).toHaveBeenCalledOnce();
     expect(result).toStrictEqual(TEST_SYLLABUS);
+  });
+
+  it("builds curriculumPageQueryOptions and delegates to getCurriculumPageFn", async () => {
+    expect.assertions(3);
+
+    // Arrange
+    vi.mocked(getCurriculumPageFn).mockResolvedValueOnce(TEST_BEHAVIOR_PAGE);
+    const options = curriculumPageQueryOptions("level-1/zen");
+
+    // Act
+    const result = await options.queryFn?.({} as never);
+
+    // Assert
+    expect(options.queryKey).toStrictEqual(["curriculum", "page", "level-1/zen"]);
+    expect(getCurriculumPageFn).toHaveBeenCalledWith({ data: { pageSlug: "level-1/zen" } });
+    expect(result).toStrictEqual(TEST_BEHAVIOR_PAGE);
   });
 
   it("builds curriculumPageQueryOptions with normalized query key and trimmed pageSlug", async () => {
@@ -81,6 +98,22 @@ describe("curriculum article query keys and options", () => {
       data: { pageSlug: "theory/01-foreword" },
     });
     expect(result).toStrictEqual(TEST_THEORY_PAGE);
+  });
+
+  it("builds stepProgressQueryOptions and delegates to getStepProgressFn", async () => {
+    expect.assertions(3);
+
+    // Arrange
+    vi.mocked(getStepProgressFn).mockResolvedValueOnce(["level-1/zen:step-1"]);
+    const options = stepProgressQueryOptions();
+
+    // Act
+    const result = await options.queryFn?.({} as never);
+
+    // Assert
+    expect(options.queryKey).toStrictEqual(["curriculum", "step-progress"]);
+    expect(getStepProgressFn).toHaveBeenCalledOnce();
+    expect(result).toStrictEqual(["level-1/zen:step-1"]);
   });
 });
 

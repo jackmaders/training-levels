@@ -16,10 +16,12 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedTodosRouteImport } from './routes/_authenticated/todos'
 import { Route as AuthenticatedAppendicesIndexRouteImport } from './routes/_authenticated/appendices/index'
 import { Route as AuthenticatedAppendicesPageRouteImport } from './routes/_authenticated/appendices/$page'
+import { Route as AuthenticatedLevelsIndexRouteImport } from './routes/_authenticated/levels/index'
 import { Route as AuthenticatedTheoryIndexRouteImport } from './routes/_authenticated/theory/index'
 import { Route as AuthenticatedTheoryPageRouteImport } from './routes/_authenticated/theory/$page'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiImagesSplatRouteImport } from './routes/api/images/$'
+import { Route as AuthenticatedLevelsSectionPageRouteImport } from './routes/_authenticated/levels/$section.$page'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -57,6 +59,12 @@ const AuthenticatedAppendicesPageRoute =
     path: '/appendices/$page',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedLevelsIndexRoute =
+  AuthenticatedLevelsIndexRouteImport.update({
+    id: '/levels/',
+    path: '/levels/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedTheoryIndexRoute =
   AuthenticatedTheoryIndexRouteImport.update({
     id: '/theory/',
@@ -78,6 +86,12 @@ const ApiImagesSplatRoute = ApiImagesSplatRouteImport.update({
   path: '/api/images/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedLevelsSectionPageRoute =
+  AuthenticatedLevelsSectionPageRouteImport.update({
+    id: '/levels/$section/$page',
+    path: '/levels/$section/$page',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,7 +103,9 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/images/$': typeof ApiImagesSplatRoute
   '/appendices/': typeof AuthenticatedAppendicesIndexRoute
+  '/levels/': typeof AuthenticatedLevelsIndexRoute
   '/theory/': typeof AuthenticatedTheoryIndexRoute
+  '/levels/$section/$page': typeof AuthenticatedLevelsSectionPageRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -101,7 +117,9 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/images/$': typeof ApiImagesSplatRoute
   '/appendices': typeof AuthenticatedAppendicesIndexRoute
+  '/levels': typeof AuthenticatedLevelsIndexRoute
   '/theory': typeof AuthenticatedTheoryIndexRoute
+  '/levels/$section/$page': typeof AuthenticatedLevelsSectionPageRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -115,7 +133,9 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/images/$': typeof ApiImagesSplatRoute
   '/_authenticated/appendices/': typeof AuthenticatedAppendicesIndexRoute
+  '/_authenticated/levels/': typeof AuthenticatedLevelsIndexRoute
   '/_authenticated/theory/': typeof AuthenticatedTheoryIndexRoute
+  '/_authenticated/levels/$section/$page': typeof AuthenticatedLevelsSectionPageRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -129,7 +149,9 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/images/$'
     | '/appendices/'
+    | '/levels/'
     | '/theory/'
+    | '/levels/$section/$page'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -141,7 +163,9 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/images/$'
     | '/appendices'
+    | '/levels'
     | '/theory'
+    | '/levels/$section/$page'
   id:
     | '__root__'
     | '/'
@@ -154,7 +178,9 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/images/$'
     | '/_authenticated/appendices/'
+    | '/_authenticated/levels/'
     | '/_authenticated/theory/'
+    | '/_authenticated/levels/$section/$page'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -216,6 +242,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppendicesPageRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/levels/': {
+      id: '/_authenticated/levels/'
+      path: '/levels'
+      fullPath: '/levels/'
+      preLoaderRoute: typeof AuthenticatedLevelsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/theory/': {
       id: '/_authenticated/theory/'
       path: '/theory'
@@ -244,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiImagesSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/levels/$section/$page': {
+      id: '/_authenticated/levels/$section/$page'
+      path: '/levels/$section/$page'
+      fullPath: '/levels/$section/$page'
+      preLoaderRoute: typeof AuthenticatedLevelsSectionPageRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -253,7 +293,9 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAppendicesPageRoute: typeof AuthenticatedAppendicesPageRoute
   AuthenticatedTheoryPageRoute: typeof AuthenticatedTheoryPageRoute
   AuthenticatedAppendicesIndexRoute: typeof AuthenticatedAppendicesIndexRoute
+  AuthenticatedLevelsIndexRoute: typeof AuthenticatedLevelsIndexRoute
   AuthenticatedTheoryIndexRoute: typeof AuthenticatedTheoryIndexRoute
+  AuthenticatedLevelsSectionPageRoute: typeof AuthenticatedLevelsSectionPageRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -262,7 +304,9 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppendicesPageRoute: AuthenticatedAppendicesPageRoute,
   AuthenticatedTheoryPageRoute: AuthenticatedTheoryPageRoute,
   AuthenticatedAppendicesIndexRoute: AuthenticatedAppendicesIndexRoute,
+  AuthenticatedLevelsIndexRoute: AuthenticatedLevelsIndexRoute,
   AuthenticatedTheoryIndexRoute: AuthenticatedTheoryIndexRoute,
+  AuthenticatedLevelsSectionPageRoute: AuthenticatedLevelsSectionPageRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

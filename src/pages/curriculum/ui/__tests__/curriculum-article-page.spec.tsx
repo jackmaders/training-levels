@@ -14,7 +14,7 @@ import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
 import {
   curriculumPageQueryOptions,
   type ArticleSectionSlug,
-} from "../../api/curriculum-article-query-options";
+} from "../../api/curriculum-query-options";
 import { CurriculumArticlePage } from "../curriculum-article-page";
 
 const TEST_THEORY_ARTICLE = createProsePageFixture({

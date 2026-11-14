@@ -4,7 +4,11 @@ import { notFound } from "@tanstack/react-router";
 import type { CurriculumPage, ProseCurriculumPage, SectionSlug } from "@/shared/curriculum-data";
 
 import { getCurriculumPageInputSchema } from "./curriculum-schema";
-import { getCurriculumPageFn, getCurriculumSyllabusFn } from "./curriculum.functions";
+import {
+  getCurriculumPageFn,
+  getCurriculumSyllabusFn,
+  getStepProgressFn,
+} from "./curriculum.functions";
 
 type ArticleSectionSlug = Extract<SectionSlug, "theory" | "appendices">;
 
@@ -14,10 +18,11 @@ interface LoadCurriculumArticleOptions {
   sectionSlug: ArticleSectionSlug;
 }
 
-const curriculumArticleKeys = {
+const curriculumKeys = {
   all: ["curriculum"] as const,
-  page: (pageSlug: string) => [...curriculumArticleKeys.all, "page", pageSlug] as const,
-  syllabus: () => [...curriculumArticleKeys.all, "syllabus"] as const,
+  page: (pageSlug: string) => [...curriculumKeys.all, "page", pageSlug] as const,
+  stepProgress: () => [...curriculumKeys.all, "step-progress"] as const,
+  syllabus: () => [...curriculumKeys.all, "syllabus"] as const,
 };
 
 function normalizeCurriculumPageSlug(pageSlug: string): string {
@@ -28,7 +33,8 @@ function normalizeCurriculumPageSlug(pageSlug: string): string {
 function curriculumSyllabusQueryOptions() {
   return queryOptions({
     queryFn: async () => await getCurriculumSyllabusFn(),
-    queryKey: curriculumArticleKeys.syllabus(),
+    queryKey: curriculumKeys.syllabus(),
+    staleTime: Infinity,
   });
 }
 
@@ -37,7 +43,15 @@ function curriculumPageQueryOptions(pageSlug: string) {
 
   return queryOptions({
     queryFn: async () => await getCurriculumPageFn({ data: { pageSlug: normalizedPageSlug } }),
-    queryKey: curriculumArticleKeys.page(normalizedPageSlug),
+    queryKey: curriculumKeys.page(normalizedPageSlug),
+    staleTime: Infinity,
+  });
+}
+
+function stepProgressQueryOptions() {
+  return queryOptions({
+    queryFn: async () => await getStepProgressFn(),
+    queryKey: curriculumKeys.stepProgress(),
   });
 }
 
@@ -88,10 +102,11 @@ function createNotFoundError(): Error {
 
 export type { ArticleSectionSlug, LoadCurriculumArticleOptions };
 export {
-  curriculumArticleKeys,
+  curriculumKeys,
   curriculumPageQueryOptions,
   curriculumSyllabusQueryOptions,
   isMatchingProseArticle,
   loadCurriculumArticle,
   normalizeCurriculumPageSlug,
+  stepProgressQueryOptions,
 };

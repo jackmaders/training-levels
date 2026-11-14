@@ -21,7 +21,7 @@ export function Header({ className, ...props }: ComponentProps<"header">) {
     { children: "About", to: "/about" },
     ...(canReadCurriculum
       ? [
-          { children: "Levels", href: "/levels" },
+          { children: "Levels", to: "/levels" },
           { children: "Theory", to: "/theory" },
           { children: "Appendices", to: "/appendices" },
         ]
@@ -72,7 +72,7 @@ function NavLinks({
   return (
     <nav className={cn("flex items-center gap-3", className)} {...props}>
       {links.map((link) => (
-        <Link key={link.to ?? link.href} {...link} />
+        <Link key={link.to} {...link} />
       ))}
     </nav>
   );

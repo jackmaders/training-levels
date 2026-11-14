@@ -6,7 +6,7 @@ import type { CurriculumSyllabus } from "@/shared/curriculum-data";
 import { TEST_SYLLABUS, createSyllabusFixture } from "@test/vitest/fixtures/curriculum";
 import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
 
-import { curriculumSyllabusQueryOptions } from "../../api/curriculum-article-query-options";
+import { curriculumSyllabusQueryOptions } from "../../api/curriculum-query-options";
 import { CurriculumSectionIndexPage } from "../curriculum-section-index-page";
 
 function createSeededQueryClient(syllabus: CurriculumSyllabus = TEST_SYLLABUS): QueryClient {
