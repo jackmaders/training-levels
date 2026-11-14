@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { Button } from "@/shared/ui/shadcn/button";
 import {
   Dialog,
@@ -11,8 +13,10 @@ import {
 import { SignUpForm } from "./sign-up-form";
 
 export function SignUpDialog() {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Dialog>
+    <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger render={<Button />}>Sign up</DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -21,7 +25,11 @@ export function SignUpDialog() {
             Create an account to start the Dog Training Levels curriculum
           </DialogDescription>
         </DialogHeader>
-        <SignUpForm />
+        <SignUpForm
+          onSuccess={() => {
+            setOpen(false);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

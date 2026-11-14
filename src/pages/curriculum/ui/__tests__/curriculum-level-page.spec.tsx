@@ -150,8 +150,8 @@ describe("curriculum level page behavior view and optimistic sync", () => {
 });
 
 describe("curriculum level page prose views and fallbacks", () => {
-  it("renders overview page with breadcrumb and next link only", () => {
-    expect.assertions(4);
+  it("renders overview page without behavior navigation", () => {
+    expect.assertions(3);
 
     // Arrange & Act
     seedLevelQueries({
@@ -159,19 +159,14 @@ describe("curriculum level page prose views and fallbacks", () => {
       page: TEST_OVERVIEW_PAGE,
       pageSlug: "level-1/00-overview",
     });
-    const footerNav = screen.getByRole("navigation", { name: "Page navigation" });
-
     // Assert
     expect(screen.getByRole("heading", { level: 1, name: "Level 1 Overview" })).toBeDefined();
     expect(screen.getByText("Welcome to Level 1 foundations.")).toBeDefined();
-    expect(within(footerNav).queryByText("Previous")).toBeNull();
-    expect(within(footerNav).getByRole("link", { name: /Zen/u }).getAttribute("href")).toBe(
-      "/levels/level-1/zen",
-    );
+    expect(screen.queryByRole("navigation", { name: "Page navigation" })).toBeNull();
   });
 
-  it("renders homework page with previous and next level links", () => {
-    expect.assertions(3);
+  it("renders homework page without behavior navigation", () => {
+    expect.assertions(2);
 
     // Arrange & Act
     seedLevelQueries({
@@ -179,18 +174,9 @@ describe("curriculum level page prose views and fallbacks", () => {
       page: TEST_HOMEWORK_PAGE,
       pageSlug: "level-1/homework",
     });
-    const footerNav = screen.getByRole("navigation", { name: "Page navigation" });
-
     // Assert
     expect(screen.getByRole("heading", { level: 1, name: "Level 1 Homework" })).toBeDefined();
-    expect(within(footerNav).getByRole("link", { name: /Come/u }).getAttribute("href")).toBe(
-      "/levels/level-1/come",
-    );
-    expect(
-      within(footerNav)
-        .getByRole("link", { name: /Level 2 Overview/u })
-        .getAttribute("href"),
-    ).toBe("/levels/level-2/00-overview");
+    expect(screen.queryByRole("navigation", { name: "Page navigation" })).toBeNull();
   });
 
   it("renders final level page with previous link and omits next link", () => {
@@ -216,11 +202,9 @@ describe("curriculum level page prose views and fallbacks", () => {
 
     // Assert
     expect(screen.getByRole("heading", { level: 1, name: "Level 2: Zen" })).toBeDefined();
-    expect(
-      within(footerNav)
-        .getByRole("link", { name: /Level 2 Overview/u })
-        .getAttribute("href"),
-    ).toBe("/levels/level-2/00-overview");
+    expect(within(footerNav).getByRole("link", { name: /Come/u }).getAttribute("href")).toBe(
+      "/levels/level-1/come",
+    );
     expect(within(footerNav).queryByText("Next")).toBeNull();
   });
 
@@ -265,7 +249,7 @@ describe("curriculum level page prose views and fallbacks", () => {
     expect(screen.queryByRole("navigation", { name: "Page navigation" })).toBeNull();
   });
 
-  it("omits footer navigation when adjacent syllabus entry has an invalid level slug", () => {
+  it("omits footer navigation when an adjacent behavior has an invalid level slug", () => {
     expect.assertions(1);
 
     // Arrange
@@ -276,13 +260,13 @@ describe("curriculum level page prose views and fallbacks", () => {
           levelNumber: 1,
           pages: [
             {
-              href: "/levels/level-1/00-overview",
-              kind: "overview",
+              href: "/levels/level-1/zen",
+              kind: "behavior",
               levelNumber: 1,
               order: 0,
-              pageSlug: "level-1/00-overview",
+              pageSlug: "level-1/zen",
               sectionSlug: "level-1",
-              title: "Level 1 Overview",
+              title: "Zen",
             },
             {
               href: "/theory/invalid",
@@ -301,9 +285,9 @@ describe("curriculum level page prose views and fallbacks", () => {
 
     // Act
     seedLevelQueries({
-      initialLocation: "/levels/level-1/00-overview",
-      page: TEST_OVERVIEW_PAGE,
-      pageSlug: "level-1/00-overview",
+      initialLocation: "/levels/level-1/zen",
+      page: TEST_BEHAVIOR_PAGE,
+      pageSlug: "level-1/zen",
       syllabus: invalidAdjacentSyllabus,
     });
 

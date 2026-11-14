@@ -9,13 +9,17 @@ const signInSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-export function SignInForm({ className, ...props }: AppFormProps) {
+export function SignInForm({
+  className,
+  onSuccess,
+  ...props
+}: AppFormProps & { onSuccess?: () => void }) {
   const { signInEmail } = useAuth();
 
   const form = useAppForm({
     defaultValues: { email: "", password: "" },
     onSubmit: async ({ value }) => {
-      await signInEmail(value);
+      await signInEmail(value).then(onSuccess);
     },
     validators: { onChange: signInSchema },
   });

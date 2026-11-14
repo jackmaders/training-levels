@@ -83,7 +83,7 @@ test("renders zen breadcrumb, progress bar, and footer navigation", async ({ bas
   await expect(curriculumPage.getBreadcrumbLink("Level 1")).toBeVisible();
   await expect(curriculumPage.getBreadcrumbCurrent("Zen")).toBeVisible();
   await expect(curriculumPage.getProgressText("0 of 5 steps")).toBeVisible();
-  await expect(curriculumPage.getFooterPreviousLink("Level 1 Overview")).toBeVisible();
+  await expect(curriculumPage.getFooterPreviousLink("Level 1 Overview")).toBeHidden();
   await expect(curriculumPage.getFooterNextLink("Come")).toBeVisible();
 });
 
@@ -227,23 +227,15 @@ test("restores zero progress across reload when unchecking a completed step", as
   await expect(curriculumPage.getStepCheckbox(STEP_ONE_HEADING)).not.toBeChecked();
 });
 
-test("navigates between level 1 pages via footer and sidebar links", async ({ baseURL, page }) => {
+test("navigates between behavior pages via footer links", async ({ baseURL, page }) => {
   // Arrange
   const curriculumPage = await signUpAndVisitLevels(page, baseURL);
 
-  // Act & Assert overview via footer
-  await curriculumPage.openFooterPrevious("Level 1 Overview");
-  await expect(curriculumPage.heading).toHaveText("Level 1");
-  await expect(curriculumPage.getBreadcrumbCurrent("Level 1 Overview")).toBeVisible();
-
-  // Act & Assert come via sidebar
-  await curriculumPage.openSidebarLink("Come");
+  // Act & Assert behavior pages via footer
+  await curriculumPage.openFooterNext("Come");
   await expect(curriculumPage.heading).toHaveText("Level 1: Come");
-
-  // Act & Assert homework via sidebar
-  await curriculumPage.openSidebarLink("Level 1 Homework");
-  await expect(page).toHaveURL(/\/levels\/level-1\/homework$/u);
-  await expect(curriculumPage.heading).toHaveText("Level 1: Homework");
+  await curriculumPage.openFooterPrevious("Zen");
+  await expect(curriculumPage.heading).toHaveText("Level 1: Zen");
 });
 
 test("navigates directly to a level page and advances via footer next link", async ({

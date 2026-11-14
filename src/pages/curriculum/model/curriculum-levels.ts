@@ -142,8 +142,10 @@ export function getLevelAdjacentPages(
   syllabus: CurriculumSyllabus,
   pageSlug: string,
 ): LevelAdjacentPages {
-  const levelPages = getLevelSections(syllabus).flatMap((section) => section.pages);
-  const currentIndex = levelPages.findIndex((entry) => entry.pageSlug === pageSlug);
+  const behaviorPages = getLevelSections(syllabus)
+    .flatMap((section) => section.pages)
+    .filter((entry) => entry.kind === "behavior");
+  const currentIndex = behaviorPages.findIndex((entry) => entry.pageSlug === pageSlug);
 
   if (currentIndex === NOT_FOUND_INDEX) {
     return {
@@ -152,8 +154,8 @@ export function getLevelAdjacentPages(
     };
   }
 
-  const previousPage = levelPages.find((_entry, index) => index === currentIndex - 1) ?? null;
-  const nextPage = levelPages.find((_entry, index) => index === currentIndex + 1) ?? null;
+  const previousPage = behaviorPages.find((_entry, index) => index === currentIndex - 1) ?? null;
+  const nextPage = behaviorPages.find((_entry, index) => index === currentIndex + 1) ?? null;
 
   return {
     nextPage,

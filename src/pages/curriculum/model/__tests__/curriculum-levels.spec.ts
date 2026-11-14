@@ -275,41 +275,54 @@ describe("curriculum-levels model", () => {
     });
   });
 
-  describe("level-scoped adjacent page lookup", () => {
-    it("returns null previousPage at first Level 1 page and links forward to Zen", () => {
+  describe("behavior page navigation", () => {
+    it("returns null previousPage at the first behavior and links forward to the next behavior", () => {
       expect.assertions(2);
 
       // Act
-      const adjacent = getLevelAdjacentPages(TEST_SYLLABUS, "level-1/00-overview");
+      const adjacent = getLevelAdjacentPages(TEST_SYLLABUS, "level-1/zen");
 
       // Assert
       expect(adjacent.previousPage).toBeNull();
-      expect(adjacent.nextPage?.pageSlug).toBe("level-1/zen");
+      expect(adjacent.nextPage?.pageSlug).toBe("level-1/come");
     });
 
-    it("links across Level boundary from Level 1 homework to Level 2 overview", () => {
+    it("links across Level boundary while skipping overview and homework pages", () => {
       expect.assertions(2);
 
       // Act
-      const adjacent = getLevelAdjacentPages(TEST_SYLLABUS, "level-1/homework");
+      const adjacent = getLevelAdjacentPages(TEST_SYLLABUS, "level-1/come");
 
       // Assert
-      expect(adjacent.previousPage?.pageSlug).toBe("level-1/come");
-      expect(adjacent.nextPage?.pageSlug).toBe("level-2/00-overview");
+      expect(adjacent.previousPage?.pageSlug).toBe("level-1/zen");
+      expect(adjacent.nextPage?.pageSlug).toBe("level-2/zen");
     });
 
-    it("returns null nextPage at the final Level page", () => {
+    it.each(["level-1/00-overview", "level-1/homework"])(
+      "does not provide behavior navigation for prose page %s",
+      (pageSlug) => {
+        expect.assertions(1);
+
+        // Act
+        const adjacent = getLevelAdjacentPages(TEST_SYLLABUS, pageSlug);
+
+        // Assert
+        expect(adjacent).toStrictEqual({ nextPage: null, previousPage: null });
+      },
+    );
+
+    it("returns null nextPage at the final behavior", () => {
       expect.assertions(2);
 
       // Act
       const adjacent = getLevelAdjacentPages(TEST_SYLLABUS, "level-2/zen");
 
       // Assert
-      expect(adjacent.previousPage?.pageSlug).toBe("level-2/00-overview");
+      expect(adjacent.previousPage?.pageSlug).toBe("level-1/come");
       expect(adjacent.nextPage).toBeNull();
     });
 
-    it("returns null for both adjacent pages when pageSlug is not in Levels", () => {
+    it("returns null for both adjacent pages when pageSlug is not a behavior", () => {
       expect.assertions(1);
 
       // Act

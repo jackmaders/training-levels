@@ -45,7 +45,7 @@ describe("use-auth hook", () => {
   });
 
   it("handles signInEmail and signUpEmail calls", async () => {
-    expect.assertions(5);
+    expect.assertions(3);
 
     const signRes = { data: { user: { id: "user-1" } }, error: null };
     const upRes = { data: { user: { id: "user-2" } }, error: null };
@@ -54,19 +54,23 @@ describe("use-auth hook", () => {
 
     const router = createRouter({ routeTree: createRootRoute() });
     const invalidateSpy = vi.spyOn(router, "invalidate");
+    const navigateSpy = vi.spyOn(router, "navigate");
     const { wrapper } = createTestingWrapper({ router });
     const { result } = renderHook(() => useAuth(), { wrapper });
 
     const creds = { email: "test@example.com", password: "password123" };
     const r1 = await result.current.signInEmail(creds);
-    expect(authClient.signIn.email).toHaveBeenCalledWith(creds);
-    expect(r1).toBe(signRes);
-
     const payload = { email: "new@example.com", name: "New User", password: "password123" };
     const r2 = await result.current.signUpEmail(payload);
-    expect(authClient.signUp.email).toHaveBeenCalledWith(payload);
-    expect(r2).toBe(upRes);
+
+    expect([
+      vi.mocked(authClient.signIn.email).mock.calls[0]?.[0],
+      r1,
+      vi.mocked(authClient.signUp.email).mock.calls[0]?.[0],
+      r2,
+    ]).toStrictEqual([creds, signRes, payload, upRes]);
     expect(invalidateSpy).toHaveBeenCalledTimes(2);
+    expect(navigateSpy.mock.calls).toStrictEqual([[{ to: "/levels" }], [{ to: "/levels" }]]);
   });
 
   it("throws ApplicationError when signInEmail or signUpEmail returns an error", async () => {

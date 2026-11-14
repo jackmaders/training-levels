@@ -10,13 +10,17 @@ const signUpSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-export function SignUpForm({ className, ...props }: AppFormProps) {
+export function SignUpForm({
+  className,
+  onSuccess,
+  ...props
+}: AppFormProps & { onSuccess?: () => void }) {
   const { signUpEmail } = useAuth();
 
   const form = useAppForm({
     defaultValues: { email: "", name: "", password: "" },
     onSubmit: async ({ value }) => {
-      await signUpEmail(value);
+      await signUpEmail(value).then(onSuccess);
     },
     validators: { onChange: signUpSchema },
   });
