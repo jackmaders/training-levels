@@ -1,0 +1,2305 @@
+{
+  "sections": [
+    {
+      "href": "/theory",
+      "pages": [
+        {
+          "href": "/theory/01-foreword",
+          "kind": "theory",
+          "order": 0,
+          "pageSlug": "theory/01-foreword",
+          "sectionSlug": "theory",
+          "title": "Foreword"
+        },
+        {
+          "href": "/theory/02-welcome",
+          "kind": "theory",
+          "order": 1,
+          "pageSlug": "theory/02-welcome",
+          "sectionSlug": "theory",
+          "title": "Welcome! Come Into My Parlour..."
+        },
+        {
+          "href": "/theory/03-why-are-you-here",
+          "kind": "theory",
+          "order": 2,
+          "pageSlug": "theory/03-why-are-you-here",
+          "sectionSlug": "theory",
+          "title": "Why Are You Here?"
+        },
+        {
+          "href": "/theory/04-the-people-of-training",
+          "kind": "theory",
+          "order": 3,
+          "pageSlug": "theory/04-the-people-of-training",
+          "sectionSlug": "theory",
+          "title": "The People of Training"
+        },
+        {
+          "href": "/theory/05-the-equipment-of-training",
+          "kind": "theory",
+          "order": 4,
+          "pageSlug": "theory/05-the-equipment-of-training",
+          "sectionSlug": "theory",
+          "title": "The Equipment of Training"
+        },
+        {
+          "href": "/theory/06-the-organization-of-training",
+          "kind": "theory",
+          "order": 5,
+          "pageSlug": "theory/06-the-organization-of-training",
+          "sectionSlug": "theory",
+          "title": "The Organization of Training"
+        },
+        {
+          "href": "/theory/07-the-thinking-of-training",
+          "kind": "theory",
+          "order": 6,
+          "pageSlug": "theory/07-the-thinking-of-training",
+          "sectionSlug": "theory",
+          "title": "The Thinking of Training"
+        },
+        {
+          "href": "/theory/08-solving-training-problems",
+          "kind": "theory",
+          "order": 7,
+          "pageSlug": "theory/08-solving-training-problems",
+          "sectionSlug": "theory",
+          "title": "Solving Training Problems"
+        },
+        {
+          "href": "/theory/09-after-you-train",
+          "kind": "theory",
+          "order": 8,
+          "pageSlug": "theory/09-after-you-train",
+          "sectionSlug": "theory",
+          "title": "After You Train"
+        }
+      ],
+      "sectionSlug": "theory",
+      "title": "Theory"
+    },
+    {
+      "href": "/levels/level-1",
+      "levelNumber": 1,
+      "pages": [
+        {
+          "href": "/levels/level-1/00-overview",
+          "kind": "overview",
+          "levelNumber": 1,
+          "order": 9,
+          "pageSlug": "level-1/00-overview",
+          "sectionSlug": "level-1",
+          "title": "Level 1 Overview"
+        },
+        {
+          "behaviorFamily": "zen",
+          "href": "/levels/level-1/zen",
+          "kind": "behavior",
+          "levelNumber": 1,
+          "order": 10,
+          "pageSlug": "level-1/zen",
+          "sectionSlug": "level-1",
+          "stepIds": [
+            "level-1/zen:step-1",
+            "level-1/zen:step-2",
+            "level-1/zen:step-3",
+            "level-1/zen:step-4",
+            "level-1/zen:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog moves away from a treat in your hand. You're sitting down.",
+              "stepId": "level-1/zen:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog stays away from the treat in a closed hand for 5 seconds.",
+              "stepId": "level-1/zen:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog stays away from the treat in an open hand for 5 seconds.",
+              "stepId": "level-1/zen:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog stays away from the treat in her dog dish in your hand.",
+              "stepId": "level-1/zen:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Practise with more hands, more treats, more things.",
+              "stepId": "level-1/zen:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Zen"
+        },
+        {
+          "behaviorFamily": "come",
+          "href": "/levels/level-1/come",
+          "kind": "behavior",
+          "levelNumber": 1,
+          "order": 11,
+          "pageSlug": "level-1/come",
+          "sectionSlug": "level-1",
+          "stepIds": [
+            "level-1/come:step-1",
+            "level-1/come:step-2",
+            "level-1/come:step-3",
+            "level-1/come:step-4",
+            "level-1/come:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog looks for treats at your feet.",
+              "stepId": "level-1/come:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog runs 10 feet between 2 people.",
+              "stepId": "level-1/come:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog plays the Come Game between 2 people 10 feet apart.",
+              "stepId": "level-1/come:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog plays the Come Game between 2 people 20 feet apart.",
+              "stepId": "level-1/come:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog comes for good things.",
+              "stepId": "level-1/come:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Come"
+        },
+        {
+          "behaviorFamily": "sit",
+          "href": "/levels/level-1/sit",
+          "kind": "behavior",
+          "levelNumber": 1,
+          "order": 12,
+          "pageSlug": "level-1/sit",
+          "sectionSlug": "level-1",
+          "stepIds": [
+            "level-1/sit:step-1",
+            "level-1/sit:step-2",
+            "level-1/sit:step-3",
+            "level-1/sit:step-4",
+            "level-1/sit:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog sits with the leash off.",
+              "stepId": "level-1/sit:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog sits with a hand signal only.",
+              "stepId": "level-1/sit:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog sits with her leash on.",
+              "stepId": "level-1/sit:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog sits by an open door.",
+              "stepId": "level-1/sit:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "You start to work without treats in your pocket.",
+              "stepId": "level-1/sit:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Sit"
+        },
+        {
+          "behaviorFamily": "target",
+          "href": "/levels/level-1/target",
+          "kind": "behavior",
+          "levelNumber": 1,
+          "order": 13,
+          "pageSlug": "level-1/target",
+          "sectionSlug": "level-1",
+          "stepIds": [
+            "level-1/target:step-1",
+            "level-1/target:step-2",
+            "level-1/target:step-3",
+            "level-1/target:step-4",
+            "level-1/target:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog touches your hand with nose.",
+              "stepId": "level-1/target:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog reaches high and low to touch your hand.",
+              "stepId": "level-1/target:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog takes 3 steps to touch your hand.",
+              "stepId": "level-1/target:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog touches your hand twice to get one treat.",
+              "stepId": "level-1/target:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Practise with more changes.",
+              "stepId": "level-1/target:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Target"
+        },
+        {
+          "behaviorFamily": "down",
+          "href": "/levels/level-1/down",
+          "kind": "behavior",
+          "levelNumber": 1,
+          "order": 14,
+          "pageSlug": "level-1/down",
+          "sectionSlug": "level-1",
+          "stepIds": [
+            "level-1/down:step-1",
+            "level-1/down:step-2",
+            "level-1/down:step-3",
+            "level-1/down:step-4",
+            "level-1/down:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog lies down with leash off.",
+              "stepId": "level-1/down:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog lies down with a hand signal only.",
+              "stepId": "level-1/down:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog lies down with trainer seated.",
+              "stepId": "level-1/down:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog relearns Steps 1 to 3 with the leash on.",
+              "stepId": "level-1/down:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog lies down to earn a pet or her dish or an open door.",
+              "stepId": "level-1/down:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Down"
+        },
+        {
+          "href": "/levels/level-1/homework",
+          "kind": "homework",
+          "levelNumber": 1,
+          "order": 15,
+          "pageSlug": "level-1/homework",
+          "sectionSlug": "level-1",
+          "title": "Level 1 Homework"
+        }
+      ],
+      "sectionSlug": "level-1",
+      "title": "Level 1"
+    },
+    {
+      "href": "/levels/level-2",
+      "levelNumber": 2,
+      "pages": [
+        {
+          "href": "/levels/level-2/00-overview",
+          "kind": "overview",
+          "levelNumber": 2,
+          "order": 16,
+          "pageSlug": "level-2/00-overview",
+          "sectionSlug": "level-2",
+          "title": "Level 2 Overview"
+        },
+        {
+          "behaviorFamily": "zen",
+          "href": "/levels/level-2/zen",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 17,
+          "pageSlug": "level-2/zen",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/zen:step-1",
+            "level-2/zen:step-2",
+            "level-2/zen:step-3",
+            "level-2/zen:step-4",
+            "level-2/zen:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog moves away from an uncovered treat on the floor.",
+              "stepId": "level-2/zen:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog stays off a treat on the floor for 10 seconds.",
+              "stepId": "level-2/zen:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog stays off a treat on the floor for 30 seconds.",
+              "stepId": "level-2/zen:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog doesn't get treat on floor.",
+              "stepId": "level-2/zen:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Zen traps and defaults.",
+              "stepId": "level-2/zen:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Zen"
+        },
+        {
+          "behaviorFamily": "focus",
+          "href": "/levels/level-2/focus",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 18,
+          "pageSlug": "level-2/focus",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/focus:step-1",
+            "level-2/focus:step-2",
+            "level-2/focus:step-3",
+            "level-2/focus:step-4",
+            "level-2/focus:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog finds your eyes.",
+              "stepId": "level-2/focus:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog holds eye contact for 2 seconds.",
+              "stepId": "level-2/focus:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog holds eye contact for 6 seconds.",
+              "stepId": "level-2/focus:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog holds eye contact for 10 seconds.",
+              "stepId": "level-2/focus:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Proof of being In The Game.",
+              "stepId": "level-2/focus:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Focus"
+        },
+        {
+          "behaviorFamily": "come",
+          "href": "/levels/level-2/come",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 19,
+          "pageSlug": "level-2/come",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/come:step-1",
+            "level-2/come:step-2",
+            "level-2/come:step-3",
+            "level-2/come:step-4",
+            "level-2/come:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog comes 10 feet to you working alone.",
+              "stepId": "level-2/come:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog comes 10 feet to have her leash put on.",
+              "stepId": "level-2/come:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog comes 40 feet to you.",
+              "stepId": "level-2/come:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog comes 40 feet to have her leash put on.",
+              "stepId": "level-2/come:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Concentrate on Come as a good thing!",
+              "stepId": "level-2/come:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Come"
+        },
+        {
+          "behaviorFamily": "down",
+          "href": "/levels/level-2/down",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 20,
+          "pageSlug": "level-2/down",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/down:step-1",
+            "level-2/down:step-2",
+            "level-2/down:step-3",
+            "level-2/down:step-4",
+            "level-2/down:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog stays down for 10 seconds.",
+              "stepId": "level-2/down:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog stays down for 1 minute.",
+              "stepId": "level-2/down:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog stays down while you walk 10 feet away and return.",
+              "stepId": "level-2/down:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog stays down while you walk 20 feet away, stay away for 1 minute, and return.",
+              "stepId": "level-2/down:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Teaching default cues and reducing the number of clicks.",
+              "stepId": "level-2/down:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Down"
+        },
+        {
+          "behaviorFamily": "sit",
+          "href": "/levels/level-2/sit",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 21,
+          "pageSlug": "level-2/sit",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/sit:step-1",
+            "level-2/sit:step-2",
+            "level-2/sit:step-3",
+            "level-2/sit:step-4",
+            "level-2/sit:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog sits while you walk 5 feet away and return.",
+              "stepId": "level-2/sit:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog sits while you walk 5 feet away, stay for 30 seconds, and return.",
+              "stepId": "level-2/sit:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog sits while you walk 10 feet away, stay for 1 minute, and return.",
+              "stepId": "level-2/sit:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog sits as you walk around her.",
+              "stepId": "level-2/sit:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Applying sit to life.",
+              "stepId": "level-2/sit:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Sit"
+        },
+        {
+          "behaviorFamily": "lazy-leash",
+          "href": "/levels/level-2/lazy-leash",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 22,
+          "pageSlug": "level-2/lazy-leash",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/lazy-leash:step-1",
+            "level-2/lazy-leash:step-2",
+            "level-2/lazy-leash:step-3",
+            "level-2/lazy-leash:step-4",
+            "level-2/lazy-leash:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog moves away from collar pressure.",
+              "stepId": "level-2/lazy-leash:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog keeps leash loose while you stand in place for 5 seconds, then take 5 steps forward and turn around.",
+              "stepId": "level-2/lazy-leash:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "The dog keeps the leash loose with a treat on the floor at her feet while you take one step in any direction.",
+              "stepId": "level-2/lazy-leash:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "The dog keeps the leash loose while you both walk past the treat on the floor.",
+              "stepId": "level-2/lazy-leash:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Lazy Leash in new places.",
+              "stepId": "level-2/lazy-leash:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Lazy Leash"
+        },
+        {
+          "behaviorFamily": "target",
+          "href": "/levels/level-2/target",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 23,
+          "pageSlug": "level-2/target",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/target:step-1",
+            "level-2/target:step-2",
+            "level-2/target:step-3",
+            "level-2/target:step-4",
+            "level-2/target:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog touches a wooden object in your hand.",
+              "stepId": "level-2/target:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog touches a plastic object in your hand.",
+              "stepId": "level-2/target:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog touches a metal object in your hand.",
+              "stepId": "level-2/target:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog touches a sticky note on the wall.",
+              "stepId": "level-2/target:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog closes a cabinet door.",
+              "stepId": "level-2/target:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Target"
+        },
+        {
+          "behaviorFamily": "go-to-mat",
+          "href": "/levels/level-2/go-to-mat",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 24,
+          "pageSlug": "level-2/go-to-mat",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/go-to-mat:step-1",
+            "level-2/go-to-mat:step-2",
+            "level-2/go-to-mat:step-3",
+            "level-2/go-to-mat:step-4",
+            "level-2/go-to-mat:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog goes to her mat.",
+              "stepId": "level-2/go-to-mat:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog goes 2 feet to her mat and lies down on it.",
+              "stepId": "level-2/go-to-mat:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog goes 5 feet to lie down on her mat.",
+              "stepId": "level-2/go-to-mat:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog goes 2 feet to a new mat.",
+              "stepId": "level-2/go-to-mat:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog begins to practise \"parking\" on the mat.",
+              "stepId": "level-2/go-to-mat:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Go To Mat"
+        },
+        {
+          "behaviorFamily": "crate",
+          "href": "/levels/level-2/crate",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 25,
+          "pageSlug": "level-2/crate",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/crate:step-1",
+            "level-2/crate:step-2",
+            "level-2/crate:step-3",
+            "level-2/crate:step-4",
+            "level-2/crate:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog enters a crate with no lure.",
+              "stepId": "level-2/crate:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog enters a crate and lies down.",
+              "stepId": "level-2/crate:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog lies down for 10 seconds in a crate.",
+              "stepId": "level-2/crate:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog lies down for 30 seconds in a crate.",
+              "stepId": "level-2/crate:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Different rooms, different crates, different activities.",
+              "stepId": "level-2/crate:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Crate"
+        },
+        {
+          "behaviorFamily": "distance",
+          "href": "/levels/level-2/distance",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 26,
+          "pageSlug": "level-2/distance",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/distance:step-1",
+            "level-2/distance:step-2",
+            "level-2/distance:step-3",
+            "level-2/distance:step-4",
+            "level-2/distance:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog walks around a pole.",
+              "stepId": "level-2/distance:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog walks around a pole 2 feet from you.",
+              "stepId": "level-2/distance:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog walks around a pole 5 feet from you.",
+              "stepId": "level-2/distance:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog walks around a new pole 2 feet from you.",
+              "stepId": "level-2/distance:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog walks through a door, then turns to face you while you are still on the original side of the door.",
+              "stepId": "level-2/distance:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Distance"
+        },
+        {
+          "behaviorFamily": "jump",
+          "href": "/levels/level-2/jump",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 27,
+          "pageSlug": "level-2/jump",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/jump:step-1",
+            "level-2/jump:step-2",
+            "level-2/jump:step-3",
+            "level-2/jump:step-4",
+            "level-2/jump:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog goes over a bar on the floor.",
+              "stepId": "level-2/jump:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog goes 2 feet to go around a pole with a bar on the floor.",
+              "stepId": "level-2/jump:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog goes 2 feet to go around a pole with a bar 4 inches above the floor.",
+              "stepId": "level-2/jump:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog goes 5 feet to go around a pole with a 6 inch jump.",
+              "stepId": "level-2/jump:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Using jumps in life.",
+              "stepId": "level-2/jump:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Jump"
+        },
+        {
+          "behaviorFamily": "relax",
+          "href": "/levels/level-2/relax",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 28,
+          "pageSlug": "level-2/relax",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/relax:step-1",
+            "level-2/relax:step-2",
+            "level-2/relax:step-3",
+            "level-2/relax:step-4",
+            "level-2/relax:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog relaxes.",
+              "stepId": "level-2/relax:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog gets excited and then relaxes.",
+              "stepId": "level-2/relax:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog settles and stays relaxed for 1 minute.",
+              "stepId": "level-2/relax:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog settles for 1 minute, gets excited, settles for 1 minute, gets excited, and settles again for 1 minute.",
+              "stepId": "level-2/relax:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog settles in the car.",
+              "stepId": "level-2/relax:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Relax"
+        },
+        {
+          "behaviorFamily": "handling",
+          "href": "/levels/level-2/handling",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 29,
+          "pageSlug": "level-2/handling",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/handling:step-1",
+            "level-2/handling:step-2",
+            "level-2/handling:step-3",
+            "level-2/handling:step-4",
+            "level-2/handling:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog allows you to touch her head, tail, and feet.",
+              "stepId": "level-2/handling:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog allows you to handle her ears, and muzzle.",
+              "stepId": "level-2/handling:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog allows you to brush her ears, muzzle, body, feet, and tail.",
+              "stepId": "level-2/handling:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog allows clippers, pills, thermometer and tooth brush.",
+              "stepId": "level-2/handling:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog allows herself to be pushed, pulled and prodded.",
+              "stepId": "level-2/handling:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Handling"
+        },
+        {
+          "behaviorFamily": "tricks",
+          "href": "/levels/level-2/tricks",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 30,
+          "pageSlug": "level-2/tricks",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/tricks:step-1",
+            "level-2/tricks:step-2",
+            "level-2/tricks:step-3",
+            "level-2/tricks:step-4",
+            "level-2/tricks:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Think Of A Trick",
+              "stepId": "level-2/tricks:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Make Plans",
+              "stepId": "level-2/tricks:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Get The Behaviour",
+              "stepId": "level-2/tricks:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Add difficulty, distance, distraction, and duration",
+              "stepId": "level-2/tricks:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Add A Cue",
+              "stepId": "level-2/tricks:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Tricks"
+        },
+        {
+          "behaviorFamily": "communication",
+          "href": "/levels/level-2/communication",
+          "kind": "behavior",
+          "levelNumber": 2,
+          "order": 31,
+          "pageSlug": "level-2/communication",
+          "sectionSlug": "level-2",
+          "stepIds": [
+            "level-2/communication:step-1",
+            "level-2/communication:step-2",
+            "level-2/communication:step-3",
+            "level-2/communication:step-4",
+            "level-2/communication:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog backs up.",
+              "stepId": "level-2/communication:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog moves out of your personal space.",
+              "stepId": "level-2/communication:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog moves out of your personal space to your left.",
+              "stepId": "level-2/communication:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog untangles a leash from around you and a pole (not at the same time).",
+              "stepId": "level-2/communication:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog untangles a leash from one of her front legs.",
+              "stepId": "level-2/communication:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Communication"
+        },
+        {
+          "href": "/levels/level-2/homework",
+          "kind": "homework",
+          "levelNumber": 2,
+          "order": 32,
+          "pageSlug": "level-2/homework",
+          "sectionSlug": "level-2",
+          "title": "Level 2 Homework"
+        }
+      ],
+      "sectionSlug": "level-2",
+      "title": "Level 2"
+    },
+    {
+      "href": "/levels/level-3",
+      "levelNumber": 3,
+      "pages": [
+        {
+          "href": "/levels/level-3/00-overview",
+          "kind": "overview",
+          "levelNumber": 3,
+          "order": 33,
+          "pageSlug": "level-3/00-overview",
+          "sectionSlug": "level-3",
+          "title": "Level 3 Overview"
+        },
+        {
+          "behaviorFamily": "zen",
+          "href": "/levels/level-3/zen",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 34,
+          "pageSlug": "level-3/zen",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/zen:step-1",
+            "level-3/zen:step-2",
+            "level-3/zen:step-3",
+            "level-3/zen:step-4",
+            "level-3/zen:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog waits for an invitation to go through a just-opened door.",
+              "stepId": "level-3/zen:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog waits 30 seconds for an invitation to go through an opened door. No cue.",
+              "stepId": "level-3/zen:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog waits 1 minute while you carry items in and out through an opened door.",
+              "stepId": "level-3/zen:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog waits inside the door 1 minute while you greet a person not interested in the dog.",
+              "stepId": "level-3/zen:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Real life and people situations.",
+              "stepId": "level-3/zen:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Zen"
+        },
+        {
+          "behaviorFamily": "focus",
+          "href": "/levels/level-3/focus",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 35,
+          "pageSlug": "level-3/focus",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/focus:step-1",
+            "level-3/focus:step-2",
+            "level-3/focus:step-3",
+            "level-3/focus:step-4",
+            "level-3/focus:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog holds eye contact for 15 seconds.",
+              "stepId": "level-3/focus:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog holds eye contact for 5 seconds from 2 feet away.",
+              "stepId": "level-3/focus:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog holds eye contact for 10 seconds from 5 feet away.",
+              "stepId": "level-3/focus:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog holds eye contact for 10 seconds; you are not looking at dog.",
+              "stepId": "level-3/focus:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Using focus to show that the dog is In The Game.",
+              "stepId": "level-3/focus:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Focus"
+        },
+        {
+          "behaviorFamily": "come",
+          "href": "/levels/level-3/come",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 36,
+          "pageSlug": "level-3/come",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/come:step-1",
+            "level-3/come:step-2",
+            "level-3/come:step-3",
+            "level-3/come:step-4",
+            "level-3/come:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog comes 5 feet with distractions.",
+              "stepId": "level-3/come:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog comes 20 feet through or away from dogs and people.",
+              "stepId": "level-3/come:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog comes 40 feet through or away from distractions.",
+              "stepId": "level-3/come:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog comes 60 feet through or away from dogs and people.",
+              "stepId": "level-3/come:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog comes with her own personal nightmare distractions.",
+              "stepId": "level-3/come:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Come"
+        },
+        {
+          "behaviorFamily": "sit",
+          "href": "/levels/level-3/sit",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 37,
+          "pageSlug": "level-3/sit",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/sit:step-1",
+            "level-3/sit:step-2",
+            "level-3/sit:step-3",
+            "level-3/sit:step-4",
+            "level-3/sit:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog sits from a down.",
+              "stepId": "level-3/sit:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog sits from down 2 feet from you.",
+              "stepId": "level-3/sit:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog sits from down 5 feet from you.",
+              "stepId": "level-3/sit:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog downs from sit 5 feet from you.",
+              "stepId": "level-3/sit:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Applying sit to life.",
+              "stepId": "level-3/sit:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Sit"
+        },
+        {
+          "behaviorFamily": "down",
+          "href": "/levels/level-3/down",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 38,
+          "pageSlug": "level-3/down",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/down:step-1",
+            "level-3/down:step-2",
+            "level-3/down:step-3",
+            "level-3/down:step-4",
+            "level-3/down:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog does a down stay while you step in and out of sight 3 times.",
+              "stepId": "level-3/down:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog does a down stay while you go out of sight 10 seconds and return.",
+              "stepId": "level-3/down:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog does a down stay while you go out of sight for 30 seconds and return.",
+              "stepId": "level-3/down:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog does a down stay while you go out of sight for 30 seconds and return, with 1 distraction.",
+              "stepId": "level-3/down:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog does a down stay while you go down the hall to the linen closet and return.",
+              "stepId": "level-3/down:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Down"
+        },
+        {
+          "behaviorFamily": "lazy-leash",
+          "href": "/levels/level-3/lazy-leash",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 39,
+          "pageSlug": "level-3/lazy-leash",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/lazy-leash:step-1",
+            "level-3/lazy-leash:step-2",
+            "level-3/lazy-leash:step-3",
+            "level-3/lazy-leash:step-4",
+            "level-3/lazy-leash:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "The leash stays loose while the team walks through an outside door.",
+              "stepId": "level-3/lazy-leash:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "The leash stays loose while the team walks 10 feet to a single focal point outdoors.",
+              "stepId": "level-3/lazy-leash:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "The leash stays loose while the team walks 10 feet forward, turns, and walks 10 feet back with dogs and people in the area.",
+              "stepId": "level-3/lazy-leash:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "The leash stays loose while the team walks 20 feet forward and back with personal distractions.",
+              "stepId": "level-3/lazy-leash:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Work her personal distractions.",
+              "stepId": "level-3/lazy-leash:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Lazy Leash"
+        },
+        {
+          "behaviorFamily": "retrieve",
+          "href": "/levels/level-3/retrieve",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 40,
+          "pageSlug": "level-3/retrieve",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/retrieve:step-1",
+            "level-3/retrieve:step-2",
+            "level-3/retrieve:step-3",
+            "level-3/retrieve:step-4",
+            "level-3/retrieve:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog puts a spoon, a pen, and another object in her mouth (not all at the same time!).",
+              "stepId": "level-3/retrieve:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "You and the dog, together, hold an object for 5 seconds.",
+              "stepId": "level-3/retrieve:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "You and the dog together hold an object for 5 seconds, then the dog alone for 5 seconds, then both for another 5 (15 second hold altogether).",
+              "stepId": "level-3/retrieve:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog moves to put an object in her mouth from your hand.",
+              "stepId": "level-3/retrieve:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "More objects! More places!",
+              "stepId": "level-3/retrieve:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Retrieve"
+        },
+        {
+          "behaviorFamily": "target",
+          "href": "/levels/level-3/target",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 41,
+          "pageSlug": "level-3/target",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/target:step-1",
+            "level-3/target:step-2",
+            "level-3/target:step-3",
+            "level-3/target:step-4",
+            "level-3/target:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog puts front paws up on a horizontal surface.",
+              "stepId": "level-3/target:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog holds paws up on a small horizontal surface for 5 seconds.",
+              "stepId": "level-3/target:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog puts paws up on a vertical surface.",
+              "stepId": "level-3/target:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog holds paws up on a vertical surface for 5 seconds.",
+              "stepId": "level-3/target:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Using paws up in life.",
+              "stepId": "level-3/target:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Target"
+        },
+        {
+          "behaviorFamily": "crate",
+          "href": "/levels/level-3/crate",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 42,
+          "pageSlug": "level-3/crate",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/crate:step-1",
+            "level-3/crate:step-2",
+            "level-3/crate:step-3",
+            "level-3/crate:step-4",
+            "level-3/crate:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog enters the crate, downs, and you walk 5 feet away.",
+              "stepId": "level-3/crate:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog enters and downs, you go 5 feet away, stay for 1 minute, and return.",
+              "stepId": "level-3/crate:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog enters and downs, you go 10 feet away for 2 minutes and return.",
+              "stepId": "level-3/crate:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog enters and downs, you go 10 feet away for 3 minutes and return.",
+              "stepId": "level-3/crate:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Use a different crate, use the vet's crates, work the crate in a moving car.",
+              "stepId": "level-3/crate:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Crate"
+        },
+        {
+          "behaviorFamily": "relax",
+          "href": "/levels/level-3/relax",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 43,
+          "pageSlug": "level-3/relax",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/relax:step-1",
+            "level-3/relax:step-2",
+            "level-3/relax:step-3",
+            "level-3/relax:step-4",
+            "level-3/relax:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog settles for 3 minutes.",
+              "stepId": "level-3/relax:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog settles in sight of other dogs playing.",
+              "stepId": "level-3/relax:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog settles for 3 minutes in sight of other dogs playing.",
+              "stepId": "level-3/relax:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog settles in a moving car.",
+              "stepId": "level-3/relax:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog settles while you groom her.",
+              "stepId": "level-3/relax:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Relax"
+        },
+        {
+          "behaviorFamily": "distance",
+          "href": "/levels/level-3/distance",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 44,
+          "pageSlug": "level-3/distance",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/distance:step-1",
+            "level-3/distance:step-2",
+            "level-3/distance:step-3",
+            "level-3/distance:step-4",
+            "level-3/distance:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog goes around a chair.",
+              "stepId": "level-3/distance:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog goes around a chair 5 feet away.",
+              "stepId": "level-3/distance:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog goes around a chair 5 feet away with no treats.",
+              "stepId": "level-3/distance:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog goes around a chair 10 feet away.",
+              "stepId": "level-3/distance:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog goes around all sorts of things.",
+              "stepId": "level-3/distance:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Distance"
+        },
+        {
+          "behaviorFamily": "jump",
+          "href": "/levels/level-3/jump",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 45,
+          "pageSlug": "level-3/jump",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/jump:step-1",
+            "level-3/jump:step-2",
+            "level-3/jump:step-3",
+            "level-3/jump:step-4",
+            "level-3/jump:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog waits while a car door is opened, then gets into the car when told.",
+              "stepId": "level-3/jump:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog waits 30 seconds after the car door is opened, then gets out of the car on cue.",
+              "stepId": "level-3/jump:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog exits a car on cue, then waits with a loose leash for 10 seconds before you and dog move away from the car.",
+              "stepId": "level-3/jump:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Put it together - the dog waits 10 seconds for an invitation to jump into the car. The door is closed and re-opened. The dog waits 30 seconds for an invitation to jump out and then waits 10 seconds with a loose leash for you both to walk around the car.",
+              "stepId": "level-3/jump:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Do the whole thing again in a different vehicle, or from a different type of door in the same vehicle.",
+              "stepId": "level-3/jump:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Jump"
+        },
+        {
+          "behaviorFamily": "go-to-mat",
+          "href": "/levels/level-3/go-to-mat",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 46,
+          "pageSlug": "level-3/go-to-mat",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/go-to-mat:step-1",
+            "level-3/go-to-mat:step-2",
+            "level-3/go-to-mat:step-3",
+            "level-3/go-to-mat:step-4",
+            "level-3/go-to-mat:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog goes 2 feet to a new mat, and downs on it for 1 minute.",
+              "stepId": "level-3/go-to-mat:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog goes 5 feet to another new mat off the ground, downs on it for 2 minutes.",
+              "stepId": "level-3/go-to-mat:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog goes 10 feet to a third new mat and downs on it for 1 minute with one distraction.",
+              "stepId": "level-3/go-to-mat:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog goes 10 feet to another new mat and downs on it for 3 minutes with no treats.",
+              "stepId": "level-3/go-to-mat:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog goes to her mat when the doorbell rings.",
+              "stepId": "level-3/go-to-mat:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Go To Mat"
+        },
+        {
+          "behaviorFamily": "handling",
+          "href": "/levels/level-3/handling",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 47,
+          "pageSlug": "level-3/handling",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/handling:step-1",
+            "level-3/handling:step-2",
+            "level-3/handling:step-3",
+            "level-3/handling:step-4",
+            "level-3/handling:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog relaxes on table for 1 minute.",
+              "stepId": "level-3/handling:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog allows a stranger to touch her on a table.",
+              "stepId": "level-3/handling:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog allows a stranger to touch her on a table while she stays relaxed.",
+              "stepId": "level-3/handling:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog allows a stranger to touch her head, tail, and foot on a table while she stays relaxed.",
+              "stepId": "level-3/handling:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog allows vet or vet tech to examine her on a table while she stays relaxed.",
+              "stepId": "level-3/handling:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Handling"
+        },
+        {
+          "behaviorFamily": "communication",
+          "href": "/levels/level-3/communication",
+          "kind": "behavior",
+          "levelNumber": 3,
+          "order": 48,
+          "pageSlug": "level-3/communication",
+          "sectionSlug": "level-3",
+          "stepIds": [
+            "level-3/communication:step-1",
+            "level-3/communication:step-2",
+            "level-3/communication:step-3",
+            "level-3/communication:step-4",
+            "level-3/communication:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog paw-targets your hand.",
+              "stepId": "level-3/communication:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog rings a hanging bell.",
+              "stepId": "level-3/communication:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog rings a bell to ask to go outside.",
+              "stepId": "level-3/communication:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog raises her right front paw.",
+              "stepId": "level-3/communication:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog raises her right front paw to ask for food or a toy.",
+              "stepId": "level-3/communication:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Communication"
+        },
+        {
+          "href": "/levels/level-3/homework",
+          "kind": "homework",
+          "levelNumber": 3,
+          "order": 49,
+          "pageSlug": "level-3/homework",
+          "sectionSlug": "level-3",
+          "title": "Level 3 Homework"
+        }
+      ],
+      "sectionSlug": "level-3",
+      "title": "Level 3"
+    },
+    {
+      "href": "/levels/level-4",
+      "levelNumber": 4,
+      "pages": [
+        {
+          "href": "/levels/level-4/00-overview",
+          "kind": "overview",
+          "levelNumber": 4,
+          "order": 50,
+          "pageSlug": "level-4/00-overview",
+          "sectionSlug": "level-4",
+          "title": "Level 4 Overview"
+        },
+        {
+          "behaviorFamily": "zen",
+          "href": "/levels/level-4/zen",
+          "kind": "behavior",
+          "levelNumber": 4,
+          "order": 51,
+          "pageSlug": "level-4/zen",
+          "sectionSlug": "level-4",
+          "stepIds": [
+            "level-4/zen:step-1",
+            "level-4/zen:step-2",
+            "level-4/zen:step-3",
+            "level-4/zen:step-4",
+            "level-4/zen:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog stays off a treat on a coffee table for 1 minute.",
+              "stepId": "level-4/zen:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog stays off a treat on a coffee table while you step in and out of sight 3 times.",
+              "stepId": "level-4/zen:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog stays off a treat on the coffee table with you out of sight for 1 minute.",
+              "stepId": "level-4/zen:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog stays off a treat that you drop. The cue is not given until AFTER the treat starts to drop.",
+              "stepId": "level-4/zen:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog does Zen in a situation that's difficult for her.",
+              "stepId": "level-4/zen:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Zen"
+        },
+        {
+          "behaviorFamily": "focus",
+          "href": "/levels/level-4/focus",
+          "kind": "behavior",
+          "levelNumber": 4,
+          "order": 52,
+          "pageSlug": "level-4/focus",
+          "sectionSlug": "level-4",
+          "stepIds": [
+            "level-4/focus:step-1",
+            "level-4/focus:step-2",
+            "level-4/focus:step-3",
+            "level-4/focus:step-4",
+            "level-4/focus:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog looks at a treat on the ground in front of her.",
+              "stepId": "level-4/focus:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog looks at a 6 inch jump, then goes over it.",
+              "stepId": "level-4/focus:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog looks at something great in front of her, then makes eye contact.",
+              "stepId": "level-4/focus:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog looks at one of 2 things on the floor, then goes to the correct one.",
+              "stepId": "level-4/focus:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Focus challenges.",
+              "stepId": "level-4/focus:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Focus"
+        },
+        {
+          "behaviorFamily": "come",
+          "href": "/levels/level-4/come",
+          "kind": "behavior",
+          "levelNumber": 4,
+          "order": 53,
+          "pageSlug": "level-4/come",
+          "sectionSlug": "level-4",
+          "stepIds": [
+            "level-4/come:step-1",
+            "level-4/come:step-2",
+            "level-4/come:step-3",
+            "level-4/come:step-4",
+            "level-4/come:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog comes when another person is making eye contact with her.",
+              "stepId": "level-4/come:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog comes when another person is petting her.",
+              "stepId": "level-4/come:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog comes when another person is feeding her.",
+              "stepId": "level-4/come:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog comes to a whistle cue.",
+              "stepId": "level-4/come:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog comes and finds you hiding outside.",
+              "stepId": "level-4/come:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Come"
+        },
+        {
+          "behaviorFamily": "lazy-leash",
+          "href": "/levels/level-4/lazy-leash",
+          "kind": "behavior",
+          "levelNumber": 4,
+          "order": 54,
+          "pageSlug": "level-4/lazy-leash",
+          "sectionSlug": "level-4",
+          "stepIds": [
+            "level-4/lazy-leash:step-1",
+            "level-4/lazy-leash:step-2",
+            "level-4/lazy-leash:step-3",
+            "level-4/lazy-leash:step-4",
+            "level-4/lazy-leash:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "You teach another person to successfully pass L3 Step 3 with your own dog: the dog keeps the leash loose while the new trainer and dog walk 10 steps forward, turn around, and walk 10 steps back with people and dogs in the area.",
+              "stepId": "level-4/lazy-leash:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog maintains a Lazy Leash (for you) while walking for 1 minute.",
+              "stepId": "level-4/lazy-leash:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog maintains a Lazy Leash while walking for 1 minute with dogs and people in the area.",
+              "stepId": "level-4/lazy-leash:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog maintains a Lazy Leash while walking for 3 minutes with dogs and people in the area.",
+              "stepId": "level-4/lazy-leash:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog maintains a Lazy Leash while going for a normal walk.",
+              "stepId": "level-4/lazy-leash:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Lazy Leash"
+        },
+        {
+          "behaviorFamily": "retrieve",
+          "href": "/levels/level-4/retrieve",
+          "kind": "behavior",
+          "levelNumber": 4,
+          "order": 55,
+          "pageSlug": "level-4/retrieve",
+          "sectionSlug": "level-4",
+          "stepIds": [
+            "level-4/retrieve:step-1",
+            "level-4/retrieve:step-2",
+            "level-4/retrieve:step-3",
+            "level-4/retrieve:step-4",
+            "level-4/retrieve:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog goes to 3 articles on the floor – 1 wood, 1 metal, 1 cloth.",
+              "stepId": "level-4/retrieve:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog puts her mouth over the same 3 articles on the floor.",
+              "stepId": "level-4/retrieve:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog lifts the same 3 articles.",
+              "stepId": "level-4/retrieve:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog retrieves the same 3 articles.",
+              "stepId": "level-4/retrieve:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "A really neat trick.",
+              "stepId": "level-4/retrieve:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Retrieve"
+        },
+        {
+          "behaviorFamily": "target",
+          "href": "/levels/level-4/target",
+          "kind": "behavior",
+          "levelNumber": 4,
+          "order": 56,
+          "pageSlug": "level-4/target",
+          "sectionSlug": "level-4",
+          "stepIds": [
+            "level-4/target:step-1",
+            "level-4/target:step-2",
+            "level-4/target:step-3",
+            "level-4/target:step-4",
+            "level-4/target:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog goes 2 feet to put her front paws on a vertical surface.",
+              "stepId": "level-4/target:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog goes 5 feet to put her paws on a new vertical surface.",
+              "stepId": "level-4/target:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog goes 10 feet to put her paws on another new vertical surface.",
+              "stepId": "level-4/target:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog puts her paws up on a narrow vertical surface.",
+              "stepId": "level-4/target:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog runs 10 feet away from the trainer.",
+              "stepId": "level-4/target:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Target"
+        },
+        {
+          "behaviorFamily": "crate",
+          "href": "/levels/level-4/crate",
+          "kind": "behavior",
+          "levelNumber": 4,
+          "order": 57,
+          "pageSlug": "level-4/crate",
+          "sectionSlug": "level-4",
+          "stepIds": [
+            "level-4/crate:step-1",
+            "level-4/crate:step-2",
+            "level-4/crate:step-3",
+            "level-4/crate:step-4",
+            "level-4/crate:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog enters crate and remains calm for 5 minutes, you go out of sight momentarily.",
+              "stepId": "level-4/crate:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog enters crate and remains calm for 5 minutes, you close the door and go in and out of sight 3 times.",
+              "stepId": "level-4/crate:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog enters crate and remains calm for 10 minutes, you close the door and go out of sight, 2 distractions.",
+              "stepId": "level-4/crate:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog enters crate and remains calm for 15 minutes with the door closed and you out of sight, 2 distractions.",
+              "stepId": "level-4/crate:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "In a strange location, dog enters crate and remains calm for 5 minutes with the door closed while you do chores.",
+              "stepId": "level-4/crate:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Crate"
+        },
+        {
+          "behaviorFamily": "relax",
+          "href": "/levels/level-4/relax",
+          "kind": "behavior",
+          "levelNumber": 4,
+          "order": 58,
+          "pageSlug": "level-4/relax",
+          "sectionSlug": "level-4",
+          "stepIds": [
+            "level-4/relax:step-1",
+            "level-4/relax:step-2",
+            "level-4/relax:step-3",
+            "level-4/relax:step-4",
+            "level-4/relax:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog holds a Lazy Leash in sight of her own worst distraction.",
+              "stepId": "level-4/relax:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog downs in sight of her own worst distraction.",
+              "stepId": "level-4/relax:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog settles for 1 minute in sight of her own worst distraction.",
+              "stepId": "level-4/relax:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog settles for 3 minutes in sight of her own worst distraction.",
+              "stepId": "level-4/relax:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog settles in a new area that is difficult for her.",
+              "stepId": "level-4/relax:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Relax"
+        },
+        {
+          "behaviorFamily": "distance",
+          "href": "/levels/level-4/distance",
+          "kind": "behavior",
+          "levelNumber": 4,
+          "order": 59,
+          "pageSlug": "level-4/distance",
+          "sectionSlug": "level-4",
+          "stepIds": [
+            "level-4/distance:step-1",
+            "level-4/distance:step-2",
+            "level-4/distance:step-3",
+            "level-4/distance:step-4",
+            "level-4/distance:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog goes around a standing person 5 feet away.",
+              "stepId": "level-4/distance:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog goes around a seated person 5 feet away, no treats.",
+              "stepId": "level-4/distance:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog goes around a seated person 15 feet away.",
+              "stepId": "level-4/distance:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog goes around a large object 5 feet away.",
+              "stepId": "level-4/distance:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog goes around a totally new object 5 feet away.",
+              "stepId": "level-4/distance:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Distance"
+        },
+        {
+          "behaviorFamily": "go-to-mat",
+          "href": "/levels/level-4/go-to-mat",
+          "kind": "behavior",
+          "levelNumber": 4,
+          "order": 60,
+          "pageSlug": "level-4/go-to-mat",
+          "sectionSlug": "level-4",
+          "stepIds": [
+            "level-4/go-to-mat:step-1",
+            "level-4/go-to-mat:step-2",
+            "level-4/go-to-mat:step-3",
+            "level-4/go-to-mat:step-4",
+            "level-4/go-to-mat:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog goes 2 feet to go to mat on a common object that is NOT a mat.",
+              "stepId": "level-4/go-to-mat:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog goes 5 feet to a new non-mat-like common object and lies down on it for 2 minutes with no treats.",
+              "stepId": "level-4/go-to-mat:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog goes 15 feet to a personal object and stays down on it for 10 minutes while the seated trainer talks to someone.",
+              "stepId": "level-4/go-to-mat:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog goes 10 feet to a mat and stays down on it for 20 minutes while the trainer does chores.",
+              "stepId": "level-4/go-to-mat:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog goes to mat when the doorbell rings and stays on it while you briefly entertain.",
+              "stepId": "level-4/go-to-mat:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Go To Mat"
+        },
+        {
+          "behaviorFamily": "handling",
+          "href": "/levels/level-4/handling",
+          "kind": "behavior",
+          "levelNumber": 4,
+          "order": 61,
+          "pageSlug": "level-4/handling",
+          "sectionSlug": "level-4",
+          "stepIds": [
+            "level-4/handling:step-1",
+            "level-4/handling:step-2",
+            "level-4/handling:step-3",
+            "level-4/handling:step-4",
+            "level-4/handling:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog eliminates on lead.",
+              "stepId": "level-4/handling:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog eliminates on lead away from home.",
+              "stepId": "level-4/handling:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog eliminates on lead within 30 seconds.",
+              "stepId": "level-4/handling:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog eliminates on lead away from home within 30 seconds.",
+              "stepId": "level-4/handling:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog eliminates on lead on a new surface within 30 seconds.",
+              "stepId": "level-4/handling:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Handling"
+        },
+        {
+          "behaviorFamily": "communication",
+          "href": "/levels/level-4/communication",
+          "kind": "behavior",
+          "levelNumber": 4,
+          "order": 62,
+          "pageSlug": "level-4/communication",
+          "sectionSlug": "level-4",
+          "stepIds": [
+            "level-4/communication:step-1",
+            "level-4/communication:step-2",
+            "level-4/communication:step-3",
+            "level-4/communication:step-4",
+            "level-4/communication:step-5"
+          ],
+          "stepSummaries": [
+            {
+              "label": "Dog nose-targets your hands to left and right on cue.",
+              "stepId": "level-4/communication:step-1",
+              "stepNumber": 1
+            },
+            {
+              "label": "Dog paw-targets your feet to left and right on cue.",
+              "stepId": "level-4/communication:step-2",
+              "stepNumber": 2
+            },
+            {
+              "label": "Dog goes to objects on the floor left and right on cue.",
+              "stepId": "level-4/communication:step-3",
+              "stepNumber": 3
+            },
+            {
+              "label": "Dog jumps left and right on cue.",
+              "stepId": "level-4/communication:step-4",
+              "stepNumber": 4
+            },
+            {
+              "label": "Dog spins left and right on cue.",
+              "stepId": "level-4/communication:step-5",
+              "stepNumber": 5
+            }
+          ],
+          "title": "Communication"
+        },
+        {
+          "href": "/levels/level-4/homework",
+          "kind": "homework",
+          "levelNumber": 4,
+          "order": 63,
+          "pageSlug": "level-4/homework",
+          "sectionSlug": "level-4",
+          "title": "Level 4 Homework"
+        }
+      ],
+      "sectionSlug": "level-4",
+      "title": "Level 4"
+    },
+    {
+      "href": "/appendices",
+      "pages": [
+        {
+          "href": "/appendices/appendix-a-leading-the-dance",
+          "kind": "appendix",
+          "order": 64,
+          "pageSlug": "appendices/appendix-a-leading-the-dance",
+          "sectionSlug": "appendices",
+          "title": "Appendix A: Leading the Dance"
+        },
+        {
+          "href": "/appendices/appendix-b-teaching-your-dog-to-eat",
+          "kind": "appendix",
+          "order": 65,
+          "pageSlug": "appendices/appendix-b-teaching-your-dog-to-eat",
+          "sectionSlug": "appendices",
+          "title": "Appendix B: Teaching Your Dog to Eat"
+        },
+        {
+          "href": "/appendices/appendix-c-list-of-possible-tricks",
+          "kind": "appendix",
+          "order": 66,
+          "pageSlug": "appendices/appendix-c-list-of-possible-tricks",
+          "sectionSlug": "appendices",
+          "title": "Appendix C: Monkey in the Middle"
+        },
+        {
+          "href": "/appendices/appendix-d-list-of-resources",
+          "kind": "appendix",
+          "order": 67,
+          "pageSlug": "appendices/appendix-d-list-of-resources",
+          "sectionSlug": "appendices",
+          "title": "Appendix D: List of Resources"
+        },
+        {
+          "href": "/appendices/appendix-e-good-advice-from-a-friend",
+          "kind": "appendix",
+          "order": 68,
+          "pageSlug": "appendices/appendix-e-good-advice-from-a-friend",
+          "sectionSlug": "appendices",
+          "title": "Appendix E: Good Advice from a Friend"
+        }
+      ],
+      "sectionSlug": "appendices",
+      "title": "Appendices"
+    }
+  ],
+  "totalBehaviors": 47,
+  "totalPages": 69,
+  "totalSteps": 235
+}

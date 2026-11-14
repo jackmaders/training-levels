@@ -23,7 +23,19 @@ function createDefaultRouter({
   context,
   initialLocation = "/",
   queryClient,
-  routePaths = ["/", "/about", "/todos", "/sign-in", "/sign-up", "/profile"],
+  routePaths = [
+    "/",
+    "/about",
+    "/levels",
+    "/levels/$section/$page",
+    "/theory",
+    "/theory/$page",
+    "/appendices",
+    "/appendices/$page",
+    "/sign-in",
+    "/sign-up",
+    "/profile",
+  ],
 }: {
   context?: Record<string, unknown> | undefined;
   initialLocation?: string | undefined;

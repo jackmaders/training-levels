@@ -31,6 +31,7 @@ export function useAuth() {
         throwAuthError(result.error, "Failed to sign in");
       }
       await router.invalidate();
+      await router.navigate({ to: "/levels" });
       return result;
     },
     [router],
@@ -43,6 +44,7 @@ export function useAuth() {
         throwAuthError(result.error, "Failed to sign up");
       }
       await router.invalidate();
+      await router.navigate({ to: "/levels" });
       return result;
     },
     [router],

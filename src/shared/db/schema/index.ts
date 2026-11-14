@@ -17,4 +17,5 @@ export {
   userRoles,
   type Verification,
 } from "./auth";
-export { todos, type Todo } from "./todos";
+export { dogs, type Dog } from "./dogs";
+export { stepCompletions, type StepCompletion } from "./step-completions";

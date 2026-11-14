@@ -1,37 +1,24 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import type { UserRole } from "../../db/schema";
-import { hasPermission } from "../permissions";
+import { hasPermission, type Permission } from "../permissions";
+
+const ALL_PERMISSIONS = [
+  "curriculum:read",
+  "progress:update",
+] as const satisfies readonly Permission[];
 
 describe("hasPermission authorization helper", () => {
-  describe("admin role", () => {
-    it.each(["todos:read", "todos:create", "todos:update", "todos:delete"] as const)(
-      "grants %s permission",
-      (permission) => {
-        expect.assertions(1);
+  describe.each(["admin", "user"] as const)("%s role", (role) => {
+    it.each(ALL_PERMISSIONS)("grants %s permission", (permission) => {
+      expect.assertions(1);
 
-        // Act
-        const result = hasPermission("admin", permission);
+      // Act
+      const result = hasPermission(role, permission);
 
-        // Assert
-        expect(result).toBe(true);
-      },
-    );
-  });
-
-  describe("user role", () => {
-    it.each(["todos:read", "todos:create", "todos:update", "todos:delete"] as const)(
-      "grants %s permission",
-      (permission) => {
-        expect.assertions(1);
-
-        // Act
-        const result = hasPermission("user", permission);
-
-        // Assert
-        expect(result).toBe(true);
-      },
-    );
+      // Assert
+      expect(result).toBe(true);
+    });
   });
 
   describe("missing or unrecognized role", () => {
@@ -39,7 +26,7 @@ describe("hasPermission authorization helper", () => {
       expect.assertions(1);
 
       // Act
-      const result = hasPermission(undefined, "todos:read");
+      const result = hasPermission(undefined, "curriculum:read");
 
       // Assert
       expect(result).toBe(false);
@@ -49,7 +36,7 @@ describe("hasPermission authorization helper", () => {
       expect.assertions(1);
 
       // Act
-      const result = hasPermission("guest" as unknown as UserRole, "todos:read");
+      const result = hasPermission("guest" as unknown as UserRole, "curriculum:read");
 
       // Assert
       expect(result).toBe(false);

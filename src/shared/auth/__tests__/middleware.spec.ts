@@ -14,6 +14,16 @@ import {
 vi.mock(import("@/shared/auth/session.server"));
 vi.mock(import("@/shared/auth/permissions"), { spy: true });
 
+const ALL_PERMISSIONS = [
+  "curriculum:read",
+  "progress:update",
+] as const satisfies readonly Permission[];
+
+const ROLE_SESSION_CASES = [
+  { role: "admin", sessionFixture: TEST_ADMIN_SESSION },
+  { role: "user", sessionFixture: TEST_SESSION },
+] as const;
+
 function getPermissionServerMiddleware(permission: Permission) {
   const serverFn = permissionMiddleware(permission).options.server;
   if (!serverFn) {
@@ -25,13 +35,21 @@ function getPermissionServerMiddleware(permission: Permission) {
 type MiddlewareInput = Parameters<ReturnType<typeof getPermissionServerMiddleware>>[0];
 
 describe("permissionMiddleware behavior", () => {
-  it.each<Permission>(["todos:read", "todos:create", "todos:update", "todos:delete"])(
-    "passes the session to next when an admin has %s",
-    async (permission) => {
+  it.each(
+    ALL_PERMISSIONS.flatMap((permission) =>
+      ROLE_SESSION_CASES.map(({ role, sessionFixture }) => ({
+        permission,
+        role,
+        sessionFixture,
+      })),
+    ),
+  )(
+    "passes the session to next when $role has $permission",
+    async ({ permission, sessionFixture }) => {
       expect.assertions(2);
 
       // Arrange
-      vi.mocked(ensureSession).mockResolvedValueOnce(TEST_ADMIN_SESSION);
+      vi.mocked(ensureSession).mockResolvedValueOnce(sessionFixture);
       const next = vi.fn<() => Promise<{ status: string }>>().mockResolvedValueOnce({
         status: "success",
       });
@@ -43,31 +61,7 @@ describe("permissionMiddleware behavior", () => {
 
       // Assert
       expect(next).toHaveBeenCalledWith({
-        context: { session: TEST_ADMIN_SESSION.session, user: TEST_ADMIN_SESSION.user },
-      });
-      expect(result).toStrictEqual({ status: "success" });
-    },
-  );
-
-  it.each<Permission>(["todos:read", "todos:create", "todos:update", "todos:delete"])(
-    "passes the session to next when a user has %s",
-    async (permission) => {
-      expect.assertions(2);
-
-      // Arrange
-      vi.mocked(ensureSession).mockResolvedValueOnce(TEST_SESSION);
-      const next = vi.fn<() => Promise<{ status: string }>>().mockResolvedValueOnce({
-        status: "success",
-      });
-      const serverFn = getPermissionServerMiddleware(permission);
-      const input = { context: {}, next } as unknown as MiddlewareInput;
-
-      // Act
-      const result = await serverFn(input);
-
-      // Assert
-      expect(next).toHaveBeenCalledWith({
-        context: { session: TEST_SESSION.session, user: TEST_SESSION.user },
+        context: { session: sessionFixture.session, user: sessionFixture.user },
       });
       expect(result).toStrictEqual({ status: "success" });
     },
@@ -80,7 +74,7 @@ describe("permissionMiddleware behavior", () => {
     vi.mocked(ensureSession).mockResolvedValueOnce(TEST_SESSION);
     vi.mocked(hasPermission).mockReturnValueOnce(false);
     const next = vi.fn<() => Promise<void>>();
-    const serverFn = getPermissionServerMiddleware("todos:create");
+    const serverFn = getPermissionServerMiddleware("progress:update");
     const input = { context: {}, next } as unknown as MiddlewareInput;
 
     // Act
@@ -101,7 +95,7 @@ describe("permissionMiddleware behavior", () => {
     // Arrange
     vi.mocked(ensureSession).mockRejectedValueOnce(new Error("Unauthorized"));
     const next = vi.fn<() => Promise<void>>();
-    const serverFn = getPermissionServerMiddleware("todos:read");
+    const serverFn = getPermissionServerMiddleware("curriculum:read");
     const input = { context: {}, next } as unknown as MiddlewareInput;
 
     // Act & Assert
@@ -123,7 +117,7 @@ describe("permissionMiddleware role validation", () => {
         }),
       );
       const next = vi.fn<() => Promise<void>>();
-      const serverFn = getPermissionServerMiddleware("todos:read");
+      const serverFn = getPermissionServerMiddleware("curriculum:read");
       const input = { context: {}, next } as unknown as MiddlewareInput;
 
       // Act

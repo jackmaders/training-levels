@@ -14,12 +14,18 @@ const rootRouteApi = getRouteApi("__root__");
 
 export function Header({ className, ...props }: ComponentProps<"header">) {
   const { session } = rootRouteApi.useRouteContext();
-  const canReadTodos = hasPermission(session?.user.role, "todos:read");
+  const canReadCurriculum = hasPermission(session?.user.role, "curriculum:read");
 
   const links: ComponentProps<typeof Link>[] = [
     { children: "Home", to: "/" },
     { children: "About", to: "/about" },
-    ...(canReadTodos ? [{ children: "Todos", to: "/todos" }] : []),
+    ...(canReadCurriculum
+      ? [
+          { children: "Levels", to: "/levels" },
+          { children: "Theory", to: "/theory" },
+          { children: "Appendices", to: "/appendices" },
+        ]
+      : []),
   ];
 
   return (

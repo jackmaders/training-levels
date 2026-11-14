@@ -32,19 +32,42 @@ describe("router route matching", () => {
     expect(matches.map((match) => match.routeId)).toStrictEqual(["__root__", "/about"]);
   });
 
-  it("does not match a page for unknown paths", () => {
-    expect.assertions(1);
+  it("does not match a page for unknown paths or removed legacy /todos", () => {
+    expect.assertions(2);
 
     // Act
     const router = getRouter();
-    const matches = router.matchRoutes("/missing");
+    const missingMatches = router.matchRoutes("/missing");
+    const legacyMatches = router.matchRoutes("/todos");
 
     // Assert
-    expect(matches.map((match) => match.routeId)).toStrictEqual(["__root__"]);
+    expect(missingMatches.map((match) => match.routeId)).toStrictEqual(["__root__"]);
+    expect(legacyMatches.map((match) => match.routeId)).toStrictEqual(["__root__"]);
   });
 });
 
 describe("router auth route matching", () => {
+  it("matches the levels index and level behavior routes within authenticated layout", () => {
+    expect.assertions(2);
+
+    // Act
+    const router = getRouter();
+    const indexMatches = router.matchRoutes("/levels");
+    const pageMatches = router.matchRoutes("/levels/level-1/zen");
+
+    // Assert
+    expect(indexMatches.map((match) => match.routeId)).toStrictEqual([
+      "__root__",
+      "/_authenticated",
+      "/_authenticated/levels/",
+    ]);
+    expect(pageMatches.map((match) => match.routeId)).toStrictEqual([
+      "__root__",
+      "/_authenticated",
+      "/_authenticated/levels/$section/$page",
+    ]);
+  });
+
   it("matches the profile page within authenticated layout", () => {
     expect.assertions(1);
 
@@ -76,7 +99,7 @@ describe("router auth route matching", () => {
 
     // Act
     const router = getRouter();
-    const matches = router.matchRoutes("/api/images/todos/todo-1/pic.webp");
+    const matches = router.matchRoutes("/api/images/uploads/photo-1/pic.webp");
 
     // Assert
     expect(matches.map((match) => match.routeId)).toStrictEqual(["__root__", "/api/images/$"]);
@@ -150,7 +173,7 @@ describe("api failure notifications", () => {
     expect.hasAssertions();
     // Arrange
     const client = getRouter().options.context.queryClient;
-    const apiError = new ApplicationError("TODO_CREATE_FAILED");
+    const apiError = new ApplicationError("CURRICULUM_STEP_NOT_FOUND");
     const onError = vi.fn<() => void>();
     const mutation = client.getMutationCache().build(client, {
       mutationFn: vi.fn<() => Promise<never>>().mockRejectedValue(apiError),
