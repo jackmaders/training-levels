@@ -14,6 +14,10 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedTodosRouteImport } from './routes/_authenticated/todos'
+import { Route as AuthenticatedAppendicesIndexRouteImport } from './routes/_authenticated/appendices/index'
+import { Route as AuthenticatedAppendicesPageRouteImport } from './routes/_authenticated/appendices/$page'
+import { Route as AuthenticatedTheoryIndexRouteImport } from './routes/_authenticated/theory/index'
+import { Route as AuthenticatedTheoryPageRouteImport } from './routes/_authenticated/theory/$page'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiImagesSplatRouteImport } from './routes/api/images/$'
 
@@ -41,6 +45,29 @@ const AuthenticatedTodosRoute = AuthenticatedTodosRouteImport.update({
   path: '/todos',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAppendicesIndexRoute =
+  AuthenticatedAppendicesIndexRouteImport.update({
+    id: '/appendices/',
+    path: '/appendices/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAppendicesPageRoute =
+  AuthenticatedAppendicesPageRouteImport.update({
+    id: '/appendices/$page',
+    path: '/appendices/$page',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedTheoryIndexRoute =
+  AuthenticatedTheoryIndexRouteImport.update({
+    id: '/theory/',
+    path: '/theory/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedTheoryPageRoute = AuthenticatedTheoryPageRouteImport.update({
+  id: '/theory/$page',
+  path: '/theory/$page',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -57,16 +84,24 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/todos': typeof AuthenticatedTodosRoute
+  '/appendices/$page': typeof AuthenticatedAppendicesPageRoute
+  '/theory/$page': typeof AuthenticatedTheoryPageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/images/$': typeof ApiImagesSplatRoute
+  '/appendices/': typeof AuthenticatedAppendicesIndexRoute
+  '/theory/': typeof AuthenticatedTheoryIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/todos': typeof AuthenticatedTodosRoute
+  '/appendices/$page': typeof AuthenticatedAppendicesPageRoute
+  '/theory/$page': typeof AuthenticatedTheoryPageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/images/$': typeof ApiImagesSplatRoute
+  '/appendices': typeof AuthenticatedAppendicesIndexRoute
+  '/theory': typeof AuthenticatedTheoryIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -75,15 +110,38 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/todos': typeof AuthenticatedTodosRoute
+  '/_authenticated/appendices/$page': typeof AuthenticatedAppendicesPageRoute
+  '/_authenticated/theory/$page': typeof AuthenticatedTheoryPageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/images/$': typeof ApiImagesSplatRoute
+  '/_authenticated/appendices/': typeof AuthenticatedAppendicesIndexRoute
+  '/_authenticated/theory/': typeof AuthenticatedTheoryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/about' | '/profile' | '/todos' | '/api/auth/$' | '/api/images/$'
+    | '/'
+    | '/about'
+    | '/profile'
+    | '/todos'
+    | '/appendices/$page'
+    | '/theory/$page'
+    | '/api/auth/$'
+    | '/api/images/$'
+    | '/appendices/'
+    | '/theory/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/profile' | '/todos' | '/api/auth/$' | '/api/images/$'
+  to:
+    | '/'
+    | '/about'
+    | '/profile'
+    | '/todos'
+    | '/appendices/$page'
+    | '/theory/$page'
+    | '/api/auth/$'
+    | '/api/images/$'
+    | '/appendices'
+    | '/theory'
   id:
     | '__root__'
     | '/'
@@ -91,8 +149,12 @@ export interface FileRouteTypes {
     | '/about'
     | '/_authenticated/profile'
     | '/_authenticated/todos'
+    | '/_authenticated/appendices/$page'
+    | '/_authenticated/theory/$page'
     | '/api/auth/$'
     | '/api/images/$'
+    | '/_authenticated/appendices/'
+    | '/_authenticated/theory/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -140,6 +202,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTodosRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/appendices/': {
+      id: '/_authenticated/appendices/'
+      path: '/appendices'
+      fullPath: '/appendices/'
+      preLoaderRoute: typeof AuthenticatedAppendicesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/appendices/$page': {
+      id: '/_authenticated/appendices/$page'
+      path: '/appendices/$page'
+      fullPath: '/appendices/$page'
+      preLoaderRoute: typeof AuthenticatedAppendicesPageRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/theory/': {
+      id: '/_authenticated/theory/'
+      path: '/theory'
+      fullPath: '/theory/'
+      preLoaderRoute: typeof AuthenticatedTheoryIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/theory/$page': {
+      id: '/_authenticated/theory/$page'
+      path: '/theory/$page'
+      fullPath: '/theory/$page'
+      preLoaderRoute: typeof AuthenticatedTheoryPageRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -160,11 +250,19 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedTodosRoute: typeof AuthenticatedTodosRoute
+  AuthenticatedAppendicesPageRoute: typeof AuthenticatedAppendicesPageRoute
+  AuthenticatedTheoryPageRoute: typeof AuthenticatedTheoryPageRoute
+  AuthenticatedAppendicesIndexRoute: typeof AuthenticatedAppendicesIndexRoute
+  AuthenticatedTheoryIndexRoute: typeof AuthenticatedTheoryIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedTodosRoute: AuthenticatedTodosRoute,
+  AuthenticatedAppendicesPageRoute: AuthenticatedAppendicesPageRoute,
+  AuthenticatedTheoryPageRoute: AuthenticatedTheoryPageRoute,
+  AuthenticatedAppendicesIndexRoute: AuthenticatedAppendicesIndexRoute,
+  AuthenticatedTheoryIndexRoute: AuthenticatedTheoryIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
