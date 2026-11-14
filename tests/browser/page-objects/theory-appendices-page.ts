@@ -2,8 +2,12 @@ import type { Locator, Page } from "@playwright/test";
 
 import { waitForHydration } from "./hydration";
 
+type CurriculumSectionName = "Appendices" | "Theory";
+type HeaderCurriculumLinkName = CurriculumSectionName | "Levels";
+
 class TheoryAppendicesPage {
   public readonly articleNavigation: Locator;
+  public readonly breadcrumbNavigation: Locator;
   public readonly main: Locator;
   public readonly notFoundHeading: Locator;
   public readonly sectionItems: Locator;
@@ -18,6 +22,9 @@ class TheoryAppendicesPage {
       name: "Page Not Found",
     });
     this.sectionItems = this.main.getByRole("list").getByRole("listitem");
+    this.breadcrumbNavigation = this.main.getByRole("navigation", {
+      name: "Breadcrumb",
+    });
     this.articleNavigation = this.main.getByRole("navigation", {
       name: "Article navigation",
     });
@@ -40,26 +47,46 @@ class TheoryAppendicesPage {
     return this.main.getByRole("heading", { level: 1, name: title });
   }
 
-  public getInlineLink(name: string): Locator {
-    return this.main.getByRole("link", { name });
+  public getHeaderLink(name: HeaderCurriculumLinkName): Locator {
+    return this.page.getByRole("banner").getByRole("link", { name });
   }
 
-  public getNextArticleLink(title: string): Locator {
-    return this.articleNavigation.getByRole("link", { name: /Next/u }).filter({ hasText: title });
+  public async openSectionArticle(title: string) {
+    await this.main.getByRole("list").getByRole("link", { name: title }).click();
   }
 
-  public getSectionArticleLink(title: string): Locator {
-    return this.main.getByRole("link", { name: title });
+  public async openInlineLink(name: string) {
+    await this.main.getByRole("link", { name }).click();
   }
 
-  public async navigateFromHeader(section: "Appendices" | "Theory") {
+  public async goToNextArticle(title: string) {
+    await this.clickArticleNavLink("Next", title);
+  }
+
+  public async goToPreviousArticle(title: string) {
+    await this.clickArticleNavLink("Previous", title);
+  }
+
+  public async clickBreadcrumbSection(section: CurriculumSectionName) {
+    await this.breadcrumbNavigation.getByRole("link", { name: section }).click();
+  }
+
+  public async navigateFromHeader(section: CurriculumSectionName) {
     const menu = this.page.getByRole("button", { name: "Open menu" });
     if (await menu.isVisible()) {
       await menu.click();
       await this.page.getByRole("dialog").getByRole("link", { name: section }).click();
       return;
     }
-    await this.page.getByRole("banner").getByRole("link", { name: section }).click();
+    await this.getHeaderLink(section).click();
+  }
+
+  private async clickArticleNavLink(direction: "Next" | "Previous", title: string) {
+    const pattern = direction === "Next" ? /Next/u : /Previous/u;
+    await this.articleNavigation
+      .getByRole("link", { name: pattern })
+      .filter({ hasText: title })
+      .click();
   }
 }
 

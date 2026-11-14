@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
 import { AlertTriangle, Info, Lightbulb } from "lucide-react";
 import { Fragment, type ComponentProps, type ReactElement } from "react";
@@ -11,8 +12,6 @@ import type {
   ListItem,
   ProseBlock,
 } from "@/shared/curriculum-data";
-
-import { CurriculumLink } from "./curriculum-link";
 
 const HEADING_LEVEL_TWO = 2;
 const HEADING_LEVEL_THREE = 3;
@@ -220,11 +219,12 @@ function InlineLinkNode({
     );
   }
 
-  return (
-    <CurriculumLink className={linkClassName} href={node.href}>
-      {renderInlineNodes(node.children, nodeKey)}
-    </CurriculumLink>
-  );
+  const linkProps: ComponentProps<typeof Link> = {
+    className: linkClassName,
+    href: node.href,
+  };
+
+  return <Link {...linkProps}>{renderInlineNodes(node.children, nodeKey)}</Link>;
 }
 
 export { CurriculumProseBlocks };

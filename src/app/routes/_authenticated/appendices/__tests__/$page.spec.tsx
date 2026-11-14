@@ -6,22 +6,11 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { Route as AppendicesPageRoute } from "@/app/routes/_authenticated/appendices/$page";
 import { curriculumPageQueryOptions } from "@/pages/curriculum";
 import { NotFoundPage } from "@/pages/not-found";
-import type { ProseCurriculumPage } from "@/shared/curriculum-data";
+import { TEST_APPENDIX_PAGE } from "@test/vitest/fixtures/curriculum";
 import { getRouteOption } from "@test/vitest/helpers/route";
 import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
 
 vi.mock(import("@/pages/curriculum"));
-
-const TEST_APPENDIX_PAGE: ProseCurriculumPage = {
-  blocks: [],
-  href: "/appendices/appendix-a-leading-the-dance",
-  kind: "appendix",
-  nextPage: null,
-  pageSlug: "appendices/appendix-a-leading-the-dance",
-  previousPage: null,
-  sectionSlug: "appendices",
-  title: "Leading the Dance",
-};
 
 afterEach(() => {
   vi.restoreAllMocks();

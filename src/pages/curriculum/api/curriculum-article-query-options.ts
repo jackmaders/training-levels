@@ -20,6 +20,11 @@ const curriculumArticleKeys = {
   syllabus: () => [...curriculumArticleKeys.all, "syllabus"] as const,
 };
 
+function normalizeCurriculumPageSlug(pageSlug: string): string {
+  const parsed = getCurriculumPageInputSchema.safeParse({ pageSlug });
+  return parsed.success ? parsed.data.pageSlug : pageSlug.trim();
+}
+
 function curriculumSyllabusQueryOptions() {
   return queryOptions({
     queryFn: async () => await getCurriculumSyllabusFn(),
@@ -28,9 +33,11 @@ function curriculumSyllabusQueryOptions() {
 }
 
 function curriculumPageQueryOptions(pageSlug: string) {
+  const normalizedPageSlug = normalizeCurriculumPageSlug(pageSlug);
+
   return queryOptions({
-    queryFn: async () => await getCurriculumPageFn({ data: { pageSlug } }),
-    queryKey: curriculumArticleKeys.page(pageSlug),
+    queryFn: async () => await getCurriculumPageFn({ data: { pageSlug: normalizedPageSlug } }),
+    queryKey: curriculumArticleKeys.page(normalizedPageSlug),
   });
 }
 
@@ -66,9 +73,13 @@ function buildCurriculumArticleSlug(sectionSlug: ArticleSectionSlug, page: strin
 
 function isMatchingProseArticle(
   curriculumPage: CurriculumPage | null,
-  sectionSlug: ArticleSectionSlug,
+  sectionSlug: SectionSlug,
 ): curriculumPage is ProseCurriculumPage {
-  return curriculumPage?.sectionSlug === sectionSlug;
+  return (
+    curriculumPage !== null &&
+    curriculumPage.kind !== "behavior" &&
+    curriculumPage.sectionSlug === sectionSlug
+  );
 }
 
 function createNotFoundError(): Error {
@@ -80,5 +91,7 @@ export {
   curriculumArticleKeys,
   curriculumPageQueryOptions,
   curriculumSyllabusQueryOptions,
+  isMatchingProseArticle,
   loadCurriculumArticle,
+  normalizeCurriculumPageSlug,
 };

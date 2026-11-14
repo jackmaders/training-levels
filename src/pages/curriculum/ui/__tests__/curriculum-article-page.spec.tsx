@@ -2,11 +2,13 @@ import { QueryClient } from "@tanstack/react-query";
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 
-import type {
-  BehaviorCurriculumPage,
-  CurriculumPage,
-  ProseCurriculumPage,
-} from "@/shared/curriculum-data";
+import type { CurriculumPage } from "@/shared/curriculum-data";
+import {
+  TEST_APPENDIX_PAGE,
+  TEST_BEHAVIOR_PAGE,
+  TEST_THEORY_PAGE,
+  createProsePageFixture,
+} from "@test/vitest/fixtures/curriculum";
 import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
 
 import {
@@ -15,7 +17,7 @@ import {
 } from "../../api/curriculum-article-query-options";
 import { CurriculumArticlePage } from "../curriculum-article-page";
 
-const TEST_THEORY_ARTICLE: ProseCurriculumPage = {
+const TEST_THEORY_ARTICLE = createProsePageFixture({
   blocks: [
     { id: "getting-started", level: 2, text: "Getting Started", type: "heading" },
     {
@@ -32,7 +34,6 @@ const TEST_THEORY_ARTICLE: ProseCurriculumPage = {
     },
   ],
   href: "/theory/09-after-you-train",
-  kind: "theory",
   nextPage: {
     href: "/levels/level-1/00-overview",
     kind: "overview",
@@ -48,40 +49,16 @@ const TEST_THEORY_ARTICLE: ProseCurriculumPage = {
     sectionSlug: "theory",
     title: "Solving Training Problems",
   },
-  sectionSlug: "theory",
   title: "After You Train",
-};
+});
 
-const TEST_APPENDIX_ARTICLE: ProseCurriculumPage = {
+const TEST_APPENDIX_ARTICLE = createProsePageFixture({
+  ...TEST_APPENDIX_PAGE,
   blocks: [{ content: [{ text: "Appendix body copy.", type: "text" }], type: "paragraph" }],
   href: "/appendices/appendix-e-good-advice-from-a-friend",
-  kind: "appendix",
-  nextPage: null,
   pageSlug: "appendices/appendix-e-good-advice-from-a-friend",
-  previousPage: null,
-  sectionSlug: "appendices",
   title: "Advice from a Friend",
-};
-
-const TEST_BEHAVIOR_PAGE: BehaviorCurriculumPage = {
-  aboutTheCues: null,
-  behaviorFamily: "zen",
-  comebefores: [],
-  equipment: [],
-  href: "/levels/level-1/zen",
-  introBlocks: [],
-  kind: "behavior",
-  levelNumber: 1,
-  nextPage: null,
-  pageSlug: "level-1/zen",
-  previousPage: null,
-  sectionSlug: "level-1",
-  steps: [],
-  stepsIntroBlocks: [],
-  thinkAbout: [],
-  title: "Zen",
-  whereWeAreGoing: { extraBlocks: [], steps: [] },
-};
+});
 
 function createSeededQueryClient(
   sectionSlug: ArticleSectionSlug,
@@ -263,6 +240,22 @@ describe("curriculum article page", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Advice from a Friend" })).toBeDefined();
     expect(screen.getByText("Appendix body copy.")).toBeDefined();
     expect(screen.queryByRole("navigation", { name: "Article navigation" })).toBeNull();
+  });
+
+  it("hits the trimmed query cache entry when page param contains trailing whitespace", () => {
+    expect.assertions(1);
+
+    // Arrange
+    const queryClient = createSeededQueryClient("theory", "01-foreword", TEST_THEORY_PAGE);
+
+    // Act
+    renderWithProviders(<CurriculumArticlePage page="01-foreword " sectionSlug="theory" />, {
+      queryClient,
+      routePaths: ["/", "/theory", "/theory/$page"],
+    });
+
+    // Assert
+    expect(screen.getByRole("heading", { level: 1, name: "Foreword" })).toBeDefined();
   });
 
   it("renders not-found fallback when the cached article is null", () => {

@@ -1,30 +1,26 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
 import { ChevronRight } from "lucide-react";
 import type { ComponentProps } from "react";
 
 import type { SyllabusPageEntry } from "@/shared/curriculum-data";
 import { Badge } from "@/shared/ui/shadcn/badge";
-import { Card, CardHeader, CardTitle } from "@/shared/ui/shadcn/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/shadcn/card";
 
 import {
   curriculumSyllabusQueryOptions,
   type ArticleSectionSlug,
 } from "../api/curriculum-article-query-options";
-import { CurriculumLink } from "./curriculum-link";
+import { getCurriculumSectionMeta } from "../model/curriculum-sections";
 
-const SECTION_DETAILS: Record<
-  ArticleSectionSlug,
-  { description: string; fallbackTitle: string; itemLabel: string }
-> = {
+const SECTION_DETAILS: Record<ArticleSectionSlug, { description: string; itemLabel: string }> = {
   appendices: {
     description: "Reference materials, feeding guidance, trick ideas, and further reading.",
-    fallbackTitle: "Appendices",
     itemLabel: "Appendix",
   },
   theory: {
     description: "Foundational concepts behind force-free clicker training and The Levels.",
-    fallbackTitle: "Theory",
     itemLabel: "Chapter",
   },
 };
@@ -43,9 +39,10 @@ function CurriculumSectionIndexPage({
 }: CurriculumSectionIndexPageProps) {
   const { data: syllabus } = useSuspenseQuery(curriculumSyllabusQueryOptions());
   const section = syllabus.sections.find((item) => item.sectionSlug === sectionSlug);
+  const sectionMeta = getCurriculumSectionMeta(sectionSlug);
   const details = SECTION_DETAILS[sectionSlug];
   const pages = section?.pages ?? [];
-  const title = section?.title ?? details.fallbackTitle;
+  const title = section?.title ?? sectionMeta.title;
 
   return (
     <div className={cn("mx-auto flex w-full max-w-4xl flex-col gap-6", className)} {...props}>
@@ -55,9 +52,11 @@ function CurriculumSectionIndexPage({
       </header>
 
       {pages.length === 0 ? (
-        <p className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
-          No articles available in this section.
-        </p>
+        <Card>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">No articles available in this section.</p>
+          </CardContent>
+        </Card>
       ) : (
         <SectionPageList itemLabel={details.itemLabel} pages={pages} />
       )}
@@ -107,12 +106,9 @@ function SectionPageCard({
           />
         </div>
         <CardTitle>
-          <CurriculumLink
-            className="after:absolute after:inset-0 focus-visible:outline-none"
-            href={entry.href}
-          >
+          <Link className="after:absolute after:inset-0 focus-visible:outline-none" to={entry.href}>
             {entry.title}
-          </CurriculumLink>
+          </Link>
         </CardTitle>
       </CardHeader>
     </Card>

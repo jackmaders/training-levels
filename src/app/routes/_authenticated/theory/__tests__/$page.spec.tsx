@@ -6,22 +6,11 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { Route as TheoryPageRoute } from "@/app/routes/_authenticated/theory/$page";
 import { curriculumPageQueryOptions } from "@/pages/curriculum";
 import { NotFoundPage } from "@/pages/not-found";
-import type { ProseCurriculumPage } from "@/shared/curriculum-data";
+import { TEST_THEORY_PAGE } from "@test/vitest/fixtures/curriculum";
 import { getRouteOption } from "@test/vitest/helpers/route";
 import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
 
 vi.mock(import("@/pages/curriculum"));
-
-const TEST_THEORY_PAGE: ProseCurriculumPage = {
-  blocks: [],
-  href: "/theory/01-foreword",
-  kind: "theory",
-  nextPage: null,
-  pageSlug: "theory/01-foreword",
-  previousPage: null,
-  sectionSlug: "theory",
-  title: "Foreword",
-};
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -43,7 +32,7 @@ describe("theory detail route", () => {
     expect(notFoundComponent).toBe(NotFoundPage);
   });
 
-  it("loads matching theory article in loader", async () => {
+  it("loads matching theory article in loader with normalized query key", async () => {
     expect.assertions(1);
 
     // Arrange
@@ -58,7 +47,7 @@ describe("theory detail route", () => {
     // Act
     await loader({
       context: { queryClient },
-      params: { page: "01-foreword" },
+      params: { page: "01-foreword " },
     });
 
     // Assert

@@ -32,6 +32,21 @@ test("redirects unauthenticated visitors from appendices to sign in", async ({ p
   await expect(homePage.heading).toBeVisible();
 });
 
+test("displays levels, theory, and appendices links in header for authenticated users", async ({
+  baseURL,
+  page,
+}) => {
+  // Arrange
+  const curriculumPage = new TheoryAppendicesPage(page);
+  await signUpAndVisitPath(page, baseURL, "/todos");
+
+  // Assert
+  await expect(curriculumPage.getHeaderLink("Levels")).toBeVisible();
+  await expect(curriculumPage.getHeaderLink("Levels")).toHaveAttribute("href", "/levels");
+  await expect(curriculumPage.getHeaderLink("Theory")).toBeVisible();
+  await expect(curriculumPage.getHeaderLink("Appendices")).toBeVisible();
+});
+
 test("navigates via header to theory index, opens an article, and advances with next link", async ({
   baseURL,
   page,
@@ -48,13 +63,13 @@ test("navigates via header to theory index, opens an article, and advances with 
   await expect(curriculumPage.sectionItems).toHaveCount(THEORY_ARTICLE_COUNT);
 
   // Act
-  await curriculumPage.getSectionArticleLink("Why Are You Here?").click();
+  await curriculumPage.openSectionArticle("Why Are You Here?");
 
   // Assert
   await expect(page).toHaveURL(/\/theory\/03-why-are-you-here$/u);
 
   // Act
-  await curriculumPage.getNextArticleLink("The People of Training").click();
+  await curriculumPage.goToNextArticle("The People of Training");
 
   // Assert
   await expect(page).toHaveURL(/\/theory\/04-the-people-of-training$/u);
@@ -70,13 +85,13 @@ test("follows inline cross-link to appendix a, next link to appendix b, and head
   await signUpAndVisitPath(page, baseURL, "/theory/04-the-people-of-training");
 
   // Act
-  await curriculumPage.getInlineLink("Leading The Dance on page 267").click();
+  await curriculumPage.openInlineLink("Leading The Dance on page 267");
 
   // Assert
   await expect(page).toHaveURL(/\/appendices\/appendix-a-leading-the-dance$/u);
 
   // Act
-  await curriculumPage.getNextArticleLink("Appendix B: Teaching Your Dog to Eat").click();
+  await curriculumPage.goToNextArticle("Appendix B: Teaching Your Dog to Eat");
 
   // Assert
   await expect(page).toHaveURL(/\/appendices\/appendix-b-teaching-your-dog-to-eat$/u);
@@ -84,6 +99,31 @@ test("follows inline cross-link to appendix a, next link to appendix b, and head
 
   // Act
   await curriculumPage.navigateFromHeader("Appendices");
+
+  // Assert
+  await expect(page).toHaveURL(/\/appendices$/u);
+  await expect(curriculumPage.sectionItems).toHaveCount(APPENDICES_ARTICLE_COUNT);
+});
+
+test("returns to previous article via footer link and to section index via breadcrumb", async ({
+  baseURL,
+  page,
+}) => {
+  // Arrange
+  const curriculumPage = new TheoryAppendicesPage(page);
+  await signUpAndVisitPath(page, baseURL, "/appendices/appendix-b-teaching-your-dog-to-eat");
+
+  // Act
+  await curriculumPage.goToPreviousArticle("Appendix A: Leading the Dance");
+
+  // Assert
+  await expect(page).toHaveURL(/\/appendices\/appendix-a-leading-the-dance$/u);
+  await expect(
+    curriculumPage.getArticleHeading("Leading the Dance: Building a Better Relationship"),
+  ).toBeVisible();
+
+  // Act
+  await curriculumPage.clickBreadcrumbSection("Appendices");
 
   // Assert
   await expect(page).toHaveURL(/\/appendices$/u);

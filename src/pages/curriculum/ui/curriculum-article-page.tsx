@@ -1,28 +1,19 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
 import { ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
 import type { ComponentProps } from "react";
 
-import type {
-  CurriculumPage,
-  PageNavigationRef,
-  ProseCurriculumPage,
-} from "@/shared/curriculum-data";
+import type { PageNavigationRef } from "@/shared/curriculum-data";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/shadcn/card";
 
 import {
   curriculumPageQueryOptions,
+  isMatchingProseArticle,
   type ArticleSectionSlug,
 } from "../api/curriculum-article-query-options";
-import { CurriculumLink } from "./curriculum-link";
+import { getCurriculumSectionMeta } from "../model/curriculum-sections";
 import { CurriculumProseBlocks } from "./curriculum-prose-blocks";
-
-const SECTION_LINKS: Record<
-  ArticleSectionSlug,
-  { href: "/appendices" | "/theory"; label: string }
-> = {
-  appendices: { href: "/appendices", label: "Appendices" },
-  theory: { href: "/theory", label: "Theory" },
-};
 
 interface CurriculumArticlePageProps extends ComponentProps<"article"> {
   page: string;
@@ -38,7 +29,7 @@ function CurriculumArticlePage({
 }: CurriculumArticlePageProps) {
   const { data: article } = useSuspenseQuery(curriculumPageQueryOptions(`${sectionSlug}/${page}`));
 
-  if (!isProseArticle(article, sectionSlug)) {
+  if (!isMatchingProseArticle(article, sectionSlug)) {
     return <ArticleNotFound className={className} sectionSlug={sectionSlug} {...props} />;
   }
 
@@ -56,13 +47,6 @@ function CurriculumArticlePage({
   );
 }
 
-function isProseArticle(
-  article: CurriculumPage | null,
-  sectionSlug: ArticleSectionSlug,
-): article is ProseCurriculumPage {
-  return article !== null && article.kind !== "behavior" && article.sectionSlug === sectionSlug;
-}
-
 function ArticleNotFound({
   className,
   sectionSlug,
@@ -71,12 +55,18 @@ function ArticleNotFound({
   return (
     <article className={cn("mx-auto flex w-full max-w-4xl flex-col gap-6", className)} {...props}>
       <ArticleBreadcrumb sectionSlug={sectionSlug} />
-      <section className="space-y-2 rounded-xl border border-border bg-card p-6">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Article Not Found</h1>
-        <p className="text-sm text-muted-foreground">
-          The requested curriculum article could not be found.
-        </p>
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Article Not Found</h1>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            The requested curriculum article could not be found.
+          </p>
+        </CardContent>
+      </Card>
     </article>
   );
 }
@@ -88,16 +78,16 @@ function ArticleBreadcrumb({
   sectionSlug: ArticleSectionSlug;
   title?: string;
 }) {
-  const section = SECTION_LINKS[sectionSlug];
+  const section = getCurriculumSectionMeta(sectionSlug);
 
   return (
     <nav
       aria-label="Breadcrumb"
       className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground"
     >
-      <CurriculumLink className="transition-colors hover:text-foreground" href={section.href}>
-        {section.label}
-      </CurriculumLink>
+      <Link className="transition-colors hover:text-foreground" to={section.href}>
+        {section.title}
+      </Link>
       {title === undefined ? null : (
         <>
           <ChevronRight aria-hidden="true" className="size-4 shrink-0" />
@@ -144,20 +134,29 @@ function ArticleNavLink({
   const label = isNext ? "Next" : "Previous";
 
   return (
-    <CurriculumLink
+    <Card
       className={cn(
-        "flex flex-col gap-1 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/50",
-        isNext && "sm:col-start-2 sm:items-end sm:text-right",
+        "relative transition-colors hover:bg-muted/50",
+        isNext && "sm:col-start-2 sm:text-right",
       )}
-      href={target.href}
     >
-      <span className="flex items-center gap-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-        {isNext ? null : <Icon aria-hidden="true" className="size-3.5" />}
-        <span>{label}</span>
-        {isNext ? <Icon aria-hidden="true" className="size-3.5" /> : null}
-      </span>
-      <span className="font-medium text-foreground">{target.title}</span>
-    </CurriculumLink>
+      <CardContent>
+        <Link
+          className={cn(
+            "flex flex-col gap-1 after:absolute after:inset-0 focus-visible:outline-none",
+            isNext && "sm:items-end",
+          )}
+          to={target.href}
+        >
+          <span className="flex items-center gap-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            {isNext ? null : <Icon aria-hidden="true" className="size-3.5" />}
+            <span>{label}</span>
+            {isNext ? <Icon aria-hidden="true" className="size-3.5" /> : null}
+          </span>
+          <span className="font-medium text-foreground">{target.title}</span>
+        </Link>
+      </CardContent>
+    </Card>
   );
 }
 

@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { hasPermission } from "@/shared/auth/permissions";
 import { ensureSession } from "@/shared/auth/session.server";
-import type { CurriculumPage, CurriculumSyllabus } from "@/shared/curriculum-data";
 import { ApplicationError } from "@/shared/errors";
+import { TEST_SYLLABUS, TEST_THEORY_PAGE } from "@test/vitest/fixtures/curriculum";
 import { TEST_SESSION } from "@test/vitest/fixtures/session";
 
 import { getPage, getStepProgress, getSyllabus, toggleStep } from "../curriculum-service";
@@ -18,24 +18,6 @@ vi.mock(import("@tanstack/react-start"));
 vi.mock(import("@/shared/auth/session.server"));
 vi.mock(import("@/shared/auth/permissions"), { spy: true });
 vi.mock(import("../curriculum-service"));
-
-const TEST_SYLLABUS: CurriculumSyllabus = {
-  sections: [],
-  totalBehaviors: 0,
-  totalPages: 0,
-  totalSteps: 0,
-};
-
-const TEST_PAGE: CurriculumPage = {
-  blocks: [],
-  href: "/theory/01-foreword",
-  kind: "theory",
-  nextPage: null,
-  pageSlug: "theory/01-foreword",
-  previousPage: null,
-  sectionSlug: "theory",
-  title: "Foreword",
-};
 
 beforeEach(() => {
   vi.mocked(ensureSession).mockResolvedValue(TEST_SESSION);
@@ -91,7 +73,7 @@ describe("curriculum functions getCurriculumPageFn", () => {
     expect.assertions(3);
 
     // Arrange
-    vi.mocked(getPage).mockReturnValueOnce(TEST_PAGE);
+    vi.mocked(getPage).mockReturnValueOnce(TEST_THEORY_PAGE);
 
     // Act
     const result = await getCurriculumPageFn({ data: { pageSlug: "  theory/01-foreword  " } });
@@ -99,7 +81,7 @@ describe("curriculum functions getCurriculumPageFn", () => {
     // Assert
     expect(hasPermission).toHaveBeenCalledWith(TEST_SESSION.user.role, "curriculum:read");
     expect(getPage).toHaveBeenCalledWith("theory/01-foreword");
-    expect(result).toStrictEqual(TEST_PAGE);
+    expect(result).toStrictEqual(TEST_THEORY_PAGE);
   });
 
   it("returns null when getPage finds no matching page", async () => {
