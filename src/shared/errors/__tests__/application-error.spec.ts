@@ -6,8 +6,6 @@ describe("application errors", () => {
   it.each([
     ["CURRICULUM_STEP_NOT_FOUND", "Curriculum step not found.", 404],
     ["INTERNAL_SERVER_ERROR", "Something went wrong.", 500],
-    ["TODO_CREATE_FAILED", "Todo item could not be created.", 500],
-    ["TODO_NOT_FOUND", "Todo item not found.", 404],
     ["USER_FORBIDDEN", "Permission denied.", 403],
     ["USER_UNAUTHENTICATED", "Not Authenticated.", 401],
   ] as const)("configures %s", (code, message, statusCode) => {
@@ -24,10 +22,10 @@ describe("application errors", () => {
     expect.assertions(1);
     // Arrange
     const cause = new Error("Database unavailable");
-    const details = { todoId: "missing-todo" };
+    const details = { stepId: "missing-step" };
 
     // Act
-    const error = new ApplicationError("TODO_CREATE_FAILED", {
+    const error = new ApplicationError("INTERNAL_SERVER_ERROR", {
       cause,
       details,
       message: "Please retry later.",
@@ -41,18 +39,18 @@ describe("application errors", () => {
     expect.assertions(1);
 
     // Act
-    const error = new ApplicationError("TODO_NOT_FOUND", { message: "" });
+    const error = new ApplicationError("CURRICULUM_STEP_NOT_FOUND", { message: "" });
 
     // Assert
-    expect(error.message).toBe("Todo item not found.");
+    expect(error.message).toBe("Curriculum step not found.");
   });
 
   it("serializes public error fields without the cause or stack", () => {
     expect.assertions(1);
     // Arrange
-    const error = new ApplicationError("TODO_NOT_FOUND", {
+    const error = new ApplicationError("CURRICULUM_STEP_NOT_FOUND", {
       cause: new Error("Private database details"),
-      details: { todoId: "missing-todo" },
+      details: { stepId: "missing-step" },
     });
 
     // Act
@@ -61,8 +59,8 @@ describe("application errors", () => {
     // Assert
     expect(serialized).toBe(
       JSON.stringify({
-        code: "TODO_NOT_FOUND",
-        message: "Todo item not found.",
+        code: "CURRICULUM_STEP_NOT_FOUND",
+        message: "Curriculum step not found.",
         name: "ApplicationError",
         statusCode: 404,
       }),

@@ -15,10 +15,6 @@ vi.mock(import("@/shared/auth/session.server"));
 vi.mock(import("@/shared/auth/permissions"), { spy: true });
 
 const ALL_PERMISSIONS = [
-  "todos:read",
-  "todos:create",
-  "todos:update",
-  "todos:delete",
   "curriculum:read",
   "progress:update",
 ] as const satisfies readonly Permission[];
@@ -78,7 +74,7 @@ describe("permissionMiddleware behavior", () => {
     vi.mocked(ensureSession).mockResolvedValueOnce(TEST_SESSION);
     vi.mocked(hasPermission).mockReturnValueOnce(false);
     const next = vi.fn<() => Promise<void>>();
-    const serverFn = getPermissionServerMiddleware("todos:create");
+    const serverFn = getPermissionServerMiddleware("progress:update");
     const input = { context: {}, next } as unknown as MiddlewareInput;
 
     // Act
@@ -99,7 +95,7 @@ describe("permissionMiddleware behavior", () => {
     // Arrange
     vi.mocked(ensureSession).mockRejectedValueOnce(new Error("Unauthorized"));
     const next = vi.fn<() => Promise<void>>();
-    const serverFn = getPermissionServerMiddleware("todos:read");
+    const serverFn = getPermissionServerMiddleware("curriculum:read");
     const input = { context: {}, next } as unknown as MiddlewareInput;
 
     // Act & Assert
@@ -121,7 +117,7 @@ describe("permissionMiddleware role validation", () => {
         }),
       );
       const next = vi.fn<() => Promise<void>>();
-      const serverFn = getPermissionServerMiddleware("todos:read");
+      const serverFn = getPermissionServerMiddleware("curriculum:read");
       const input = { context: {}, next } as unknown as MiddlewareInput;
 
       // Act

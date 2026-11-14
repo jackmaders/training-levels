@@ -2,7 +2,7 @@ import { applyD1Migrations, type D1Migration } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { afterEach, beforeAll } from "vite-plus/test";
 
-import { dogs, stepCompletions, todos } from "@/shared/db";
+import { dogs, stepCompletions } from "@/shared/db";
 import { getDb } from "@/shared/db/index.server";
 import { rateLimit, user } from "@/shared/db/schema";
 
@@ -26,6 +26,5 @@ afterEach(async () => {
   const db = getDb(env.DB);
   await db.delete(stepCompletions);
   await db.delete(dogs);
-  await db.delete(todos);
   await Promise.all([db.delete(user), db.delete(rateLimit), clearImages()]);
 });

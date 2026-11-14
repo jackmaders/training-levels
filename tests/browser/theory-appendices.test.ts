@@ -38,7 +38,7 @@ test("displays levels, theory, and appendices links in header for authenticated 
 }) => {
   // Arrange
   const curriculumPage = new TheoryAppendicesPage(page);
-  await signUpAndVisitPath(page, baseURL, "/todos");
+  await signUpAndVisitPath(page, baseURL, "/levels");
 
   // Assert
   await expect(curriculumPage.getHeaderLink("Levels")).toBeVisible();
@@ -53,7 +53,7 @@ test("navigates via header to theory index, opens an article, and advances with 
 }) => {
   // Arrange
   const curriculumPage = new TheoryAppendicesPage(page);
-  await signUpAndVisitPath(page, baseURL, "/todos");
+  await signUpAndVisitPath(page, baseURL, "/levels");
 
   // Act
   await curriculumPage.navigateFromHeader("Theory");

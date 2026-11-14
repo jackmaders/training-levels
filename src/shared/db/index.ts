@@ -1,1 +1,1 @@
-export { dogs, stepCompletions, todos, type Dog, type StepCompletion, type Todo } from "./schema";
+export { dogs, stepCompletions, type Dog, type StepCompletion } from "./schema";

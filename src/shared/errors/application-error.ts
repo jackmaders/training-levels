@@ -3,8 +3,6 @@ import { HttpStatusCodes, type HttpStatusCode } from "../lib/http-status-codes";
 const ErrorCodes = {
   CURRICULUM_STEP_NOT_FOUND: "CURRICULUM_STEP_NOT_FOUND",
   INTERNAL_SERVER_ERROR: "INTERNAL_SERVER_ERROR",
-  TODO_CREATE_FAILED: "TODO_CREATE_FAILED",
-  TODO_NOT_FOUND: "TODO_NOT_FOUND",
   USER_FORBIDDEN: "USER_FORBIDDEN",
   USER_UNAUTHENTICATED: "USER_UNAUTHENTICATED",
 } as const;
@@ -17,8 +15,6 @@ const ErrorConfig: Record<ErrorCode, { message: string; statusCode?: HttpStatusC
     statusCode: HttpStatusCodes.NOT_FOUND,
   },
   INTERNAL_SERVER_ERROR: { message: "Something went wrong." },
-  TODO_CREATE_FAILED: { message: "Todo item could not be created." },
-  TODO_NOT_FOUND: { message: "Todo item not found.", statusCode: HttpStatusCodes.NOT_FOUND },
   USER_FORBIDDEN: { message: "Permission denied.", statusCode: HttpStatusCodes.FORBIDDEN },
   USER_UNAUTHENTICATED: { message: "Not Authenticated.", statusCode: HttpStatusCodes.UNAUTHORIZED },
 };

@@ -1,13 +1,6 @@
 import type { UserRole } from "../db/schema";
 
-const ALL_PERMISSIONS = [
-  "todos:read",
-  "todos:create",
-  "todos:update",
-  "todos:delete",
-  "curriculum:read",
-  "progress:update",
-] as const;
+const ALL_PERMISSIONS = ["curriculum:read", "progress:update"] as const;
 
 type Permission = (typeof ALL_PERMISSIONS)[number];
 

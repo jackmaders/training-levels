@@ -9,7 +9,9 @@ export function SignUpCard() {
         <CardTitle>
           <h2>Sign Up</h2>
         </CardTitle>
-        <CardDescription>Create an account to start managing your todos</CardDescription>
+        <CardDescription>
+          Create an account to start the Dog Training Levels curriculum
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <SignUpForm />

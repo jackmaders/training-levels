@@ -19,4 +19,3 @@ export {
 } from "./auth";
 export { dogs, type Dog } from "./dogs";
 export { stepCompletions, type StepCompletion } from "./step-completions";
-export { todos, type Todo } from "./todos";

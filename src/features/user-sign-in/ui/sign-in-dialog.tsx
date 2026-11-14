@@ -17,7 +17,9 @@ export function SignInDialog() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Sign In</DialogTitle>
-          <DialogDescription>Enter your credentials to access your todos</DialogDescription>
+          <DialogDescription>
+            Enter your credentials to access the training curriculum
+          </DialogDescription>
         </DialogHeader>
         <SignInForm />
       </DialogContent>

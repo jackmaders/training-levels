@@ -17,7 +17,9 @@ export function SignUpDialog() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Sign Up</DialogTitle>
-          <DialogDescription>Create an account to start managing your todos</DialogDescription>
+          <DialogDescription>
+            Create an account to start the Dog Training Levels curriculum
+          </DialogDescription>
         </DialogHeader>
         <SignUpForm />
       </DialogContent>

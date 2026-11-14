@@ -44,6 +44,10 @@ class AuthClient {
       headers,
     });
   }
+
+  public async clearSession(): Promise<void> {
+    await this.page.context().clearCookies();
+  }
 }
 
 export { AuthClient };

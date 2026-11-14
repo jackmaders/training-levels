@@ -5,9 +5,9 @@ import { applicationErrorAdapter } from "../serialization";
 
 describe("application error serialization", () => {
   it.each([
-    [new ApplicationError("TODO_NOT_FOUND"), true],
+    [new ApplicationError("CURRICULUM_STEP_NOT_FOUND"), true],
     [new Error("unknown failure"), false],
-    [{ code: "TODO_NOT_FOUND" }, false],
+    [{ code: "CURRICULUM_STEP_NOT_FOUND" }, false],
   ])("recognizes application errors: %s", (value, expected) => {
     expect.assertions(1);
 
@@ -21,7 +21,7 @@ describe("application error serialization", () => {
   it("sends only configured public error fields", () => {
     expect.assertions(1);
     // Arrange
-    const error = new ApplicationError("TODO_NOT_FOUND", {
+    const error = new ApplicationError("CURRICULUM_STEP_NOT_FOUND", {
       cause: new Error("private cause"),
       details: { secret: "private details" },
       message: "private diagnostic message",
@@ -32,8 +32,8 @@ describe("application error serialization", () => {
 
     // Assert
     expect(serialized).toStrictEqual({
-      code: "TODO_NOT_FOUND",
-      message: "Todo item not found.",
+      code: "CURRICULUM_STEP_NOT_FOUND",
+      message: "Curriculum step not found.",
       name: "ApplicationError",
       statusCode: 404,
     });
