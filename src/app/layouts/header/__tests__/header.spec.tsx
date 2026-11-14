@@ -24,17 +24,17 @@ async function renderHeader({
   const { router, wrapper } = createTestingWrapper({
     context: { session },
     initialLocation: initialEntry,
-    routePaths: ["/", "/about", "/todos"],
+    routePaths: ["/", "/about", "/levels", "/theory", "/appendices"],
   });
   await router.load();
   render(<Header />, { wrapper });
 }
 
 describe("header identity and navigation", () => {
-  it("provides a branded home link and navigation links", async () => {
+  it("provides a branded home link and public navigation links", async () => {
     expect.assertions(3);
 
-    // Arrange & Act
+    // Act
     await renderHeader();
     const banner = screen.getByRole("banner");
 
@@ -44,24 +44,32 @@ describe("header identity and navigation", () => {
     expect(within(banner).getByRole("link", { name: "About" }).getAttribute("href")).toBe("/about");
   });
 
-  it("shows sign in button when user is unauthenticated", async () => {
-    expect.assertions(1);
+  it("shows sign in button and hides curriculum links when user is unauthenticated", async () => {
+    expect.assertions(4);
 
-    // Arrange & Act
+    // Act
     await renderHeader({ session: null });
 
     // Assert
     expect(screen.getByRole("button", { name: "Sign in" })).toBeDefined();
+    expect(screen.queryByRole("link", { name: "Levels" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Theory" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Appendices" })).toBeNull();
   });
 
-  it("shows todos link and sign out button when user is authenticated", async () => {
-    expect.assertions(2);
+  it("shows curriculum links and sign out button without legacy Todos link when authenticated", async () => {
+    expect.assertions(5);
 
-    // Arrange & Act
-    await renderHeader({ initialEntry: "/todos", session: TEST_SESSION });
+    // Act
+    await renderHeader({ initialEntry: "/theory", session: TEST_SESSION });
 
     // Assert
-    expect(screen.getByRole("link", { name: "Todos" }).getAttribute("href")).toBe("/todos");
+    expect(screen.getByRole("link", { name: "Levels" }).getAttribute("href")).toBe("/levels");
+    expect(screen.getByRole("link", { name: "Theory" }).getAttribute("href")).toBe("/theory");
+    expect(screen.getByRole("link", { name: "Appendices" }).getAttribute("href")).toBe(
+      "/appendices",
+    );
+    expect(screen.queryByRole("link", { name: "Todos" })).toBeNull();
     expect(screen.getByRole("button", { name: "Sign Out" })).toBeDefined();
   });
 });
@@ -72,7 +80,7 @@ describe("header auth actions", () => {
 
     // Arrange
     const user = userEvent.setup();
-    await renderHeader({ initialEntry: "/todos", session: TEST_SESSION });
+    await renderHeader({ initialEntry: "/theory", session: TEST_SESSION });
 
     // Act
     await user.click(screen.getByRole("button", { name: "Sign Out" }));
@@ -87,7 +95,7 @@ describe("header auth actions", () => {
   });
 
   it("shows sign in in the mobile drawer without a session", async () => {
-    expect.assertions(4);
+    expect.assertions(3);
 
     // Arrange
     const error = vi.spyOn(console, "error");
@@ -101,20 +109,39 @@ describe("header auth actions", () => {
 
     // Assert
     expect(within(drawer).getByRole("button", { name: "Sign in" })).toBeDefined();
-    expect(within(drawer).queryByRole("link", { name: "Todos" })).toBeNull();
     expect(error).not.toHaveBeenCalled();
     expect(warning).not.toHaveBeenCalled();
   });
 
-  it("signs out from the mobile drawer", async () => {
-    expect.assertions(2);
+  it("hides curriculum links in the mobile drawer without a session", async () => {
+    expect.assertions(3);
 
     // Arrange
     const user = userEvent.setup();
-    await renderHeader({ initialEntry: "/todos", session: TEST_SESSION });
+    await renderHeader({ session: null });
+
+    // Act
     await user.click(screen.getByRole("button", { name: "Open menu" }));
     const drawer = await screen.findByRole("dialog");
-    const todos = within(drawer).getByRole("link", { name: "Todos" });
+
+    // Assert
+    expect(within(drawer).queryByRole("link", { name: "Levels" })).toBeNull();
+    expect(within(drawer).queryByRole("link", { name: "Theory" })).toBeNull();
+    expect(within(drawer).queryByRole("link", { name: "Appendices" })).toBeNull();
+  });
+
+  it("shows curriculum links and signs out from the mobile drawer", async () => {
+    expect.assertions(5);
+
+    // Arrange
+    const user = userEvent.setup();
+    await renderHeader({ initialEntry: "/theory", session: TEST_SESSION });
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    const drawer = await screen.findByRole("dialog");
+    const levelsLink = within(drawer).getByRole("link", { name: "Levels" });
+    const theoryLink = within(drawer).getByRole("link", { name: "Theory" });
+    const appendicesLink = within(drawer).getByRole("link", { name: "Appendices" });
+    const todosLink = within(drawer).queryByRole("link", { name: "Todos" });
 
     // Act
     await user.click(within(drawer).getByRole("button", { name: "Sign Out" }));
@@ -125,7 +152,10 @@ describe("header auth actions", () => {
     );
 
     // Assert
-    expect(todos.getAttribute("href")).toBe("/todos");
+    expect(levelsLink.getAttribute("href")).toBe("/levels");
+    expect(theoryLink.getAttribute("href")).toBe("/theory");
+    expect(appendicesLink.getAttribute("href")).toBe("/appendices");
+    expect(todosLink).toBeNull();
     expect(signOut).toHaveBeenCalledWith();
   });
 });
