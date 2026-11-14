@@ -1,7 +1,6 @@
-import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
 import { AlertTriangle, Info, Lightbulb } from "lucide-react";
-import { Fragment, type ComponentProps, type ReactElement, type ReactNode } from "react";
+import { Fragment, type ComponentProps, type ReactElement } from "react";
 
 import type {
   CalloutBlock,
@@ -12,6 +11,8 @@ import type {
   ListItem,
   ProseBlock,
 } from "@/shared/curriculum-data";
+
+import { CurriculumLink } from "./curriculum-link";
 
 const HEADING_LEVEL_TWO = 2;
 const HEADING_LEVEL_THREE = 3;
@@ -199,35 +200,31 @@ function renderInlineNode(node: InlineNode, nodeKey: string): ReactElement {
     );
   }
 
+  return <InlineLinkNode key={nodeKey} node={node} nodeKey={nodeKey} />;
+}
+
+function InlineLinkNode({
+  node,
+  nodeKey,
+}: {
+  node: Extract<InlineNode, { type: "link" }>;
+  nodeKey: string;
+}) {
+  const linkClassName = "font-medium text-primary underline underline-offset-4 hover:opacity-80";
+
   if (node.external) {
     return (
-      <a
-        className="font-medium text-primary underline underline-offset-4 hover:opacity-80"
-        href={node.href}
-        key={nodeKey}
-        rel="noopener noreferrer"
-        target="_blank"
-      >
+      <a className={linkClassName} href={node.href} rel="noopener noreferrer" target="_blank">
         {renderInlineNodes(node.children, nodeKey)}
       </a>
     );
   }
 
   return (
-    <InternalCurriculumLink href={node.href} key={nodeKey}>
+    <CurriculumLink className={linkClassName} href={node.href}>
       {renderInlineNodes(node.children, nodeKey)}
-    </InternalCurriculumLink>
+    </CurriculumLink>
   );
-}
-
-function InternalCurriculumLink({ children, href }: { children: ReactNode; href: string }) {
-  const linkProps: ComponentProps<typeof Link> = {
-    children,
-    className: "font-medium text-primary underline underline-offset-4 hover:opacity-80",
-    href,
-  };
-
-  return <Link {...linkProps} />;
 }
 
 export { CurriculumProseBlocks };
