@@ -110,6 +110,34 @@ describe("useToggleStep optimistic mutation hook", () => {
     expect(queryClient.getQueryData(progressKey)).toStrictEqual(["level-1/zen:step-1"]);
   });
 
+  it("restores a completed step if its query cache is removed while the mutation is pending", async () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const deferred = createDeferred<ToggleStepResult>();
+    vi.mocked(toggleStepFn).mockReturnValueOnce(deferred.promise);
+    const { queryClient, wrapper } = createTestingWrapper();
+    const progressKey = stepProgressQueryOptions().queryKey;
+    queryClient.setQueryData(progressKey, []);
+    const { result } = renderHook(() => useToggleStep(), { wrapper });
+
+    // Act
+    act(() => {
+      result.current.mutate({ completed: true, stepId: "level-1/zen:step-1" });
+    });
+    await waitFor(() => {
+      expect(queryClient.getQueryData(progressKey)).toStrictEqual(["level-1/zen:step-1"]);
+    });
+    queryClient.removeQueries({ queryKey: progressKey });
+    await act(async () => {
+      deferred.resolve({ completed: true, stepId: "level-1/zen:step-1" });
+      await deferred.promise;
+    });
+
+    // Assert
+    expect(queryClient.getQueryData(progressKey)).toStrictEqual(["level-1/zen:step-1"]);
+  });
+
   it("optimistically removes a step ID when unchecking", async () => {
     expect.assertions(1);
 
@@ -173,6 +201,147 @@ describe("useToggleStep optimistic mutation hook", () => {
     expect(result.current.error).toBe(error);
     expect(queryClient.getQueryData(progressKey)).toStrictEqual(["level-1/zen:step-1"]);
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: progressKey });
+  });
+
+  it("preserves another step completed by a concurrent mutation when one mutation fails", async () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const firstMutation = createDeferred<ToggleStepResult>();
+    const secondMutation = createDeferred<ToggleStepResult>();
+    vi.mocked(toggleStepFn)
+      .mockReturnValueOnce(firstMutation.promise)
+      .mockReturnValueOnce(secondMutation.promise);
+    const { queryClient, wrapper } = createTestingWrapper();
+    const progressKey = stepProgressQueryOptions().queryKey;
+    queryClient.setQueryData(progressKey, []);
+    const { result } = renderHook(() => useToggleStep(), { wrapper });
+
+    // Act
+    act(() => {
+      result.current.mutate({ completed: true, stepId: "level-1/zen:step-1" });
+      result.current.mutate({ completed: true, stepId: "level-1/zen:step-2" });
+    });
+    await waitFor(() => {
+      expect(queryClient.getQueryData(progressKey)).toStrictEqual([
+        "level-1/zen:step-1",
+        "level-1/zen:step-2",
+      ]);
+    });
+    await act(async () => {
+      secondMutation.resolve({ completed: true, stepId: "level-1/zen:step-2" });
+      await secondMutation.promise;
+    });
+    act(() => {
+      firstMutation.reject(new ApplicationError("CURRICULUM_STEP_NOT_FOUND"));
+    });
+
+    // Assert
+    await waitFor(() => {
+      expect(queryClient.isMutating()).toBe(0);
+    });
+    expect(queryClient.getQueryData(progressKey)).toStrictEqual(["level-1/zen:step-2"]);
+  });
+
+  it("does not roll back an earlier failed toggle over a later same-step toggle", async () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const firstMutation = createDeferred<ToggleStepResult>();
+    const secondMutation = createDeferred<ToggleStepResult>();
+    vi.mocked(toggleStepFn)
+      .mockReturnValueOnce(firstMutation.promise)
+      .mockReturnValueOnce(secondMutation.promise);
+    const { queryClient, wrapper } = createTestingWrapper();
+    const progressKey = stepProgressQueryOptions().queryKey;
+    queryClient.setQueryData(progressKey, []);
+    const { result } = renderHook(() => useToggleStep(), { wrapper });
+
+    // Act
+    act(() => {
+      result.current.mutate({ completed: true, stepId: "level-1/zen:step-1" });
+      result.current.mutate({ completed: true, stepId: "level-1/zen:step-1" });
+    });
+    await act(async () => {
+      secondMutation.resolve({ completed: true, stepId: "level-1/zen:step-1" });
+      await secondMutation.promise;
+    });
+    act(() => {
+      firstMutation.reject(new ApplicationError("CURRICULUM_STEP_NOT_FOUND"));
+    });
+
+    // Assert
+    await waitFor(() => {
+      expect(queryClient.isMutating()).toBe(0);
+    });
+    expect(queryClient.getQueryData(progressKey)).toStrictEqual(["level-1/zen:step-1"]);
+  });
+
+  it("restores the baseline when overlapping same-step toggles from separate hooks both fail", async () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const firstMutation = createDeferred<ToggleStepResult>();
+    const secondMutation = createDeferred<ToggleStepResult>();
+    vi.mocked(toggleStepFn)
+      .mockReturnValueOnce(firstMutation.promise)
+      .mockReturnValueOnce(secondMutation.promise);
+    const { queryClient, wrapper } = createTestingWrapper();
+    const progressKey = stepProgressQueryOptions().queryKey;
+    queryClient.setQueryData(progressKey, []);
+    const { result } = renderHook(() => [useToggleStep(), useToggleStep()] as const, { wrapper });
+
+    // Act
+    act(() => {
+      result.current[0].mutate({ completed: true, stepId: "level-1/zen:step-1" });
+      result.current[1].mutate({ completed: false, stepId: "level-1/zen:step-1" });
+    });
+    await waitFor(() => {
+      expect(queryClient.getQueryData(progressKey)).toStrictEqual([]);
+    });
+    act(() => {
+      secondMutation.reject(new ApplicationError("CURRICULUM_STEP_NOT_FOUND"));
+    });
+    act(() => {
+      firstMutation.reject(new ApplicationError("CURRICULUM_STEP_NOT_FOUND"));
+    });
+
+    // Assert
+    await waitFor(() => {
+      expect(queryClient.isMutating()).toBe(0);
+    });
+    expect(queryClient.getQueryData(progressKey)).toStrictEqual([]);
+  });
+
+  it("keeps another same-step mutation registered when query cancellation fails", async () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const deferred = createDeferred<ToggleStepResult>();
+    vi.mocked(toggleStepFn).mockReturnValueOnce(deferred.promise);
+    const cancelError = new Error("Query cancel failed");
+    const { queryClient, wrapper } = createTestingWrapper();
+    const progressKey = stepProgressQueryOptions().queryKey;
+    queryClient.setQueryData(progressKey, []);
+    vi.spyOn(queryClient, "cancelQueries").mockRejectedValueOnce(cancelError);
+    const { result } = renderHook(() => useToggleStep(), { wrapper });
+
+    // Act
+    act(() => {
+      result.current.mutate({ completed: true, stepId: "level-1/zen:step-1" });
+      result.current.mutate({ completed: true, stepId: "level-1/zen:step-1" });
+    });
+    await waitFor(() => {
+      expect(toggleStepFn).toHaveBeenCalledOnce();
+      expect(queryClient.getQueryData(progressKey)).toStrictEqual(["level-1/zen:step-1"]);
+    });
+    await act(async () => {
+      deferred.resolve({ completed: true, stepId: "level-1/zen:step-1" });
+      await deferred.promise;
+    });
+
+    // Assert
+    expect(queryClient.getQueryData(progressKey)).toStrictEqual(["level-1/zen:step-1"]);
   });
 
   it("handles onError gracefully when onMutate fails before returning rollback context", async () => {
