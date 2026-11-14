@@ -3,6 +3,13 @@ import { notFound } from "@tanstack/react-router";
 
 import type { CurriculumPage, ProseCurriculumPage, SectionSlug } from "@/shared/curriculum-data";
 
+import {
+  getLevelSections,
+  getSectionFirstBehavior,
+  parseLevelRouteParams,
+  toLevelRouteParams,
+  type LevelRouteParams,
+} from "../model/curriculum-levels";
 import { getCurriculumPageInputSchema } from "./curriculum-schema";
 import {
   getCurriculumPageFn,
@@ -16,6 +23,12 @@ interface LoadCurriculumArticleOptions {
   page: string;
   queryClient: QueryClient;
   sectionSlug: ArticleSectionSlug;
+}
+
+interface LoadLevelPageOptions {
+  page: string;
+  queryClient: QueryClient;
+  section: string;
 }
 
 const curriculumKeys = {
@@ -73,6 +86,42 @@ async function loadCurriculumArticle({
   return curriculumPage;
 }
 
+async function loadLevelPage({
+  page,
+  queryClient,
+  section,
+}: LoadLevelPageOptions): Promise<CurriculumPage> {
+  const target = parseLevelRouteParams(section, page);
+  if (target === null) {
+    throw createNotFoundError();
+  }
+
+  const [, curriculumPage] = await Promise.all([
+    queryClient.query(curriculumSyllabusQueryOptions()),
+    queryClient.query(curriculumPageQueryOptions(target.pageSlug)),
+    queryClient.query(stepProgressQueryOptions()),
+  ]);
+
+  if (curriculumPage === null) {
+    throw createNotFoundError();
+  }
+
+  return curriculumPage;
+}
+
+async function loadFirstLevelBehaviorParams(queryClient: QueryClient): Promise<LevelRouteParams> {
+  const syllabus = await queryClient.query(curriculumSyllabusQueryOptions());
+  const levelOne = getLevelSections(syllabus).find((section) => section.sectionSlug === "level-1");
+  const firstBehavior = levelOne === undefined ? null : getSectionFirstBehavior(levelOne);
+  const params = firstBehavior === null ? null : toLevelRouteParams(firstBehavior.pageSlug);
+
+  if (params === null) {
+    throw createNotFoundError();
+  }
+
+  return params;
+}
+
 function buildCurriculumArticleSlug(sectionSlug: ArticleSectionSlug, page: string): string | null {
   const parsed = getCurriculumPageInputSchema.safeParse({
     pageSlug: `${sectionSlug}/${page}`,
@@ -100,13 +149,15 @@ function createNotFoundError(): Error {
   return Object.assign(new Error("Not Found"), notFound());
 }
 
-export type { ArticleSectionSlug, LoadCurriculumArticleOptions };
+export type { ArticleSectionSlug, LoadCurriculumArticleOptions, LoadLevelPageOptions };
 export {
   curriculumKeys,
   curriculumPageQueryOptions,
   curriculumSyllabusQueryOptions,
   isMatchingProseArticle,
   loadCurriculumArticle,
+  loadFirstLevelBehaviorParams,
+  loadLevelPage,
   normalizeCurriculumPageSlug,
   stepProgressQueryOptions,
 };

@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import type { ComponentProps } from "react";
 
 import type { CurriculumPage, CurriculumSyllabus } from "@/shared/curriculum-data";
 import {
@@ -12,12 +13,12 @@ import {
 
 import { getSectionFirstPage, toLevelRouteParams } from "../model/curriculum-levels";
 
-interface CurriculumPageBreadcrumbProps {
+interface CurriculumPageBreadcrumbProps extends ComponentProps<typeof Breadcrumb> {
   page: CurriculumPage;
   syllabus: CurriculumSyllabus;
 }
 
-function CurriculumPageBreadcrumb({ page, syllabus }: CurriculumPageBreadcrumbProps) {
+function CurriculumPageBreadcrumb({ page, syllabus, ...props }: CurriculumPageBreadcrumbProps) {
   const currentSection = syllabus.sections.find(
     (section) => section.sectionSlug === page.sectionSlug,
   );
@@ -28,7 +29,7 @@ function CurriculumPageBreadcrumb({ page, syllabus }: CurriculumPageBreadcrumbPr
   const firstPageParams = firstPage === null ? null : toLevelRouteParams(firstPage.pageSlug);
 
   return (
-    <Breadcrumb>
+    <Breadcrumb {...props}>
       <BreadcrumbList>
         <BreadcrumbItem>
           {firstPageParams === null ? (

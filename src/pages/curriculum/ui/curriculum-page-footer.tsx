@@ -1,73 +1,100 @@
 import { Link } from "@tanstack/react-router";
+import { cn } from "cn";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { ComponentProps } from "react";
 
 import type { CurriculumSyllabus, SyllabusPageEntry } from "@/shared/curriculum-data";
+import { Card, CardContent } from "@/shared/ui/shadcn/card";
 
-import { getLevelAdjacentPages, toLevelRouteParams } from "../model/curriculum-levels";
+import {
+  getLevelAdjacentPages,
+  toLevelRouteParams,
+  type LevelRouteParams,
+} from "../model/curriculum-levels";
 
-interface CurriculumPageFooterProps {
+interface CurriculumPageFooterProps extends ComponentProps<"nav"> {
   pageSlug: string;
   syllabus: CurriculumSyllabus;
 }
 
-function CurriculumPageFooter({ pageSlug, syllabus }: CurriculumPageFooterProps) {
-  const { nextPage, previousPage } = getLevelAdjacentPages(syllabus, pageSlug);
+interface AdjacentTarget {
+  params: LevelRouteParams;
+  title: string;
+}
 
-  if (previousPage === null && nextPage === null) {
+function CurriculumPageFooter({
+  className,
+  pageSlug,
+  syllabus,
+  ...props
+}: CurriculumPageFooterProps) {
+  const { nextPage, previousPage } = getLevelAdjacentPages(syllabus, pageSlug);
+  const previousTarget = toAdjacentTarget(previousPage);
+  const nextTarget = toAdjacentTarget(nextPage);
+
+  if (previousTarget === null && nextTarget === null) {
     return null;
   }
 
   return (
     <nav
       aria-label="Page navigation"
-      className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t pt-6"
+      className={cn("mt-8 grid gap-3 border-t border-border pt-6 sm:grid-cols-2", className)}
+      {...props}
     >
-      <AdjacentLink direction="previous" entry={previousPage} />
-      <AdjacentLink direction="next" entry={nextPage} />
+      {previousTarget === null ? null : (
+        <AdjacentLink direction="previous" target={previousTarget} />
+      )}
+      {nextTarget === null ? null : <AdjacentLink direction="next" target={nextTarget} />}
     </nav>
   );
 }
 
+function toAdjacentTarget(entry: SyllabusPageEntry | null): AdjacentTarget | null {
+  if (entry === null) {
+    return null;
+  }
+
+  const params = toLevelRouteParams(entry.pageSlug);
+  return params === null ? null : { params, title: entry.title };
+}
+
 function AdjacentLink({
   direction,
-  entry,
+  target,
 }: {
   direction: "next" | "previous";
-  entry: SyllabusPageEntry | null;
+  target: AdjacentTarget;
 }) {
-  const params = entry === null ? null : toLevelRouteParams(entry.pageSlug);
-  if (entry === null || params === null) {
-    return <div />;
-  }
-
-  if (direction === "previous") {
-    return (
-      <Link
-        className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
-        params={params}
-        to="/levels/$section/$page"
-      >
-        <ChevronLeft aria-hidden="true" className="size-4 text-muted-foreground" />
-        <span className="flex flex-col text-left">
-          <span className="text-xs font-normal text-muted-foreground">Previous</span>
-          <span>{entry.title}</span>
-        </span>
-      </Link>
-    );
-  }
+  const isNext = direction === "next";
+  const Icon = isNext ? ChevronRight : ChevronLeft;
+  const label = isNext ? "Next" : "Previous";
 
   return (
-    <Link
-      className="ml-auto inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
-      params={params}
-      to="/levels/$section/$page"
+    <Card
+      className={cn(
+        "relative transition-colors hover:bg-muted/50",
+        isNext && "sm:col-start-2 sm:text-right",
+      )}
     >
-      <span className="flex flex-col text-right">
-        <span className="text-xs font-normal text-muted-foreground">Next</span>
-        <span>{entry.title}</span>
-      </span>
-      <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
-    </Link>
+      <CardContent>
+        <Link
+          className={cn(
+            "flex flex-col gap-1 after:absolute after:inset-0 focus-visible:outline-none",
+            isNext && "sm:items-end",
+          )}
+          params={target.params}
+          to="/levels/$section/$page"
+        >
+          <span className="flex items-center gap-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            {isNext ? null : <Icon aria-hidden="true" className="size-3.5" />}
+            <span>{label}</span>
+            {isNext ? <Icon aria-hidden="true" className="size-3.5" /> : null}
+          </span>
+          <span className="font-medium text-foreground">{target.title}</span>
+        </Link>
+      </CardContent>
+    </Card>
   );
 }
 

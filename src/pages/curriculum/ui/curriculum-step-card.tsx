@@ -1,6 +1,9 @@
+import { cn } from "cn";
 import { ChevronDown } from "lucide-react";
+import type { ComponentProps } from "react";
 
 import type { BehaviorStep, ContentBlock } from "@/shared/curriculum-data";
+import { Button } from "@/shared/ui/shadcn/button";
 import { Card } from "@/shared/ui/shadcn/card";
 import { Checkbox } from "@/shared/ui/shadcn/checkbox";
 import {
@@ -12,17 +15,31 @@ import {
 import { formatStepSummary } from "../model/curriculum-levels";
 import { CurriculumContentBlocks } from "./curriculum-content-blocks";
 
-interface CurriculumStepCardProps {
-  defaultOpen: boolean;
+interface CurriculumStepCardProps extends Omit<ComponentProps<typeof Card>, "id" | "onToggle"> {
   isCompleted: boolean;
+  onOpenChange: (open: boolean) => void;
   onToggle: (stepId: string, completed: boolean) => void;
+  open: boolean;
   step: BehaviorStep;
 }
 
-function CurriculumStepCard({ defaultOpen, isCompleted, onToggle, step }: CurriculumStepCardProps) {
+function CurriculumStepCard({
+  className,
+  isCompleted,
+  onOpenChange,
+  onToggle,
+  open,
+  step,
+  ...props
+}: CurriculumStepCardProps) {
   return (
-    <Card className="scroll-mt-20 gap-0 py-0" id={step.anchor} size="sm">
-      <Collapsible defaultOpen={defaultOpen}>
+    <Card
+      className={cn("scroll-mt-20 gap-0 py-0", className)}
+      id={step.anchor}
+      size="sm"
+      {...props}
+    >
+      <Collapsible open={open} onOpenChange={onOpenChange}>
         <StepCardHeader isCompleted={isCompleted} onToggle={onToggle} step={step} />
         <StepCardBody step={step} />
       </Collapsible>
@@ -34,7 +51,7 @@ function StepCardHeader({
   isCompleted,
   onToggle,
   step,
-}: Omit<CurriculumStepCardProps, "defaultOpen">) {
+}: Pick<CurriculumStepCardProps, "isCompleted" | "onToggle" | "step">) {
   const summary = formatStepSummary(step.heading);
 
   return (
@@ -46,11 +63,14 @@ function StepCardHeader({
           onToggle(step.stepId, checked);
         }}
       />
-      <CollapsibleTrigger className="group/step-trigger flex flex-1 items-center justify-between gap-3 rounded-md text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-        <span className="font-semibold text-foreground">{summary}</span>
+      <span className="flex-1 font-semibold text-foreground">{summary}</span>
+      <CollapsibleTrigger
+        aria-label={`Toggle details for ${summary}`}
+        render={<Button className="group/step-trigger shrink-0" size="icon-sm" variant="ghost" />}
+      >
         <ChevronDown
           aria-hidden="true"
-          className="size-4 shrink-0 text-muted-foreground transition-transform group-aria-expanded/step-trigger:rotate-180"
+          className="size-4 text-muted-foreground transition-transform group-aria-expanded/step-trigger:rotate-180"
         />
       </CollapsibleTrigger>
     </div>

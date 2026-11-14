@@ -9,6 +9,7 @@ import {
   TEST_SYLLABUS,
   TEST_THEORY_PAGE,
   createBehaviorPageFixture,
+  createSyllabusFixture,
 } from "@test/vitest/fixtures/curriculum";
 
 import {
@@ -17,6 +18,8 @@ import {
   curriculumSyllabusQueryOptions,
   isMatchingProseArticle,
   loadCurriculumArticle,
+  loadFirstLevelBehaviorParams,
+  loadLevelPage,
   normalizeCurriculumPageSlug,
   stepProgressQueryOptions,
 } from "../curriculum-query-options";
@@ -36,6 +39,7 @@ describe("curriculum query options", () => {
   it("constructs hierarchical curriculum query keys", () => {
     expect.assertions(4);
 
+    // Assert
     expect(curriculumKeys.all).toStrictEqual(["curriculum"]);
     expect(curriculumKeys.syllabus()).toStrictEqual(["curriculum", "syllabus"]);
     expect(curriculumKeys.page("level-1/zen")).toStrictEqual(["curriculum", "page", "level-1/zen"]);
@@ -246,6 +250,179 @@ describe("curriculum article loader", () => {
       queryClient,
       sectionSlug: "theory",
     }).catch((error: unknown) => error);
+
+    // Assert
+    expect(isNotFound(caught)).toBe(true);
+  });
+});
+
+describe("level page loader", () => {
+  it("loads syllabus, level page, and step progress in parallel for valid params", async () => {
+    expect.assertions(4);
+
+    // Arrange
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    vi.mocked(getCurriculumSyllabusFn).mockResolvedValueOnce(TEST_SYLLABUS);
+    vi.mocked(getCurriculumPageFn).mockResolvedValueOnce(TEST_BEHAVIOR_PAGE);
+    vi.mocked(getStepProgressFn).mockResolvedValueOnce(["level-1/zen:step-1"]);
+
+    // Act
+    const loadedPage = await loadLevelPage({
+      page: "zen",
+      queryClient,
+      section: "level-1",
+    });
+
+    // Assert
+    expect(loadedPage).toStrictEqual(TEST_BEHAVIOR_PAGE);
+    expect(queryClient.getQueryData(curriculumSyllabusQueryOptions().queryKey)).toStrictEqual(
+      TEST_SYLLABUS,
+    );
+    expect(
+      queryClient.getQueryData(curriculumPageQueryOptions("level-1/zen").queryKey),
+    ).toStrictEqual(TEST_BEHAVIOR_PAGE);
+    expect(queryClient.getQueryData(stepProgressQueryOptions().queryKey)).toStrictEqual([
+      "level-1/zen:step-1",
+    ]);
+  });
+
+  it("throws notFound without calling server functions when route params are invalid", async () => {
+    expect.assertions(3);
+
+    // Arrange
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+    // Act
+    const caught = await loadLevelPage({
+      page: "01-foreword",
+      queryClient,
+      section: "theory",
+    }).catch((error: unknown) => error);
+
+    // Assert
+    expect(isNotFound(caught)).toBe(true);
+    expect(getCurriculumSyllabusFn).not.toHaveBeenCalled();
+    expect(getCurriculumPageFn).not.toHaveBeenCalled();
+  });
+
+  it("throws notFound when level page query resolves to null", async () => {
+    expect.assertions(1);
+
+    // Arrange
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    vi.mocked(getCurriculumSyllabusFn).mockResolvedValueOnce(TEST_SYLLABUS);
+    vi.mocked(getCurriculumPageFn).mockResolvedValueOnce(null);
+    vi.mocked(getStepProgressFn).mockResolvedValueOnce([]);
+
+    // Act
+    const caught = await loadLevelPage({
+      page: "nonexistent",
+      queryClient,
+      section: "level-1",
+    }).catch((error: unknown) => error);
+
+    // Assert
+    expect(isNotFound(caught)).toBe(true);
+  });
+});
+
+describe("first level behavior params loader", () => {
+  it("returns route params for the first behavior page in Level 1", async () => {
+    expect.assertions(1);
+
+    // Arrange
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    vi.mocked(getCurriculumSyllabusFn).mockResolvedValueOnce(TEST_SYLLABUS);
+
+    // Act
+    const params = await loadFirstLevelBehaviorParams(queryClient);
+
+    // Assert
+    expect(params).toStrictEqual({ page: "zen", section: "level-1" });
+  });
+
+  it("throws notFound when syllabus contains no Level 1 section", async () => {
+    expect.assertions(1);
+
+    // Arrange
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    vi.mocked(getCurriculumSyllabusFn).mockResolvedValueOnce(
+      createSyllabusFixture({ sections: [] }),
+    );
+
+    // Act
+    const caught = await loadFirstLevelBehaviorParams(queryClient).catch((error: unknown) => error);
+
+    // Assert
+    expect(isNotFound(caught)).toBe(true);
+  });
+
+  it("throws notFound when Level 1 contains no behavior pages", async () => {
+    expect.assertions(1);
+
+    // Arrange
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    vi.mocked(getCurriculumSyllabusFn).mockResolvedValueOnce(
+      createSyllabusFixture({
+        sections: [
+          {
+            href: "/levels/level-1",
+            levelNumber: 1,
+            pages: [
+              {
+                href: "/levels/level-1/00-overview",
+                kind: "overview",
+                levelNumber: 1,
+                order: 0,
+                pageSlug: "level-1/00-overview",
+                sectionSlug: "level-1",
+                title: "Level 1 Overview",
+              },
+            ],
+            sectionSlug: "level-1",
+            title: "Level 1",
+          },
+        ],
+      }),
+    );
+
+    // Act
+    const caught = await loadFirstLevelBehaviorParams(queryClient).catch((error: unknown) => error);
+
+    // Assert
+    expect(isNotFound(caught)).toBe(true);
+  });
+
+  it("throws notFound when first Level 1 behavior slug is not a valid level route target", async () => {
+    expect.assertions(1);
+
+    // Arrange
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    vi.mocked(getCurriculumSyllabusFn).mockResolvedValueOnce(
+      createSyllabusFixture({
+        sections: [
+          {
+            href: "/levels/level-1",
+            levelNumber: 1,
+            pages: [
+              {
+                href: "/theory/invalid",
+                kind: "behavior",
+                order: 0,
+                pageSlug: "invalid/slug",
+                sectionSlug: "level-1",
+                title: "Invalid",
+              },
+            ],
+            sectionSlug: "level-1",
+            title: "Level 1",
+          },
+        ],
+      }),
+    );
+
+    // Act
+    const caught = await loadFirstLevelBehaviorParams(queryClient).catch((error: unknown) => error);
 
     // Assert
     expect(isNotFound(caught)).toBe(true);

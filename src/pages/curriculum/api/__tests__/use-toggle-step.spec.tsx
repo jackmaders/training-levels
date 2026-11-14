@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vite-plus/test";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { ApplicationError } from "@/shared/errors";
 import { createDeferred } from "@test/vitest/helpers/deferred";
@@ -12,8 +12,12 @@ import { useToggleStep } from "../use-toggle-step";
 
 vi.mock(import("../curriculum.functions"));
 
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 describe("useToggleStep optimistic mutation hook", () => {
-  it("optimistically adds a step ID before server resolution and invalidates on settle", async () => {
+  it("optimistically adds a step ID and cancels active queries while mutation is pending", async () => {
     expect.hasAssertions();
 
     // Arrange
@@ -23,7 +27,6 @@ describe("useToggleStep optimistic mutation hook", () => {
     const progressKey = stepProgressQueryOptions().queryKey;
     queryClient.setQueryData(progressKey, ["level-1/zen:step-1"]);
     const cancelSpy = vi.spyOn(queryClient, "cancelQueries");
-    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
     const { result } = renderHook(() => useToggleStep(), { wrapper });
 
     // Act
@@ -31,7 +34,7 @@ describe("useToggleStep optimistic mutation hook", () => {
       result.current.mutate({ completed: true, stepId: "level-1/zen:step-2" });
     });
 
-    // Assert optimistic state
+    // Assert
     await waitFor(() => {
       expect(queryClient.getQueryData(progressKey)).toStrictEqual([
         "level-1/zen:step-1",
@@ -39,20 +42,33 @@ describe("useToggleStep optimistic mutation hook", () => {
       ]);
     });
     expect(cancelSpy).toHaveBeenCalledWith({ queryKey: progressKey });
+    expect(result.current.isPending).toBe(true);
+  });
 
-    // Act resolve server call
+  it("calls toggleStepFn and invalidates step progress when mutation resolves", async () => {
+    expect.assertions(2);
+
+    // Arrange
+    const deferred = createDeferred<ToggleStepResult>();
+    vi.mocked(toggleStepFn).mockReturnValueOnce(deferred.promise);
+    const { queryClient, wrapper } = createTestingWrapper();
+    const progressKey = stepProgressQueryOptions().queryKey;
+    queryClient.setQueryData(progressKey, ["level-1/zen:step-1"]);
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+    const { result } = renderHook(() => useToggleStep(), { wrapper });
+
+    // Act
     await act(async () => {
+      const pending = result.current.mutateAsync({ completed: true, stepId: "level-1/zen:step-2" });
       deferred.resolve({ completed: true, stepId: "level-1/zen:step-2" });
-      await deferred.promise;
+      await pending;
     });
 
-    // Assert settled state
+    // Assert
     expect(toggleStepFn).toHaveBeenCalledWith({
       data: { completed: true, stepId: "level-1/zen:step-2" },
     });
-    await waitFor(() => {
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: progressKey });
-    });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: progressKey });
   });
 
   it("keeps step IDs unique when optimistically checking an already completed step", async () => {

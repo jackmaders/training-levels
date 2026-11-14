@@ -21,6 +21,7 @@ class CurriculumLevelPage {
   public readonly mobileDrawer: Locator;
   public readonly mobileMenuButton: Locator;
   public readonly pageFooterNav: Locator;
+  public readonly whereWeAreGoingSection: Locator;
 
   private readonly page: Page;
 
@@ -32,6 +33,7 @@ class CurriculumLevelPage {
     this.mobileDrawer = page.getByRole("dialog", { name: "Curriculum Levels" });
     this.mobileMenuButton = page.getByRole("button", { name: "Levels menu" });
     this.pageFooterNav = page.getByRole("navigation", { name: "Page navigation" });
+    this.whereWeAreGoingSection = this.article.getByRole("region", { name: "Where We Are Going" });
   }
 
   public get heading(): Locator {
@@ -48,6 +50,14 @@ class CurriculumLevelPage {
 
   public get stepTriggers(): Locator {
     return this.article.getByRole("button");
+  }
+
+  public get collapsedStepTriggers(): Locator {
+    return this.article.getByRole("button", { expanded: false });
+  }
+
+  public get stepPrefixedTriggers(): Locator {
+    return this.article.getByRole("button", { name: /^Step \d+/u });
   }
 
   public get stepCheckboxes(): Locator {
@@ -69,6 +79,16 @@ class CurriculumLevelPage {
 
   public async gotoLevelPage(section: string, page: string) {
     await this.page.goto(`/levels/${section}/${page}`);
+    await waitForHydration(this.page);
+  }
+
+  public async gotoLevelPageAnchor(section: string, page: string, anchor: string) {
+    await this.page.goto(`/levels/${section}/${page}#${anchor}`);
+    await waitForHydration(this.page);
+  }
+
+  public async reload() {
+    await this.page.reload();
     await waitForHydration(this.page);
   }
 
@@ -98,6 +118,16 @@ class CurriculumLevelPage {
     await this.getStepTrigger(summary).click();
   }
 
+  public async collapseStep(summary: string) {
+    await this.getStepTrigger(summary).click();
+  }
+
+  public async openWhereWeAreGoingStep(stepNumber: number) {
+    await this.whereWeAreGoingSection
+      .getByRole("link", { exact: true, name: `Step ${String(stepNumber)}` })
+      .click();
+  }
+
   public async toggleStepCheckbox(stepHeading: string) {
     const responsePromise = this.page.waitForResponse(
       (response) =>
@@ -105,6 +135,10 @@ class CurriculumLevelPage {
     );
     await this.getStepCheckbox(stepHeading).click();
     await responsePromise;
+  }
+
+  public async waitForProgressVisible(text: string) {
+    await this.getProgressText(text).waitFor({ state: "visible" });
   }
 
   public async openFooterPrevious(title: string) {
@@ -117,6 +151,10 @@ class CurriculumLevelPage {
 
   public getSidebarSectionButton(title: string): Locator {
     return this.desktopSidebar.getByRole("button", { name: createSectionButtonPattern(title) });
+  }
+
+  public getSidebarSectionButtonByName(pattern: RegExp): Locator {
+    return this.desktopSidebar.getByRole("button", { name: pattern });
   }
 
   public getSidebarLink(title: string): Locator {
@@ -143,8 +181,15 @@ class CurriculumLevelPage {
     });
   }
 
+  public getStepSummary(summary: string): Locator {
+    return this.article.getByText(summary, { exact: true });
+  }
+
   public getStepTrigger(summary: string): Locator {
-    return this.article.getByRole("button", { exact: true, name: summary });
+    return this.article.getByRole("button", {
+      exact: true,
+      name: `Toggle details for ${summary}`,
+    });
   }
 
   public getStepCheckbox(stepHeading: string): Locator {
@@ -152,6 +197,12 @@ class CurriculumLevelPage {
       exact: true,
       name: `Toggle ${stepHeading}`,
     });
+  }
+
+  public getWhereWeAreGoingItem(stepNumber: number): Locator {
+    return this.whereWeAreGoingSection
+      .getByRole("listitem")
+      .filter({ hasText: new RegExp(`^Step ${String(stepNumber)}:`, "u") });
   }
 
   public getProgressText(text: string): Locator {

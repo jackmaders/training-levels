@@ -177,9 +177,15 @@ const TEST_BEHAVIOR_PAGE: BehaviorCurriculumPage = {
     steps: [
       {
         anchor: "step-1",
-        content: [{ text: "Closed fist impulse check", type: "text" }],
+        content: [{ text: "Step 1: Closed fist impulse check", type: "text" }],
         stepId: "level-1/zen:step-1",
         stepNumber: 1,
+      },
+      {
+        anchor: "step-2",
+        content: [{ text: "Step 2: Open palm calmly", type: "text" }],
+        stepId: "level-1/zen:step-2",
+        stepNumber: 2,
       },
     ],
   },

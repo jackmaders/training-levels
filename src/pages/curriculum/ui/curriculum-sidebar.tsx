@@ -1,11 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
 import { CheckCircle2, Menu } from "lucide-react";
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
 
 import type {
   CurriculumSyllabus,
   LevelSectionSlug,
+  SectionSlug,
   SyllabusPageEntry,
   SyllabusSection,
 } from "@/shared/curriculum-data";
@@ -29,35 +30,60 @@ import {
   getBehaviorProgress,
   getLevelSections,
   getSectionProgress,
+  isLevelSectionSlug,
   toLevelRouteParams,
 } from "../model/curriculum-levels";
 
-interface CurriculumSidebarProps {
+interface CurriculumSidebarProps extends ComponentProps<"div"> {
+  completedStepIds: ReadonlySet<string>;
+  currentPageSlug: string;
+  currentSectionSlug: SectionSlug;
+  syllabus: CurriculumSyllabus;
+}
+
+interface SidebarContentProps {
   completedStepIds: ReadonlySet<string>;
   currentPageSlug: string;
   currentSectionSlug: LevelSectionSlug;
   syllabus: CurriculumSyllabus;
 }
 
-interface SidebarTreeProps extends CurriculumSidebarProps {
+interface SidebarTreeProps extends SidebarContentProps {
   onNavigate?: (() => void) | undefined;
 }
 
-function CurriculumSidebar(props: CurriculumSidebarProps) {
-  return (
-    <>
-      <MobileSidebarDrawer {...props} />
+function CurriculumSidebar({
+  className,
+  completedStepIds,
+  currentPageSlug,
+  currentSectionSlug,
+  syllabus,
+  ...props
+}: CurriculumSidebarProps) {
+  const resolvedSectionSlug = isLevelSectionSlug(currentSectionSlug)
+    ? currentSectionSlug
+    : "level-1";
+  const contentProps: SidebarContentProps = {
+    completedStepIds,
+    currentPageSlug,
+    currentSectionSlug: resolvedSectionSlug,
+    syllabus,
+  };
 
-      <aside aria-label="Curriculum navigation" className="hidden w-64 shrink-0 md:block">
+  return (
+    <div className={cn("shrink-0 md:w-64", className)} {...props}>
+      <MobileSidebarDrawer {...contentProps} />
+
+      <aside aria-label="Curriculum navigation" className="hidden md:block">
         <div className="sticky top-20 rounded-lg border bg-card p-3">
-          <SidebarSectionTree {...props} />
+          <SidebarSectionTree {...contentProps} />
         </div>
       </aside>
-    </>
+    </div>
   );
 }
 
-function MobileSidebarDrawer(props: CurriculumSidebarProps) {
+function MobileSidebarDrawer(props: SidebarContentProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (

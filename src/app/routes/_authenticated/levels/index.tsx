@@ -1,25 +1,11 @@
-import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import {
-  curriculumSyllabusQueryOptions,
-  getLevelSections,
-  getSectionFirstBehavior,
-  toLevelRouteParams,
-} from "@/pages/curriculum";
+import { loadFirstLevelBehaviorParams } from "@/pages/curriculum";
 import { NotFoundPage } from "@/pages/not-found";
 
 const Route = createFileRoute("/_authenticated/levels/")({
   loader: async ({ context }) => {
-    const syllabus = await context.queryClient.query(curriculumSyllabusQueryOptions());
-    const levelOne = getLevelSections(syllabus).find(
-      (section) => section.sectionSlug === "level-1",
-    );
-    const firstBehavior = levelOne === undefined ? null : getSectionFirstBehavior(levelOne);
-    const params = firstBehavior === null ? null : toLevelRouteParams(firstBehavior.pageSlug);
-
-    if (params === null) {
-      throw Object.assign(new Error("Not Found"), notFound());
-    }
+    const params = await loadFirstLevelBehaviorParams(context.queryClient);
 
     throw redirect({
       params,

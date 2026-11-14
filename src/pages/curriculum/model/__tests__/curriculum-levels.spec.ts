@@ -11,8 +11,8 @@ import {
   getSectionFirstPage,
   getSectionProgress,
   isLevelSectionSlug,
-  parseInternalLevelHref,
   parseLevelRouteParams,
+  stripStepPrefixFromNodes,
   toLevelRouteParams,
 } from "../curriculum-levels";
 
@@ -102,44 +102,79 @@ describe("curriculum-levels model", () => {
     );
   });
 
-  describe("internal level link parsing", () => {
-    it("parses level href with step fragment into route params and hash", () => {
+  describe("step prefix stripping from inline nodes", () => {
+    it("strips the Step N prefix from a leading text node and keeps trailing nodes", () => {
       expect.assertions(1);
 
+      // Arrange
+      const nodes = [
+        { text: "Step 2: Open palm calmly ", type: "text" as const },
+        {
+          children: [{ text: "without grabbing", type: "text" as const }],
+          type: "strong" as const,
+        },
+      ];
+
       // Act
-      const result = parseInternalLevelHref("/levels/level-1/come#step-2");
+      const stripped = stripStepPrefixFromNodes(nodes);
 
       // Assert
-      expect(result).toStrictEqual({
-        hash: "step-2",
-        params: { page: "come", section: "level-1" },
-      });
+      expect(stripped).toStrictEqual([
+        { text: "Open palm calmly ", type: "text" },
+        { children: [{ text: "without grabbing", type: "text" }], type: "strong" },
+      ]);
     });
 
-    it("parses level href without fragment and omits empty hash", () => {
+    it("drops an empty leading text node when only the Step N prefix is present", () => {
       expect.assertions(1);
 
+      // Arrange
+      const nodes = [
+        { text: "Step 1: ", type: "text" as const },
+        {
+          children: [{ text: "Closed fist check", type: "text" as const }],
+          type: "strong" as const,
+        },
+      ];
+
       // Act
-      const result = parseInternalLevelHref("/levels/level-1/zen#");
+      const stripped = stripStepPrefixFromNodes(nodes);
 
       // Assert
-      expect(result).toStrictEqual({
-        params: { page: "zen", section: "level-1" },
-      });
+      expect(stripped).toStrictEqual([
+        { children: [{ text: "Closed fist check", type: "text" }], type: "strong" },
+      ]);
     });
 
-    it.each(["/theory/07-the-thinking-of-training", "/appendices/appendix-a", "/levels/level-5/a"])(
-      "returns null for non-level href %s",
-      (href) => {
-        expect.assertions(1);
+    it("returns nodes unchanged when leading text has no Step prefix", () => {
+      expect.assertions(1);
 
-        // Act
-        const result = parseInternalLevelHref(href);
+      // Arrange
+      const nodes = [{ text: "Closed fist impulse check", type: "text" as const }];
 
-        // Assert
-        expect(result).toBeNull();
-      },
-    );
+      // Act
+      const stripped = stripStepPrefixFromNodes(nodes);
+
+      // Assert
+      expect(stripped).toBe(nodes);
+    });
+
+    it("returns nodes unchanged when empty or starting with a non-text node", () => {
+      expect.assertions(2);
+
+      // Arrange
+      const nonTextNodes = [
+        { children: [{ text: "Step 1: Bold", type: "text" as const }], type: "strong" as const },
+      ];
+
+      // Act
+      const emptyResult = stripStepPrefixFromNodes([]);
+      const nonTextResult = stripStepPrefixFromNodes(nonTextNodes);
+
+      // Assert
+      expect(emptyResult).toStrictEqual([]);
+      expect(nonTextResult).toBe(nonTextNodes);
+    });
   });
 
   describe("level section filtering", () => {

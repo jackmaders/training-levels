@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 
+import type { SectionSlug } from "@/shared/curriculum-data";
 import { TEST_SYLLABUS, createSyllabusFixture } from "@test/vitest/fixtures/curriculum";
 import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
 
@@ -11,12 +12,12 @@ const LEVEL_ROUTE_PATHS = ["/", "/levels/$section/$page"];
 function renderSidebar({
   completedStepIds = [],
   currentPageSlug = "level-1/zen",
-  currentSectionSlug = "level-1" as const,
+  currentSectionSlug = "level-1",
   syllabus = TEST_SYLLABUS,
 }: {
   completedStepIds?: readonly string[];
   currentPageSlug?: string;
-  currentSectionSlug?: "level-1" | "level-2" | "level-3" | "level-4";
+  currentSectionSlug?: SectionSlug;
   syllabus?: typeof TEST_SYLLABUS;
 } = {}) {
   return renderWithProviders(
@@ -117,28 +118,60 @@ describe("curriculum sidebar section hierarchy and progress", () => {
     expect(within(zenLink).queryByText("0/5")).toBeNull();
   });
 
-  it("ignores syllabus entries with invalid level slugs and expands collapsed sections", async () => {
+  it("omits syllabus entries whose pageSlug is not a valid level route", () => {
     expect.assertions(2);
 
     // Arrange
     const customSyllabus = createSyllabusWithInvalidEntry();
-    const { user } = renderSidebar({ syllabus: customSyllabus });
+
+    // Act
+    renderSidebar({ syllabus: customSyllabus });
+    const nav = screen.getByRole("complementary", { name: "Curriculum navigation" });
+
+    // Assert
+    expect(within(nav).queryByRole("link", { name: "Invalid Entry" })).toBeNull();
+    expect(within(nav).getByRole("link", { name: /Zen/u }).getAttribute("href")).toBe(
+      "/levels/level-1/zen",
+    );
+  });
+
+  it("expands a collapsed level section when its accordion button is clicked", async () => {
+    expect.assertions(1);
+
+    // Arrange
+    const { user } = renderSidebar();
     const nav = screen.getByRole("complementary", { name: "Curriculum navigation" });
 
     // Act
     await user.click(within(nav).getByRole("button", { name: "Level 2 0/5" }));
 
     // Assert
-    expect(within(nav).queryByRole("link", { name: "Invalid Entry" })).toBeNull();
     expect(within(nav).getByRole("link", { name: "Level 2 Overview" }).getAttribute("href")).toBe(
       "/levels/level-2/00-overview",
     );
   });
+
+  it("falls back to expanding Level 1 when currentSectionSlug is not a level section", () => {
+    expect.assertions(2);
+
+    // Arrange & Act
+    renderSidebar({
+      currentPageSlug: "theory/01-foreword",
+      currentSectionSlug: "theory",
+    });
+    const nav = screen.getByRole("complementary", { name: "Curriculum navigation" });
+
+    // Assert
+    expect(
+      within(nav).getByRole("button", { name: "Level 1 0/10" }).getAttribute("aria-expanded"),
+    ).toBe("true");
+    expect(within(nav).getByRole("link", { name: "Level 1 Overview" })).toBeDefined();
+  });
 });
 
 describe("curriculum sidebar mobile drawer", () => {
-  it("opens from the mobile trigger and closes when a level link is clicked", async () => {
-    expect.hasAssertions();
+  it("opens from the mobile trigger and exposes level navigation links", async () => {
+    expect.assertions(1);
 
     // Arrange
     const { user } = renderSidebar();
@@ -147,9 +180,21 @@ describe("curriculum sidebar mobile drawer", () => {
     await user.click(screen.getByRole("button", { name: "Levels menu" }));
     const dialog = await screen.findByRole("dialog", { name: "Curriculum Levels" });
     const comeLink = within(dialog).getByRole("link", { name: "Come" });
-    expect(comeLink.getAttribute("href")).toBe("/levels/level-1/come");
 
-    await user.click(comeLink);
+    // Assert
+    expect(comeLink.getAttribute("href")).toBe("/levels/level-1/come");
+  });
+
+  it("closes the mobile drawer when a level link is clicked", async () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const { user } = renderSidebar();
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Levels menu" }));
+    const dialog = await screen.findByRole("dialog", { name: "Curriculum Levels" });
+    await user.click(within(dialog).getByRole("link", { name: "Come" }));
 
     // Assert
     await waitFor(() => {

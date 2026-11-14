@@ -1,6 +1,7 @@
 import {
   CURRICULUM_SECTIONS,
   type CurriculumSyllabus,
+  type InlineNode,
   type LevelSectionSlug,
   type SyllabusPageEntry,
   type SyllabusSection,
@@ -14,7 +15,6 @@ const LEVEL_SECTION_SLUGS: ReadonlySet<string> = new Set(
   ),
 );
 
-const LEVELS_PATH_PREFIX = "/levels/";
 const NOT_FOUND_INDEX = -1;
 const PERCENT_SCALE = 100;
 const STEP_PREFIX_PATTERN = /^Step\s+\d+:\s*/u;
@@ -26,11 +26,6 @@ export interface LevelRouteParams {
 
 export interface ParsedLevelRouteTarget extends LevelRouteParams {
   pageSlug: string;
-}
-
-export interface ParsedInternalLevelHref {
-  hash?: string;
-  params: LevelRouteParams;
 }
 
 export interface StepProgressSummary {
@@ -91,29 +86,26 @@ export function toLevelRouteParams(pageSlug: string): LevelRouteParams | null {
   };
 }
 
-export function parseInternalLevelHref(href: string): ParsedInternalLevelHref | null {
-  const hashIndex = href.indexOf("#");
-  const pathname = hashIndex === NOT_FOUND_INDEX ? href : href.slice(0, hashIndex);
-  const hash = hashIndex === NOT_FOUND_INDEX ? "" : href.slice(hashIndex + 1);
-
-  if (!pathname.startsWith(LEVELS_PATH_PREFIX)) {
-    return null;
-  }
-
-  const params = toLevelRouteParams(pathname.slice(LEVELS_PATH_PREFIX.length));
-  if (params === null) {
-    return null;
-  }
-
-  return hash.length > 0 ? { hash, params } : { params };
-}
-
 export function getLevelSections(syllabus: CurriculumSyllabus): SyllabusSection[] {
   return syllabus.sections.filter((section) => isLevelSectionSlug(section.sectionSlug));
 }
 
 export function formatStepSummary(heading: string): string {
   return heading.replace(STEP_PREFIX_PATTERN, "").trim();
+}
+
+export function stripStepPrefixFromNodes(nodes: readonly InlineNode[]): readonly InlineNode[] {
+  const [first, ...rest] = nodes;
+  if (first?.type !== "text") {
+    return nodes;
+  }
+
+  const strippedText = first.text.replace(STEP_PREFIX_PATTERN, "");
+  if (strippedText === first.text) {
+    return nodes;
+  }
+
+  return strippedText.length > 0 ? [{ ...first, text: strippedText }, ...rest] : rest;
 }
 
 export function getBehaviorProgress(

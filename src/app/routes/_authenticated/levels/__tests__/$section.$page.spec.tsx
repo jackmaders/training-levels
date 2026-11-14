@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vite-plus/test";
+import { screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { Route as LevelPageRoute } from "@/app/routes/_authenticated/levels/$section.$page";
 import {
@@ -12,8 +12,13 @@ import { NotFoundPage } from "@/pages/not-found";
 import type { CurriculumPage } from "@/shared/curriculum-data";
 import { TEST_BEHAVIOR_PAGE, TEST_SYLLABUS } from "@test/vitest/fixtures/curriculum";
 import { getRouteOption } from "@test/vitest/helpers/route";
+import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
 
 vi.mock(import("@/pages/curriculum"));
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 type LevelPageLoader = (ctx: {
   context: { queryClient: QueryClient };
@@ -58,17 +63,20 @@ describe("level page route options", () => {
     expect(notFoundComponent).toBe(NotFoundPage);
   });
 
-  it("renders CurriculumLevelPage via Route component option", () => {
+  it("renders CurriculumLevelPage with section and page route params", () => {
     expect.assertions(1);
 
     // Arrange
     const Component = getRouteOption(LevelPageRoute, "component") as React.ComponentType;
+    vi.spyOn(LevelPageRoute, "useParams").mockReturnValue({ page: "zen", section: "level-1" });
 
     // Act
-    render(<Component />);
+    renderWithProviders(<Component />);
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Curriculum Level Page" })).toBeDefined();
+    expect(
+      screen.getByRole("heading", { name: "Curriculum Level Page: level-1/zen" }),
+    ).toBeDefined();
   });
 });
 

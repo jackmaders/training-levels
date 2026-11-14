@@ -1,4 +1,5 @@
-import { AlertCircle } from "lucide-react";
+import { cn } from "cn";
+import type { ComponentProps } from "react";
 
 import type {
   BehaviorCurriculumPage,
@@ -7,53 +8,60 @@ import type {
   ContentBlock,
   CurriculumSyllabus,
 } from "@/shared/curriculum-data";
-import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/shadcn/alert";
 import { Progress, ProgressLabel, ProgressValue } from "@/shared/ui/shadcn/progress";
 
-import { useToggleStep } from "../api/use-toggle-step";
-import { getBehaviorProgress } from "../model/curriculum-levels";
+import { getBehaviorProgress, stripStepPrefixFromNodes } from "../model/curriculum-levels";
+import { CurriculumBehaviorSteps } from "./curriculum-behavior-steps";
 import { CurriculumContentBlocks, InlineNodes } from "./curriculum-content-blocks";
 import { CurriculumPageBreadcrumb } from "./curriculum-page-breadcrumb";
 import { CurriculumPageFooter } from "./curriculum-page-footer";
-import { CurriculumStepCard } from "./curriculum-step-card";
+import { useStepAnchors } from "./use-step-anchors";
 
-interface CurriculumBehaviorArticleProps {
+interface CurriculumBehaviorArticleProps extends ComponentProps<"article"> {
+  activeAnchor?: string | undefined;
   completedStepIds: ReadonlySet<string>;
-  initialOpenAnchor?: string | undefined;
   page: BehaviorCurriculumPage;
   syllabus: CurriculumSyllabus;
 }
 
 function CurriculumBehaviorArticle({
+  activeAnchor,
+  className,
   completedStepIds,
-  initialOpenAnchor,
   page,
   syllabus,
+  ...props
 }: CurriculumBehaviorArticleProps) {
+  const { openAnchors, setAnchorOpen } = useStepAnchors(activeAnchor);
+
   return (
-    <article className="space-y-8">
+    <article className={cn("space-y-8", className)} {...props}>
       <div className="space-y-4">
         <CurriculumPageBreadcrumb page={page} syllabus={syllabus} />
         <BehaviorHeader completedStepIds={completedStepIds} page={page} />
       </div>
 
       {page.introBlocks.length > 0 ? <CurriculumContentBlocks blocks={page.introBlocks} /> : null}
-      <OptionalContentSection blocks={page.comebefores} heading="Comebefores" id="comebefores" />
+      <ContentSection blocks={page.comebefores} heading="Comebefores" id="comebefores" />
       <WhereWeAreGoingSection
         extraBlocks={page.whereWeAreGoing.extraBlocks}
         steps={page.whereWeAreGoing.steps}
+        onSelectAnchor={(anchor) => {
+          setAnchorOpen(anchor, true);
+        }}
       />
-      <OptionalContentSection blocks={page.equipment} heading="Equipment" id="equipment" />
+      <ContentSection blocks={page.equipment} heading="Equipment" id="equipment" />
       <ThinkAboutSections sections={page.thinkAbout} />
-      <OptionalContentSection
+      <ContentSection
         blocks={page.aboutTheCues ?? []}
         heading="About the Cues"
         id="about-the-cues"
       />
-      <BehaviorStepsSection
+      <CurriculumBehaviorSteps
         completedStepIds={completedStepIds}
-        initialOpenAnchor={initialOpenAnchor}
+        openAnchors={openAnchors}
         page={page}
+        onStepOpenChange={setAnchorOpen}
       />
       <CurriculumPageFooter pageSlug={page.pageSlug} syllabus={syllabus} />
     </article>
@@ -72,7 +80,6 @@ function BehaviorHeader({
 
   return (
     <header className="space-y-3">
-      <p className="text-sm font-medium text-muted-foreground">{page.behaviorFamily}</p>
       <h1 className="text-3xl font-bold tracking-tight">{page.title}</h1>
       <Progress aria-label={`${page.title} progress`} className="gap-2" value={progress.percent}>
         <ProgressLabel>Step Progress</ProgressLabel>
@@ -84,7 +91,7 @@ function BehaviorHeader({
   );
 }
 
-function OptionalContentSection({
+function ContentSection({
   blocks,
   heading,
   id,
@@ -109,9 +116,11 @@ function OptionalContentSection({
 
 function WhereWeAreGoingSection({
   extraBlocks,
+  onSelectAnchor,
   steps,
 }: {
   extraBlocks: readonly ContentBlock[];
+  onSelectAnchor: (anchor: string) => void;
   steps: readonly BehaviorStepSummary[];
 }) {
   if (steps.length === 0 && extraBlocks.length === 0) {
@@ -123,13 +132,21 @@ function WhereWeAreGoingSection({
       <h2 className="text-xl font-semibold tracking-tight" id="where-we-are-going">
         Where We Are Going
       </h2>
-      {steps.length > 0 ? <WhereWeAreGoingStepList steps={steps} /> : null}
+      {steps.length > 0 ? (
+        <WhereWeAreGoingStepList onSelectAnchor={onSelectAnchor} steps={steps} />
+      ) : null}
       {extraBlocks.length > 0 ? <CurriculumContentBlocks blocks={extraBlocks} /> : null}
     </section>
   );
 }
 
-function WhereWeAreGoingStepList({ steps }: { steps: readonly BehaviorStepSummary[] }) {
+function WhereWeAreGoingStepList({
+  onSelectAnchor,
+  steps,
+}: {
+  onSelectAnchor: (anchor: string) => void;
+  steps: readonly BehaviorStepSummary[];
+}) {
   return (
     <ol className="list-decimal space-y-1.5 pl-6">
       {steps.map((step) => (
@@ -137,11 +154,14 @@ function WhereWeAreGoingStepList({ steps }: { steps: readonly BehaviorStepSummar
           <a
             className="font-medium text-primary underline underline-offset-4 hover:opacity-80"
             href={`#${step.anchor}`}
+            onClick={() => {
+              onSelectAnchor(step.anchor);
+            }}
           >
             {`Step ${String(step.stepNumber)}`}
           </a>
           {": "}
-          <InlineNodes nodes={step.content} />
+          <InlineNodes nodes={stripStepPrefixFromNodes(step.content)} />
         </li>
       ))}
     </ol>
@@ -149,64 +169,17 @@ function WhereWeAreGoingStepList({ steps }: { steps: readonly BehaviorStepSummar
 }
 
 function ThinkAboutSections({ sections }: { sections: readonly BehaviorThinkAboutSection[] }) {
-  if (sections.length === 0) {
-    return null;
-  }
-
   return (
     <>
       {sections.map((section) => (
-        <section aria-labelledby={section.id} className="space-y-3" key={section.id}>
-          <h2 className="text-xl font-semibold tracking-tight" id={section.id}>
-            {section.heading}
-          </h2>
-          <CurriculumContentBlocks blocks={section.blocks} />
-        </section>
+        <ContentSection
+          blocks={section.blocks}
+          heading={section.heading}
+          id={section.id}
+          key={section.id}
+        />
       ))}
     </>
-  );
-}
-
-function BehaviorStepsSection({
-  completedStepIds,
-  initialOpenAnchor,
-  page,
-}: {
-  completedStepIds: ReadonlySet<string>;
-  initialOpenAnchor: string | undefined;
-  page: BehaviorCurriculumPage;
-}) {
-  const { error, mutate: toggleStep } = useToggleStep();
-
-  return (
-    <section aria-labelledby="steps-heading" className="space-y-4">
-      <h2 className="text-xl font-semibold tracking-tight" id="steps-heading">
-        Steps
-      </h2>
-      {page.stepsIntroBlocks.length > 0 ? (
-        <CurriculumContentBlocks blocks={page.stepsIntroBlocks} />
-      ) : null}
-      {error === null ? null : (
-        <Alert variant="destructive">
-          <AlertCircle aria-hidden="true" className="size-4" />
-          <AlertTitle>Could not update step progress</AlertTitle>
-          <AlertDescription>{error.message}</AlertDescription>
-        </Alert>
-      )}
-      <div className="space-y-3">
-        {page.steps.map((step) => (
-          <CurriculumStepCard
-            defaultOpen={initialOpenAnchor === step.anchor}
-            isCompleted={completedStepIds.has(step.stepId)}
-            key={step.stepId}
-            step={step}
-            onToggle={(stepId, completed) => {
-              toggleStep({ completed, stepId });
-            }}
-          />
-        ))}
-      </div>
-    </section>
   );
 }
 

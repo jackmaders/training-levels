@@ -1,24 +1,20 @@
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "./fixtures";
-import { AuthClient, CurriculumLevelPage, HomePage, waitForHydration } from "./page-objects";
+import { AuthClient, CurriculumLevelPage, HomePage } from "./page-objects";
 
 const LEVEL_SECTION_COUNT = 4;
 const MOBILE_VIEWPORT = { height: 844, width: 390 };
+const STEP_ONE_NUMBER = 1;
+const STEP_TWO_NUMBER = 2;
 const ZEN_STEP_COUNT = 5;
 
 const STEP_ONE_SUMMARY = "The dog moves off a treat held in your hand. You're sitting down.";
 const STEP_ONE_HEADING = `Step 1: ${STEP_ONE_SUMMARY}`;
+const STEP_TWO_SUMMARY = "The dog stays away from the treat in your closed fist for 5 seconds.";
 
 async function signUpTestUser(page: Page, baseURL: string | undefined) {
-  const authClient = new AuthClient(page);
-  const response = await authClient.signUp({
-    baseURL,
-    email: `curriculum-${globalThis.crypto.randomUUID()}@example.com`,
-    name: "Curriculum reader",
-    password: "curriculum-test-password",
-  });
-
+  const response = await new AuthClient(page).signUp({ baseURL });
   if (!response.ok()) {
     throw new Error(`Test user registration failed (${response.status()})`);
   }
@@ -58,10 +54,8 @@ test("redirects authenticated visitors from /levels to level 1 zen with level-on
   await expect(page).toHaveURL(/\/levels\/level-1\/zen$/u);
   await expect(curriculumPage.sidebarSectionButtons).toHaveCount(LEVEL_SECTION_COUNT);
   await expect(curriculumPage.getSidebarSectionButton("Level 1")).toContainText("0/25");
-  await expect(curriculumPage.desktopSidebar.getByRole("button", { name: /Theory/u })).toBeHidden();
-  await expect(
-    curriculumPage.desktopSidebar.getByRole("button", { name: /Appendices/u }),
-  ).toBeHidden();
+  await expect(curriculumPage.getSidebarSectionButtonByName(/Theory/u)).toBeHidden();
+  await expect(curriculumPage.getSidebarSectionButtonByName(/Appendices/u)).toBeHidden();
 });
 
 test("displays level 1 through 4 sections and toggles level 2 in the sidebar", async ({
@@ -93,7 +87,7 @@ test("renders zen breadcrumb, progress bar, and footer navigation", async ({ bas
   await expect(curriculumPage.getFooterNextLink("Come")).toBeVisible();
 });
 
-test("renders five collapsed step cards with bold summaries and no step prefix", async ({
+test("renders five collapsed step cards with summaries and no step prefix", async ({
   baseURL,
   page,
 }) => {
@@ -102,15 +96,47 @@ test("renders five collapsed step cards with bold summaries and no step prefix",
 
   // Assert
   await expect(curriculumPage.stepTriggers).toHaveCount(ZEN_STEP_COUNT);
-  await expect(curriculumPage.article.getByRole("button", { expanded: false })).toHaveCount(
-    ZEN_STEP_COUNT,
-  );
-  await expect(curriculumPage.getStepTrigger(STEP_ONE_SUMMARY)).toBeVisible();
-  await expect(curriculumPage.article.getByRole("button", { name: /^Step \d+/u })).toHaveCount(0);
+  await expect(curriculumPage.collapsedStepTriggers).toHaveCount(ZEN_STEP_COUNT);
+  await expect(curriculumPage.getStepSummary(STEP_ONE_SUMMARY)).toBeVisible();
+  await expect(curriculumPage.stepPrefixedTriggers).toHaveCount(0);
   await expect(curriculumPage.getArticleText(/Start sitting in a chair\./u)).toBeHidden();
 });
 
-test("expands step 1 card to reveal instructions and try it cold content", async ({
+test("renders where we are going steps without doubled step prefixes", async ({
+  baseURL,
+  page,
+}) => {
+  // Arrange & Act
+  const curriculumPage = await signUpAndVisitLevels(page, baseURL);
+
+  // Assert
+  await expect(curriculumPage.getWhereWeAreGoingItem(STEP_ONE_NUMBER)).toHaveText(
+    "Step 1: Dog moves away from a treat in your hand. You're sitting down.",
+  );
+  await expect(curriculumPage.getWhereWeAreGoingItem(STEP_TWO_NUMBER)).toHaveText(
+    "Step 2: Dog stays away from the treat in a closed hand for 5 seconds.",
+  );
+});
+
+test("opens collapsed step 2 card when clicking #step-2 in where we are going", async ({
+  baseURL,
+  page,
+}) => {
+  // Arrange
+  const curriculumPage = await signUpAndVisitLevels(page, baseURL);
+
+  // Act
+  await curriculumPage.openWhereWeAreGoingStep(STEP_TWO_NUMBER);
+
+  // Assert
+  await expect(curriculumPage.getStepTrigger(STEP_TWO_SUMMARY)).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
+  await expect(curriculumPage.getArticleText(/Shaping comes into the picture/u)).toBeVisible();
+});
+
+test("expands step 1 card to reveal instructions and collapses back on second click", async ({
   baseURL,
   page,
 }) => {
@@ -127,7 +153,39 @@ test("expands step 1 card to reveal instructions and try it cold content", async
   );
   await expect(curriculumPage.getArticleText(/Start sitting in a chair\./u)).toBeVisible();
   await expect(curriculumPage.getArticleText(/Great! Check it off!/u)).toBeVisible();
-  await expect(curriculumPage.getArticleText("Comeafters")).toBeVisible();
+
+  // Act
+  await curriculumPage.collapseStep(STEP_ONE_SUMMARY);
+
+  // Assert
+  await expect(curriculumPage.getStepTrigger(STEP_ONE_SUMMARY)).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
+  await expect(curriculumPage.getArticleText(/Start sitting in a chair\./u)).toBeHidden();
+});
+
+test("opens step 2 on direct hash navigation with zero hydration errors", async ({
+  baseURL,
+  page,
+}) => {
+  // Arrange
+  const curriculumPage = new CurriculumLevelPage(page);
+  await signUpTestUser(page, baseURL);
+
+  // Act
+  await curriculumPage.gotoLevelPageAnchor("level-1", "zen", "step-2");
+
+  // Assert
+  await expect(curriculumPage.getStepTrigger(STEP_TWO_SUMMARY)).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
+  await expect(curriculumPage.getArticleText(/Shaping comes into the picture/u)).toBeVisible();
+  await expect(curriculumPage.getStepTrigger(STEP_ONE_SUMMARY)).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
 });
 
 test("updates progress on step check and persists across reload", async ({ baseURL, page }) => {
@@ -143,8 +201,7 @@ test("updates progress on step check and persists across reload", async ({ baseU
   await expect(curriculumPage.getSidebarLink("Zen")).toContainText("1/5");
 
   // Act
-  await page.reload();
-  await waitForHydration(page);
+  await curriculumPage.reload();
 
   // Assert
   await expect(curriculumPage.getProgressText("1 of 5 steps")).toBeVisible();
@@ -158,12 +215,11 @@ test("restores zero progress across reload when unchecking a completed step", as
   // Arrange
   const curriculumPage = await signUpAndVisitLevels(page, baseURL);
   await curriculumPage.toggleStepCheckbox(STEP_ONE_HEADING);
-  await curriculumPage.getProgressText("1 of 5 steps").waitFor({ state: "visible" });
+  await curriculumPage.waitForProgressVisible("1 of 5 steps");
 
   // Act
   await curriculumPage.toggleStepCheckbox(STEP_ONE_HEADING);
-  await page.reload();
-  await waitForHydration(page);
+  await curriculumPage.reload();
 
   // Assert
   await expect(curriculumPage.getProgressText("0 of 5 steps")).toBeVisible();
