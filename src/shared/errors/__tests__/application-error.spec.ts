@@ -4,6 +4,7 @@ import { ApplicationError } from "../application-error";
 
 describe("application errors", () => {
   it.each([
+    ["CURRICULUM_STEP_NOT_FOUND", "Curriculum step not found.", 404],
     ["INTERNAL_SERVER_ERROR", "Something went wrong.", 500],
     ["TODO_CREATE_FAILED", "Todo item could not be created.", 500],
     ["TODO_NOT_FOUND", "Todo item not found.", 404],

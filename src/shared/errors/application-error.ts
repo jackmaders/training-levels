@@ -1,6 +1,7 @@
 import { HttpStatusCodes, type HttpStatusCode } from "../lib/http-status-codes";
 
 const ErrorCodes = {
+  CURRICULUM_STEP_NOT_FOUND: "CURRICULUM_STEP_NOT_FOUND",
   INTERNAL_SERVER_ERROR: "INTERNAL_SERVER_ERROR",
   TODO_CREATE_FAILED: "TODO_CREATE_FAILED",
   TODO_NOT_FOUND: "TODO_NOT_FOUND",
@@ -11,6 +12,10 @@ const ErrorCodes = {
 type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
 
 const ErrorConfig: Record<ErrorCode, { message: string; statusCode?: HttpStatusCode }> = {
+  CURRICULUM_STEP_NOT_FOUND: {
+    message: "Curriculum step not found.",
+    statusCode: HttpStatusCodes.NOT_FOUND,
+  },
   INTERNAL_SERVER_ERROR: { message: "Something went wrong." },
   TODO_CREATE_FAILED: { message: "Todo item could not be created." },
   TODO_NOT_FOUND: { message: "Todo item not found.", statusCode: HttpStatusCodes.NOT_FOUND },
