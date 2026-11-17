@@ -1,13 +1,17 @@
 import { Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import type { BehaviorCurriculumPage } from "@/shared/curriculum-data";
 
+import type { PRACTICE_STEP_OPTIONS, PracticePlan } from "../model/practice-ladders";
 import { CurriculumContentBlocks } from "./curriculum-content-blocks";
 
-const STEP_TARGET = "Dog moves off a treat held in your hand while you are sitting.";
+const STEP_TARGET = "Dog moves away from a treat held in your hand while you are sitting.";
 const LAST_ITEM_OFFSET = 1;
-
+const DEFAULT_PRACTICE_LIMIT = 5;
+const TIMER_TICK_MILLISECONDS = 1000;
+const NO_TARGET_INDEX = -1;
+type PracticeStepOption = (typeof PRACTICE_STEP_OPTIONS)[number];
 type Outcome = "success" | "not_yet";
 interface PracticeRecord {
   attemptId: string;
@@ -19,17 +23,17 @@ interface PracticeActions {
   correct: (attempt: PracticeRecord) => void;
   errorMessage: string | null;
   handleRetry: () => void;
-  pendingAttempt: { attemptId: string; outcome: Outcome } | null;
-  record: (outcome: Outcome) => void;
+  pendingAttempt: { attemptId: string; outcome: Outcome; target: string } | null;
+  record: (outcome: Outcome, target: string) => void;
   saving: boolean;
   undo: (attemptId: string) => void;
 }
 
-function TrainingHeading() {
+function TrainingHeading({ stepLabel }: { stepLabel: string }) {
   return (
     <header className="space-y-2">
-      <p className="text-sm text-muted-foreground">Practice · Level 1: Zen · Step 1</p>
-      <h1 className="text-3xl font-bold tracking-tight">Practice hand Zen</h1>
+      <p className="text-sm text-muted-foreground">Practice · {stepLabel}</p>
+      <h1 className="text-3xl font-bold tracking-tight">Guided Practice</h1>
     </header>
   );
 }
@@ -37,11 +41,21 @@ function TrainingHeading() {
 function TrainingPrep({
   equipment,
   history,
+  onSelectStep,
   onStart,
+  plan,
+  selectedStepId,
+  stepOptions,
+  target,
 }: {
   equipment: BehaviorCurriculumPage["equipment"];
   history: readonly PracticeRecord[];
+  onSelectStep: (stepId: string) => void;
   onStart: () => void;
+  plan: PracticePlan | null;
+  selectedStepId: string;
+  stepOptions: readonly PracticeStepOption[];
+  target: string;
 }) {
   const currentHistory = history.filter((attempt) => attempt.undoneAt === null);
 
@@ -50,23 +64,34 @@ function TrainingPrep({
       <h2 className="text-xl font-semibold" id="prep-heading">
         Prep
       </h2>
+      <label className="grid max-w-lg gap-2 font-medium" htmlFor="practice-step">
+        Behavior and Step
+        <select
+          className="min-h-11 rounded-md border bg-background px-3 font-normal"
+          id="practice-step"
+          value={selectedStepId}
+          onChange={(event) => onSelectStep(event.currentTarget.value)}
+        >
+          {stepOptions.map((step) => (
+            <option key={step.stepId} value={step.stepId}>
+              {step.label}
+            </option>
+          ))}
+        </select>
+      </label>
       <PrepDetail heading="Equipment">
         <CurriculumContentBlocks blocks={equipment} />
       </PrepDetail>
-      <PrepDetail heading="Setup">
-        <p>
-          Sit in a chair with a treat protected in your closed hand. Keep your hand still near your
-          Dog.
-        </p>
-      </PrepDetail>
       <PrepDetail heading="Practice target">
-        <p>{STEP_TARGET}</p>
+        <output aria-label="Current practice target">{target}</output>
       </PrepDetail>
-      <PrepDetail heading="Observable success">
-        <p>
-          Your Dog moves her nose or body away from the treat hand. Mark and reward, then record it.
-        </p>
-      </PrepDetail>
+      {plan === null ? (
+        <PrepDetail heading="Observable success">
+          <p>Your Dog moves away from the treat hand. Mark and reward, then record it.</p>
+        </PrepDetail>
+      ) : (
+        <LadderDetails plan={plan} />
+      )}
       <AttemptCounts history={currentHistory} />
       <button
         className="rounded-md bg-primary px-4 py-2 text-primary-foreground"
@@ -75,6 +100,31 @@ function TrainingPrep({
       >
         {currentHistory.length === 0 ? "Start Practice" : "Resume Practice"}
       </button>
+    </section>
+  );
+}
+
+function LadderDetails({ plan }: { plan: PracticePlan }) {
+  return (
+    <section
+      aria-label="Step ladder guidance"
+      className="space-y-2 rounded-md bg-muted p-3 text-sm"
+    >
+      <p>
+        <strong>Prior achievement:</strong> {plan.priorAchievement ?? "None recorded yet"}
+      </p>
+      {plan.restartReason === null ? null : (
+        <p>
+          <strong>Restart suggestion:</strong> {plan.target}. {plan.restartReason}
+        </p>
+      )}
+      <p>
+        <strong>Source:</strong> {plan.source}
+      </p>
+      <p>
+        App defaults: {String(plan.appDefaultRepetitions)} confirmed attempt to advance each target;
+        take a break after {String(plan.appDefaultPracticeLimit)} recorded attempts.
+      </p>
     </section>
   );
 }
@@ -94,12 +144,53 @@ function PrepDetail({ children, heading }: { children: ReactNode; heading: strin
 function TrainingPractice({
   actions,
   history,
+  onBreak,
+  onChangeTarget,
+  finishStep,
+  plan,
+  target,
 }: {
   actions: PracticeActions;
   history: readonly PracticeRecord[];
+  onBreak: () => void;
+  onChangeTarget: (target: string) => void;
+  finishStep: PracticeStepOption;
+  plan: PracticePlan | null;
+  target: string;
 }) {
   const currentHistory = history.filter((attempt) => attempt.undoneAt === null);
   const lastAttempt = currentHistory.at(-LAST_ITEM_OFFSET);
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+  const [deadlineTimestamp, setDeadlineTimestamp] = useState<number | null>(null);
+  const timerComplete = remainingSeconds === 0;
+  const timerActive =
+    deadlineTimestamp !== null && remainingSeconds !== null && remainingSeconds > 0;
+  const targetDuration =
+    plan?.targetOptions.find((option) => option.label === target)?.durationSeconds ??
+    plan?.durationSeconds ??
+    0;
+  const practiceActions: PracticeActions = {
+    ...actions,
+    record: (outcome, currentTarget) => {
+      setRemainingSeconds(null);
+      setDeadlineTimestamp(null);
+      actions.record(outcome, currentTarget);
+    },
+  };
+
+  useEffect(() => {
+    if (!timerActive) {
+      return;
+    }
+    const timerId = window.setInterval(() => {
+      if (deadlineTimestamp !== null) {
+        const millisecondsRemaining = deadlineTimestamp - Date.now();
+        const secondsRemaining = Math.ceil(millisecondsRemaining / TIMER_TICK_MILLISECONDS);
+        setRemainingSeconds(Math.max(0, secondsRemaining));
+      }
+    }, TIMER_TICK_MILLISECONDS);
+    return () => window.clearInterval(timerId);
+  }, [deadlineTimestamp, timerActive]);
 
   return (
     <section aria-labelledby="practice-heading" className="space-y-5">
@@ -107,12 +198,147 @@ function TrainingPractice({
         <h2 className="text-xl font-semibold" id="practice-heading">
           Current target
         </h2>
-        <p>{STEP_TARGET}</p>
+        <output aria-label="Current practice target">{target}</output>
+        {plan === null ? null : (
+          <>
+            <TargetChoices
+              plan={plan}
+              target={target}
+              onChangeTarget={(nextTarget) => {
+                setRemainingSeconds(null);
+                setDeadlineTimestamp(null);
+                onChangeTarget(nextTarget);
+              }}
+            />
+            <p>Prior achievement: {plan.priorAchievement ?? "None recorded yet"}</p>
+            {plan.restartReason === null ? null : (
+              <p>
+                Restart suggestion: {plan.target}. {plan.restartReason}
+              </p>
+            )}
+          </>
+        )}
       </div>
+      {plan === null || targetDuration === 0 ? null : (
+        <TimerControls
+          complete={timerComplete}
+          remainingSeconds={remainingSeconds}
+          target={target}
+          onConfirm={(outcome) => practiceActions.record(outcome, target)}
+          onStart={() => {
+            setDeadlineTimestamp(Date.now() + targetDuration * TIMER_TICK_MILLISECONDS);
+            setRemainingSeconds(targetDuration);
+          }}
+        />
+      )}
+      <PracticeLimitNotice
+        attemptCount={currentHistory.length}
+        limit={plan?.appDefaultPracticeLimit ?? DEFAULT_PRACTICE_LIMIT}
+      />
       <AttemptCounts history={currentHistory} />
-      <SaveError actions={actions} />
-      <AttemptHistory actions={actions} history={currentHistory} />
-      <RecordingControls actions={actions} lastAttempt={lastAttempt} />
+      <SaveError actions={practiceActions} />
+      <AttemptHistory actions={practiceActions} history={currentHistory} />
+      <RecordingControls
+        actions={practiceActions}
+        lastAttempt={lastAttempt}
+        target={target}
+        onBreak={onBreak}
+        finishStep={finishStep}
+      />
+    </section>
+  );
+}
+
+function TargetChoices({
+  onChangeTarget,
+  plan,
+  target,
+}: {
+  onChangeTarget: (target: string) => void;
+  plan: PracticePlan;
+  target: string;
+}) {
+  const targetIndex = plan.targetOptions.findIndex((option) => option.label === target);
+  return (
+    <div className="flex flex-wrap gap-2 text-sm">
+      <button
+        className="rounded-md border px-3 py-2"
+        disabled={targetIndex <= 0}
+        type="button"
+        onClick={() => onChangeTarget(plan.targetOptions[targetIndex - 1]?.label ?? target)}
+      >
+        Easier target
+      </button>
+      <button
+        className="rounded-md border px-3 py-2"
+        disabled={targetIndex === NO_TARGET_INDEX || targetIndex >= plan.targetOptions.length - 1}
+        type="button"
+        onClick={() => onChangeTarget(plan.targetOptions[targetIndex + 1]?.label ?? target)}
+      >
+        Next ladder target
+      </button>
+      <label className="grid gap-1" htmlFor="practice-target">
+        Choose target
+      </label>
+      <select
+        className="min-h-10 rounded-md border bg-background px-2"
+        id="practice-target"
+        value={target}
+        onChange={(event) => onChangeTarget(event.currentTarget.value)}
+      >
+        {plan.targetOptions.map((option) => (
+          <option key={option.label} value={option.label}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function TimerControls({
+  complete,
+  onConfirm,
+  onStart,
+  remainingSeconds,
+  target,
+}: {
+  complete: boolean;
+  onConfirm: (outcome: Outcome) => void;
+  onStart: () => void;
+  remainingSeconds: number | null;
+  target: string;
+}) {
+  return (
+    <section aria-label="Optional timer" className="space-y-2 rounded-md border p-3">
+      <p>Optional timer for {target}</p>
+      {remainingSeconds === null ? (
+        <button className="rounded-md border px-3 py-2" type="button" onClick={onStart}>
+          Start timer
+        </button>
+      ) : (
+        <p aria-live="polite">
+          {complete ? "Timer complete." : `${String(remainingSeconds)} seconds remaining.`}
+        </p>
+      )}
+      {complete ? (
+        <div className="flex gap-2">
+          <button
+            className="rounded-md bg-primary px-3 py-2 text-primary-foreground"
+            type="button"
+            onClick={() => onConfirm("success")}
+          >
+            Confirm Success
+          </button>
+          <button
+            className="rounded-md border px-3 py-2"
+            type="button"
+            onClick={() => onConfirm("not_yet")}
+          >
+            Record Not yet
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -127,11 +353,21 @@ function AttemptCounts({ history }: { history: readonly PracticeRecord[] }) {
   );
 }
 
+function PracticeLimitNotice({ attemptCount, limit }: { attemptCount: number; limit: number }) {
+  if (attemptCount < limit) {
+    return null;
+  }
+  return (
+    <output>
+      App-default practice limit reached. Take a break, then choose Continue or Finish.
+    </output>
+  );
+}
+
 function SaveError({ actions }: { actions: PracticeActions }) {
   if (actions.errorMessage === null) {
     return null;
   }
-
   return (
     <div
       aria-live="assertive"
@@ -186,15 +422,21 @@ function AttemptHistory({
 function RecordingControls({
   actions,
   lastAttempt,
+  onBreak,
+  finishStep,
+  target,
 }: {
   actions: PracticeActions;
   lastAttempt: PracticeRecord | undefined;
+  onBreak: () => void;
+  finishStep: PracticeStepOption;
+  target: string;
 }) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-4 backdrop-blur">
       <div className="mx-auto grid max-w-3xl grid-cols-2 gap-3">
-        <OutcomeButton actions={actions} outcome="success" />
-        <OutcomeButton actions={actions} outcome="not_yet" />
+        <OutcomeButton actions={actions} outcome="success" target={target} />
+        <OutcomeButton actions={actions} outcome="not_yet" target={target} />
         <button
           className="min-h-12 rounded-md border"
           disabled={actions.saving || lastAttempt === undefined}
@@ -205,19 +447,24 @@ function RecordingControls({
         >
           Undo
         </button>
-        <Link
-          className="flex min-h-12 items-center justify-center rounded-md border"
-          to="/levels/$section/$page"
-          params={{ page: "zen", section: "level-1" }}
-        >
-          Finish Practice
-        </Link>
+        <button className="min-h-12 rounded-md border" type="button" onClick={onBreak}>
+          Take a break
+        </button>
+        <FinishTrainingLink step={finishStep} />
       </div>
     </div>
   );
 }
 
-function OutcomeButton({ actions, outcome }: { actions: PracticeActions; outcome: Outcome }) {
+function OutcomeButton({
+  actions,
+  outcome,
+  target,
+}: {
+  actions: PracticeActions;
+  outcome: Outcome;
+  target: string;
+}) {
   const label = outcome === "success" ? "Success" : "Not yet";
   return (
     <button
@@ -228,12 +475,64 @@ function OutcomeButton({ actions, outcome }: { actions: PracticeActions; outcome
       }
       disabled={actions.saving || actions.pendingAttempt !== null}
       type="button"
-      onClick={() => actions.record(outcome)}
+      onClick={() => actions.record(outcome, target)}
     >
       {label}
     </button>
   );
 }
 
-export { STEP_TARGET, TrainingHeading, TrainingPractice, TrainingPrep };
+function TrainingBreak({
+  onContinue,
+  finishStep,
+}: {
+  onContinue: () => void;
+  finishStep: PracticeStepOption;
+}) {
+  return (
+    <section aria-labelledby="break-heading" className="space-y-4 rounded-lg border p-5">
+      <h2 className="text-xl font-semibold" id="break-heading">
+        Take a break
+      </h2>
+      <p>
+        Your attempts and target are saved. Continue when you and your Dog are ready, or finish
+        Practice.
+      </p>
+      <div className="flex flex-wrap gap-3">
+        <button
+          className="rounded-md bg-primary px-4 py-2 text-primary-foreground"
+          type="button"
+          onClick={onContinue}
+        >
+          Continue
+        </button>
+        <FinishTrainingLink step={finishStep} label="Finish" />
+      </div>
+    </section>
+  );
+}
+
+function FinishTrainingLink({
+  label = "Finish Practice",
+  step,
+}: {
+  label?: string;
+  step: PracticeStepOption;
+}) {
+  const [section, page] = step.pageSlug.split("/");
+  if (section === undefined || page === undefined) {
+    return null;
+  }
+  return (
+    <Link
+      className="flex min-h-12 items-center justify-center rounded-md border"
+      to="/levels/$section/$page"
+      params={{ page, section }}
+    >
+      {label}
+    </Link>
+  );
+}
+
+export { STEP_TARGET, TrainingBreak, TrainingHeading, TrainingPractice, TrainingPrep };
 export type { Outcome, PracticeActions, PracticeRecord };

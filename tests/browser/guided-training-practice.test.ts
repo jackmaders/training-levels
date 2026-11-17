@@ -4,6 +4,8 @@ import { expect, test } from "./fixtures";
 import { AuthClient, TrainingPage } from "./page-objects";
 
 const PREP_HEADING_COUNT = 3;
+const TIMER_TARGET_DURATION_MILLISECONDS = 15_000;
+const TIMER_INTERRUPTION_DURATION_MILLISECONDS = TIMER_TARGET_DURATION_MILLISECONDS / 3;
 
 async function signUpAndVisit(page: Page, baseURL: string | undefined) {
   const response = await new AuthClient(page).signUp({ baseURL });
@@ -73,4 +75,76 @@ test("records Practice attempts, retains history, and leaves the Step incomplete
 
   // Assert
   await expect(page.getByRole("checkbox", { name: /^Toggle Step 1:/u })).not.toBeChecked();
+});
+
+test("uses the Crate Step 2 ladder, restarts after a miss, and offers break choices", async ({
+  baseURL,
+  page,
+}) => {
+  // Arrange
+  const trainingPage = await signUpAndVisit(page, baseURL);
+  await trainingPage.startFromPrep();
+  await trainingPage.selectStep("Level 3 Crate · Step 2");
+  await expect(trainingPage.target).toHaveText("2 feet · 0 seconds");
+
+  // Act
+  await trainingPage.startButton.click();
+  await trainingPage.chooseNextTarget();
+  await expect(trainingPage.target).toHaveText("2 feet · 15 seconds");
+  await trainingPage.successButton.click();
+  await expect(trainingPage.target).toHaveText("3 feet · 30 seconds");
+  await trainingPage.notYetButton.click();
+  await expect(trainingPage.target).toHaveText("2 feet · 0 seconds");
+
+  // Assert
+  await expect(page.getByText("Prior achievement: 2 feet · 15 seconds")).toBeVisible();
+  await expect(page.getByText(/Restart suggestion: 2 feet · 0 seconds/u)).toBeVisible();
+
+  // Act
+  await trainingPage.takeBreak();
+
+  // Assert
+  await expect(trainingPage.breakHeading).toBeVisible();
+
+  // Act
+  await trainingPage.continuePractice();
+  await trainingPage.finishLink.click();
+
+  // Assert
+  await expect(page).toHaveURL(/\/levels\/level-3\/crate$/u);
+});
+
+test("timer completion waits for the handler to confirm success", async ({ baseURL, page }) => {
+  // Arrange
+  await page.clock.install({ time: new Date("2026-01-01T09:00:00Z") });
+  const trainingPage = await signUpAndVisit(page, baseURL);
+  await trainingPage.startFromPrep();
+  await trainingPage.selectStep("Level 3 Crate · Step 2");
+  await trainingPage.startButton.click();
+  await trainingPage.chooseNextTarget();
+
+  // Act
+  await trainingPage.startTimer();
+  await page.clock.runFor(TIMER_INTERRUPTION_DURATION_MILLISECONDS);
+  await trainingPage.reload();
+
+  // Assert
+  await expect(trainingPage.stepSelect).toHaveValue("level-3/crate:step-2");
+  await expect(trainingPage.target).toHaveText("2 feet · 15 seconds");
+
+  // Act
+  await trainingPage.startButton.click();
+  await expect(trainingPage.timerStartButton).toBeVisible();
+  await trainingPage.startTimer();
+  await page.clock.runFor(TIMER_TARGET_DURATION_MILLISECONDS);
+
+  // Assert
+  await expect(page.getByText("Timer complete.")).toBeVisible();
+  await expect(trainingPage.counts).toHaveText("0 Success · 0 Not yet");
+
+  // Act
+  await trainingPage.confirmTimerSuccess.click();
+
+  // Assert
+  await expect(trainingPage.counts).toHaveText("1 Success · 0 Not yet");
 });

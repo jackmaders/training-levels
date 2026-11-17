@@ -8,14 +8,16 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState, type Dispatch, type SetStateAction } from "react";
 
 import { curriculumPageQueryOptions } from "../api/curriculum-query-options";
-import { PRACTICE_STEP_ID, practiceHistoryQueryOptions } from "../api/training-query-options";
+import { practiceHistoryQueryOptions } from "../api/training-query-options";
 import {
   correctPracticeAttemptFn,
   recordPracticeAttemptFn,
   undoPracticeAttemptFn,
 } from "../api/training.functions";
+import { getPracticePlan, PRACTICE_STEP_OPTIONS } from "../model/practice-ladders";
 import {
   STEP_TARGET,
+  TrainingBreak,
   TrainingHeading,
   TrainingPractice,
   TrainingPrep,
@@ -24,11 +26,43 @@ import {
   type PracticeRecord,
 } from "./curriculum-training-views";
 
-function CurriculumTrainingPage() {
-  const { data: history } = useSuspenseQuery(practiceHistoryQueryOptions());
-  const { data: curriculumPage } = useSuspenseQuery(curriculumPageQueryOptions("level-1/zen"));
-  const [view, setView] = useState<"prep" | "practice">("prep");
-  const actions = usePracticeActions();
+function CurriculumTrainingPage({
+  onSelectionChange,
+  selectedStepId: requestedStepId,
+  selectedTarget,
+}: {
+  onSelectionChange: (stepId: string | undefined, target: string | undefined) => void;
+  selectedStepId: string | undefined;
+  selectedTarget: string | undefined;
+}) {
+  const [view, setView] = useState<"prep" | "practice" | "break">("prep");
+  const selectedStep =
+    PRACTICE_STEP_OPTIONS.find((step) => step.stepId === requestedStepId) ??
+    PRACTICE_STEP_OPTIONS[0];
+  const selectedStepId = selectedStep.stepId;
+  const { data: history } = useSuspenseQuery(practiceHistoryQueryOptions(selectedStepId));
+  const { data: curriculumPage } = useSuspenseQuery(
+    curriculumPageQueryOptions(selectedStep.pageSlug),
+  );
+  const actions = usePracticeActions(selectedStepId);
+  const viewActions: PracticeActions = {
+    ...actions,
+    record: (outcome, currentTarget) => {
+      onSelectionChange(selectedStepId, undefined);
+      actions.record(outcome, currentTarget);
+    },
+  };
+  const plan =
+    selectedStepId === PRACTICE_STEP_OPTIONS[0].stepId
+      ? null
+      : getPracticePlan(
+          selectedStepId,
+          history.filter((attempt) => attempt.undoneAt === null),
+        );
+  const target =
+    plan?.targetOptions.some((option) => option.label === selectedTarget) === true
+      ? (selectedTarget ?? STEP_TARGET)
+      : (plan?.target ?? STEP_TARGET);
 
   if (curriculumPage === null || curriculumPage.kind !== "behavior") {
     return <main className="mx-auto max-w-3xl p-6">Training instructions are unavailable.</main>;
@@ -36,15 +70,30 @@ function CurriculumTrainingPage() {
 
   return (
     <main className="mx-auto max-w-3xl space-y-8 px-4 pt-8 pb-36 sm:px-6">
-      <TrainingHeading />
+      <TrainingHeading stepLabel={selectedStep.label} />
       {view === "prep" ? (
         <TrainingPrep
           equipment={curriculumPage.equipment}
           history={history}
+          onSelectStep={(stepId) => onSelectionChange(stepId, undefined)}
           onStart={() => setView("practice")}
+          plan={plan}
+          selectedStepId={selectedStepId}
+          stepOptions={PRACTICE_STEP_OPTIONS}
+          target={target}
+        />
+      ) : view === "practice" ? (
+        <TrainingPractice
+          actions={viewActions}
+          history={history}
+          onBreak={() => setView("break")}
+          onChangeTarget={(nextTarget) => onSelectionChange(selectedStepId, nextTarget)}
+          finishStep={selectedStep}
+          plan={plan}
+          target={target}
         />
       ) : (
-        <TrainingPractice actions={actions} history={history} />
+        <TrainingBreak onContinue={() => setView("practice")} finishStep={selectedStep} />
       )}
     </main>
   );
@@ -60,7 +109,10 @@ function usePracticePageFunctions() {
 
 function createMutationCallbacks(
   queryClient: QueryClient,
-  setPendingAttempt: Dispatch<SetStateAction<{ attemptId: string; outcome: Outcome } | null>>,
+  stepId: string,
+  setPendingAttempt: Dispatch<
+    SetStateAction<{ attemptId: string; outcome: Outcome; target: string } | null>
+  >,
   setErrorMessage: Dispatch<SetStateAction<string | null>>,
 ) {
   return {
@@ -68,24 +120,40 @@ function createMutationCallbacks(
     onSuccess: async () => {
       setPendingAttempt(null);
       setErrorMessage(null);
-      await queryClient.invalidateQueries({ queryKey: practiceHistoryQueryOptions().queryKey });
+      await queryClient.invalidateQueries({
+        queryKey: practiceHistoryQueryOptions(stepId).queryKey,
+      });
     },
   };
 }
 
-function usePracticeActions(): PracticeActions {
+function usePracticeActions(stepId: string): PracticeActions {
   const queryClient = useQueryClient();
   const serverFunctions = usePracticePageFunctions();
   const [pendingAttempt, setPendingAttempt] = useState<{
     attemptId: string;
     outcome: Outcome;
+    target: string;
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const callbacks = createMutationCallbacks(queryClient, setPendingAttempt, setErrorMessage);
+  const callbacks = createMutationCallbacks(
+    queryClient,
+    stepId,
+    setPendingAttempt,
+    setErrorMessage,
+  );
   const recordMutation = useMutation({
-    mutationFn: async ({ attemptId, outcome }: { attemptId: string; outcome: Outcome }) =>
+    mutationFn: async ({
+      attemptId,
+      outcome,
+      target,
+    }: {
+      attemptId: string;
+      outcome: Outcome;
+      target: string;
+    }) =>
       await serverFunctions.recordAttempt({
-        data: { attemptId, outcome, stepId: PRACTICE_STEP_ID, target: STEP_TARGET },
+        data: { attemptId, outcome, stepId, target },
       }),
     ...callbacks,
   });
@@ -113,8 +181,8 @@ function usePracticeActions(): PracticeActions {
       }
     },
     pendingAttempt,
-    record: (outcome: Outcome) => {
-      const nextAttempt = pendingAttempt ?? { attemptId: crypto.randomUUID(), outcome };
+    record: (outcome: Outcome, target: string) => {
+      const nextAttempt = pendingAttempt ?? { attemptId: crypto.randomUUID(), outcome, target };
       setPendingAttempt(nextAttempt);
       recordMutation.mutate(nextAttempt);
     },
