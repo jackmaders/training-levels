@@ -87,6 +87,14 @@ function BehaviorHeader({
           {() => `${String(progress.completedCount)} of ${String(progress.totalCount)} steps`}
         </ProgressValue>
       </Progress>
+      {page.pageSlug === "level-1/zen" ? (
+        <a
+          className="inline-flex rounded-md bg-primary px-4 py-2 text-primary-foreground"
+          href="/training"
+        >
+          Practice Step 1
+        </a>
+      ) : null}
     </header>
   );
 }
