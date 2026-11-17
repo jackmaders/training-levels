@@ -6,3 +6,4 @@ export * from "./home-page";
 export * from "./profile-page";
 export * from "./hydration";
 export * from "./theory-appendices-page";
+export * from "./training-page";

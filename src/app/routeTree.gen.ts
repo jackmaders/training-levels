@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedDependenciesRouteImport } from './routes/_authenticated/dependencies'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedTrainingRouteImport } from './routes/_authenticated/training'
 import { Route as AuthenticatedAppendicesIndexRouteImport } from './routes/_authenticated/appendices/index'
 import { Route as AuthenticatedAppendicesPageRouteImport } from './routes/_authenticated/appendices/$page'
 import { Route as AuthenticatedLevelsIndexRouteImport } from './routes/_authenticated/levels/index'
@@ -46,6 +47,11 @@ const AuthenticatedDependenciesRoute =
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedTrainingRoute = AuthenticatedTrainingRouteImport.update({
+  id: '/training',
+  path: '/training',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedAppendicesIndexRoute =
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/dependencies': typeof AuthenticatedDependenciesRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/training': typeof AuthenticatedTrainingRoute
   '/appendices/$page': typeof AuthenticatedAppendicesPageRoute
   '/theory/$page': typeof AuthenticatedTheoryPageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/dependencies': typeof AuthenticatedDependenciesRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/training': typeof AuthenticatedTrainingRoute
   '/appendices/$page': typeof AuthenticatedAppendicesPageRoute
   '/theory/$page': typeof AuthenticatedTheoryPageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/_authenticated/dependencies': typeof AuthenticatedDependenciesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/training': typeof AuthenticatedTrainingRoute
   '/_authenticated/appendices/$page': typeof AuthenticatedAppendicesPageRoute
   '/_authenticated/theory/$page': typeof AuthenticatedTheoryPageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/dependencies'
     | '/profile'
+    | '/training'
     | '/appendices/$page'
     | '/theory/$page'
     | '/api/auth/$'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/dependencies'
     | '/profile'
+    | '/training'
     | '/appendices/$page'
     | '/theory/$page'
     | '/api/auth/$'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/_authenticated/dependencies'
     | '/_authenticated/profile'
+    | '/_authenticated/training'
     | '/_authenticated/appendices/$page'
     | '/_authenticated/theory/$page'
     | '/api/auth/$'
@@ -227,6 +239,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/training': {
+      id: '/_authenticated/training'
+      path: '/training'
+      fullPath: '/training'
+      preLoaderRoute: typeof AuthenticatedTrainingRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/appendices/': {
@@ -291,6 +310,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedDependenciesRoute: typeof AuthenticatedDependenciesRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedTrainingRoute: typeof AuthenticatedTrainingRoute
   AuthenticatedAppendicesPageRoute: typeof AuthenticatedAppendicesPageRoute
   AuthenticatedTheoryPageRoute: typeof AuthenticatedTheoryPageRoute
   AuthenticatedAppendicesIndexRoute: typeof AuthenticatedAppendicesIndexRoute
@@ -302,6 +322,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDependenciesRoute: AuthenticatedDependenciesRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedTrainingRoute: AuthenticatedTrainingRoute,
   AuthenticatedAppendicesPageRoute: AuthenticatedAppendicesPageRoute,
   AuthenticatedTheoryPageRoute: AuthenticatedTheoryPageRoute,
   AuthenticatedAppendicesIndexRoute: AuthenticatedAppendicesIndexRoute,
