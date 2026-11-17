@@ -106,7 +106,10 @@ function SectionPageCard({
           />
         </div>
         <CardTitle>
-          <Link className="after:absolute after:inset-0 focus-visible:outline-none" to={entry.href}>
+          <Link
+            className="after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
+            to={entry.href}
+          >
             {entry.title}
           </Link>
         </CardTitle>

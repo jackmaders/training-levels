@@ -24,7 +24,7 @@ describe("profile page component", () => {
     render(<ProfilePage />);
 
     // Assert
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("User Profile");
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Your profile");
     expect(screen.getByText(/Name: Test User/u)).toBeDefined();
     expect(screen.getByText(/Email: test@example.com/u)).toBeDefined();
     expect(screen.getByText(/Role: user/u)).toBeDefined();

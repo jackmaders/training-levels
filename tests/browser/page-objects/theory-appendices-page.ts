@@ -2,6 +2,8 @@ import type { Locator, Page } from "@playwright/test";
 
 import { waitForHydration } from "./hydration";
 
+const MAX_KEYBOARD_TABS_TO_FOCUS_ARTICLE_LINK = 40;
+
 type CurriculumSectionName = "Appendices" | "Theory";
 type HeaderCurriculumLinkName = CurriculumSectionName | "Levels";
 
@@ -35,6 +37,17 @@ class TheoryAppendicesPage {
     await waitForHydration(this.page);
   }
 
+  public async focusLinkByKeyboard(link: Locator) {
+    for (let attempt = 0; attempt < MAX_KEYBOARD_TABS_TO_FOCUS_ARTICLE_LINK; attempt += 1) {
+      await this.page.keyboard.press("Tab");
+      if (await link.evaluate((element) => element === document.activeElement)) {
+        return;
+      }
+    }
+
+    throw new Error("Link was not reachable by keyboard tab navigation");
+  }
+
   /** Navigates via History API so TanStack Router handles 404s without a document 404 console error. */
   public async navigateClientSide(path: string) {
     await this.page.evaluate((targetPath) => {
@@ -48,7 +61,7 @@ class TheoryAppendicesPage {
   }
 
   public getHeaderLink(name: HeaderCurriculumLinkName): Locator {
-    return this.page.getByRole("banner").getByRole("link", { name });
+    return this.page.getByRole("banner").getByRole("link", { exact: true, name });
   }
 
   public async openSectionArticle(title: string) {

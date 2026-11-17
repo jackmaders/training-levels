@@ -2,6 +2,9 @@ import type { Locator, Page } from "@playwright/test";
 
 import { waitForHydration } from "./hydration";
 
+const RECTANGLE_CENTER_DIVISOR = 2;
+const MAX_KEYBOARD_TABS_TO_FOCUS_CONTROL = 20;
+
 class HomePage {
   public readonly heading: Locator;
   public readonly signUpHeading: Locator;
@@ -11,6 +14,7 @@ class HomePage {
   public readonly passwordInput: Locator;
   public readonly nameInput: Locator;
   public readonly submitButton: Locator;
+  public readonly skipLink: Locator;
 
   private readonly page: Page;
 
@@ -24,6 +28,7 @@ class HomePage {
     this.passwordInput = page.getByLabel("Password");
     this.nameInput = page.getByLabel("Name");
     this.submitButton = this.main.getByRole("button", { name: /sign in|create account/iu });
+    this.skipLink = page.getByRole("link", { name: "Skip to content" });
   }
 
   public get banner(): Locator {
@@ -47,6 +52,47 @@ class HomePage {
     await waitForHydration(this.page);
   }
 
+  public async setVisualLayout({
+    width,
+    height,
+    theme,
+  }: {
+    width: number;
+    height: number;
+    theme: "light" | "dark";
+  }) {
+    await this.page.setViewportSize({ height, width });
+    await this.page.evaluate((nextTheme) => {
+      document.documentElement.classList.toggle("dark", nextTheme === "dark");
+    }, theme);
+  }
+
+  public horizontalOverflow() {
+    return this.page.evaluate(() => {
+      const documentWidth = document.documentElement.scrollWidth;
+      const bodyWidth = document.body.scrollWidth;
+      const viewportWidth = document.documentElement.clientWidth;
+      return Math.max(documentWidth, bodyWidth) - viewportWidth;
+    });
+  }
+
+  public async focusSkipLink() {
+    await this.page.keyboard.press("Tab");
+  }
+
+  public async activateSkipLink() {
+    await this.page.keyboard.press("Enter");
+  }
+
+  public isSkipLinkTopmost() {
+    return this.skipLink.evaluate((element, centerDivisor) => {
+      const rect = element.getBoundingClientRect();
+      const centerX = rect.left + rect.width / centerDivisor;
+      const centerY = rect.top + rect.height / centerDivisor;
+      return document.elementFromPoint(centerX, centerY) === element;
+    }, RECTANGLE_CENTER_DIVISOR);
+  }
+
   public async navigateToAbout() {
     const menu = this.page.getByRole("button", { name: "Open menu" });
     if (await menu.isVisible()) {
@@ -55,6 +101,44 @@ class HomePage {
       return;
     }
     await this.banner.getByRole("link", { name: "About" }).click();
+  }
+
+  public async navigateToProfile() {
+    const menu = this.page.getByRole("button", { name: "Open menu" });
+    if (await menu.isVisible()) {
+      await menu.click();
+      await this.page.getByRole("dialog").getByRole("link", { name: "Profile" }).click();
+      return;
+    }
+    await this.banner.getByRole("link", { name: "Profile" }).click();
+  }
+
+  public async navigateToProfileByKeyboard() {
+    const menu = this.page.getByRole("button", { name: "Open menu" });
+    let profileLink = this.banner.getByRole("link", { exact: true, name: "Profile" });
+    if (await menu.isVisible()) {
+      await this.focusControlByKeyboard(menu);
+      await this.page.keyboard.press("Enter");
+      profileLink = this.page
+        .getByRole("dialog")
+        .getByRole("link", { exact: true, name: "Profile" });
+      await profileLink.waitFor({ state: "visible" });
+    }
+
+    await this.focusControlByKeyboard(profileLink);
+    await this.page.keyboard.press("Enter");
+  }
+
+  private async focusControlByKeyboard(control: Locator) {
+    for (let attempt = 0; attempt < MAX_KEYBOARD_TABS_TO_FOCUS_CONTROL; attempt += 1) {
+      if (await control.evaluate((element) => element === document.activeElement)) {
+        return;
+      }
+
+      await this.page.keyboard.press("Tab");
+    }
+
+    throw new Error("Control was not reachable by keyboard tab navigation");
   }
 
   public async signIn({ email, password }: { email: string; password: string }) {

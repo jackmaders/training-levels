@@ -6,14 +6,16 @@ export function AboutPage() {
       <Card>
         <CardHeader>
           <CardTitle>
-            <h1 className="text-xl font-semibold">About</h1>
+            <h1 className="text-xl font-semibold">About Dog Training Levels</h1>
           </CardTitle>
-          <CardDescription>A simple starter with room to grow.</CardDescription>
+          <CardDescription>
+            A practical, progressive curriculum for everyday dog training.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            This application is built with TanStack Start, Better Auth, and shadcn/ui. It provides
-            type-safe routing, server functions, and clean composable primitives.
+            Work through Levels 1–4 at your own pace. Each level builds useful skills through clear
+            criteria, short practice sessions, and positive reinforcement.
           </p>
         </CardContent>
       </Card>

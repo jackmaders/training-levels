@@ -38,7 +38,7 @@ export const Route = createRootRouteWithContext<RootRouterContext>()({
         name: "viewport",
       },
       {
-        title: "TanStack Start Starter",
+        title: "Dog Training Levels",
       },
     ],
   }),
@@ -60,8 +60,20 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         className="flex min-h-svh flex-col font-sans wrap-anywhere antialiased"
         data-hydrated="false"
       >
+        <a
+          className="fixed top-4 left-4 z-60 -translate-y-20 rounded-md bg-background px-4 py-2 text-foreground shadow-md focus-visible:translate-y-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          href="#main-content"
+        >
+          Skip to content
+        </a>
         <Header />
-        <main className="container mx-auto flex flex-1 flex-col px-4 py-8">{children}</main>
+        <main
+          className="container mx-auto flex flex-1 flex-col px-4 py-8"
+          id="main-content"
+          tabIndex={-1}
+        >
+          {children}
+        </main>
         <Footer />
         <Toaster />
         <Devtools />

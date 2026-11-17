@@ -5,9 +5,9 @@ function ProfilePage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8">
-      <h1 className="text-2xl font-bold tracking-tight text-foreground">User Profile</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-foreground">Your profile</h1>
       <p className="mt-2 text-muted-foreground">
-        This is a protected page accessible only to authenticated users.
+        Your account details and training progress are associated with this profile.
       </p>
       {sessionData === null ? (
         <p className="mt-4 text-sm text-muted-foreground">Loading session details...</p>

@@ -4,6 +4,7 @@ import { waitForHydration } from "./hydration";
 
 class AboutPage {
   public readonly heading: Locator;
+  public readonly description: Locator;
 
   private readonly page: Page;
 
@@ -11,8 +12,11 @@ class AboutPage {
     this.page = page;
     this.heading = page.getByRole("heading", {
       level: 1,
-      name: "About",
+      name: "About Dog Training Levels",
     });
+    this.description = page.getByText(
+      "A practical, progressive curriculum for everyday dog training.",
+    );
   }
 
   public async goto() {

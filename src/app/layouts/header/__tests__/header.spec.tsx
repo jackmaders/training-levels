@@ -39,7 +39,9 @@ describe("header identity and navigation", () => {
     const banner = screen.getByRole("banner");
 
     // Assert
-    expect(within(banner).getByRole("link", { name: "App" }).getAttribute("href")).toBe("/");
+    expect(
+      within(banner).getByRole("link", { name: "Dog Training Levels" }).getAttribute("href"),
+    ).toBe("/");
     expect(within(banner).getByRole("link", { name: "Home" }).getAttribute("href")).toBe("/");
     expect(within(banner).getByRole("link", { name: "About" }).getAttribute("href")).toBe("/about");
   });

@@ -26,6 +26,7 @@ export function Header({ className, ...props }: ComponentProps<"header">) {
           { children: "Appendices", to: "/appendices" },
         ]
       : []),
+    ...(session ? [{ children: "Profile", to: "/profile" }] : []),
   ];
 
   return (
@@ -59,7 +60,7 @@ function Logo({ className, ...props }: ComponentProps<"div">) {
   return (
     <div className={cn("flex items-center gap-2", className)} {...props}>
       <CheckSquare className="size-5" />
-      <span>App</span>
+      <span>Dog Training Levels</span>
     </div>
   );
 }
