@@ -31,7 +31,7 @@ class TrainingPage {
     return this.page.getByRole("list", { name: "Practice history" });
   }
   public get counts(): Locator {
-    return this.page.getByText(/\d+ Success · \d+ Not yet/u);
+    return this.page.getByText(/^\d+ Success · \d+ Not yet$/u);
   }
   public get stepSelect(): Locator {
     return this.page.getByLabel("Behavior and Step");
@@ -88,9 +88,37 @@ class TrainingPage {
     await this.continueButton.click();
   }
 
+  public async enterPractice() {
+    await this.startFromPrep();
+    await this.startButton.click();
+    await this.successButton.waitFor({ state: "visible" });
+  }
+
   public async reload() {
     await this.page.reload();
     await waitForHydration(this.page);
+  }
+
+  public async enterTotals(success: string, notYet: string) {
+    const entryForm = this.totalsRegion().getByRole("form", { name: "Enter practice totals" });
+    await entryForm.getByLabel("Success count").fill(success);
+    await entryForm.getByLabel("Not yet count").fill(notYet);
+    await entryForm.getByRole("button", { name: "Save totals" }).click();
+  }
+
+  public async correctTotals(success: string, notYet: string) {
+    const correctionForm = this.totalsRegion().getByRole("form", { name: "Correct saved totals" });
+    await correctionForm.getByLabel("Success count").fill(success);
+    await correctionForm.getByLabel("Not yet count").fill(notYet);
+    await correctionForm.getByRole("button", { name: "Correct totals" }).click();
+  }
+
+  public async recommendTestNextTime() {
+    await this.page.getByRole("button", { name: "Recommend a Test next time" }).click();
+  }
+
+  public totalsRegion() {
+    return this.page.getByRole("region", { name: "Enter totals" });
   }
 }
 

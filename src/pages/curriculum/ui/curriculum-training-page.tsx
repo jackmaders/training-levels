@@ -8,13 +8,21 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState, type Dispatch, type SetStateAction } from "react";
 
 import { curriculumPageQueryOptions } from "../api/curriculum-query-options";
-import { practiceHistoryQueryOptions } from "../api/training-query-options";
+import {
+  practiceHistoryQueryOptions,
+  practiceStepDecisionQueryOptions,
+  practiceTotalsQueryOptions,
+} from "../api/training-query-options";
 import {
   correctPracticeAttemptFn,
+  correctPracticeTotalsFn,
   recordPracticeAttemptFn,
+  recordPracticeTotalsFn,
+  savePracticeStepDecisionFn,
   undoPracticeAttemptFn,
 } from "../api/training.functions";
 import { getPracticePlan, PRACTICE_STEP_OPTIONS } from "../model/practice-ladders";
+import { getPracticeProgression } from "../model/practice-progression";
 import {
   STEP_TARGET,
   TrainingBreak,
@@ -41,6 +49,10 @@ function CurriculumTrainingPage({
     PRACTICE_STEP_OPTIONS[0];
   const selectedStepId = selectedStep.stepId;
   const { data: history } = useSuspenseQuery(practiceHistoryQueryOptions(selectedStepId));
+  const { data: totals } = useSuspenseQuery(practiceTotalsQueryOptions(selectedStepId));
+  const { data: decisionRecord } = useSuspenseQuery(
+    practiceStepDecisionQueryOptions(selectedStepId),
+  );
   const { data: curriculumPage } = useSuspenseQuery(
     curriculumPageQueryOptions(selectedStep.pageSlug),
   );
@@ -59,11 +71,14 @@ function CurriculumTrainingPage({
           selectedStepId,
           history.filter((attempt) => attempt.undoneAt === null),
         );
+  const progression = getPracticeProgression(selectedStepId, {
+    consecutiveSuccesses: countTrailingSuccesses(history),
+    lastOutcome: history.toReversed().find((attempt) => attempt.undoneAt === null)?.outcome,
+  });
   const target =
     plan?.targetOptions.some((option) => option.label === selectedTarget) === true
       ? (selectedTarget ?? STEP_TARGET)
       : (plan?.target ?? STEP_TARGET);
-
   if (curriculumPage === null || curriculumPage.kind !== "behavior") {
     return <main className="mx-auto max-w-3xl p-6">Training instructions are unavailable.</main>;
   }
@@ -73,6 +88,7 @@ function CurriculumTrainingPage({
       <TrainingHeading stepLabel={selectedStep.label} />
       {view === "prep" ? (
         <TrainingPrep
+          decision={decisionRecord?.decision ?? null}
           equipment={curriculumPage.equipment}
           history={history}
           onSelectStep={(stepId) => onSelectionChange(stepId, undefined)}
@@ -85,11 +101,14 @@ function CurriculumTrainingPage({
       ) : view === "practice" ? (
         <TrainingPractice
           actions={viewActions}
+          decision={decisionRecord?.decision ?? null}
           history={history}
           onBreak={() => setView("break")}
           onChangeTarget={(nextTarget) => onSelectionChange(selectedStepId, nextTarget)}
           finishStep={selectedStep}
           plan={plan}
+          progression={progression}
+          totals={totals}
           target={target}
         />
       ) : (
@@ -97,6 +116,20 @@ function CurriculumTrainingPage({
       )}
     </main>
   );
+}
+
+function countTrailingSuccesses(history: readonly PracticeRecord[]): number {
+  let count = 0;
+  for (const attempt of history.toReversed()) {
+    if (attempt.undoneAt === null) {
+      if (attempt.outcome !== "success") {
+        return count;
+      }
+      count += 1;
+    }
+  }
+
+  return count;
 }
 
 function usePracticePageFunctions() {
@@ -123,11 +156,28 @@ function createMutationCallbacks(
       await queryClient.invalidateQueries({
         queryKey: practiceHistoryQueryOptions(stepId).queryKey,
       });
+      await queryClient.invalidateQueries({
+        queryKey: practiceTotalsQueryOptions(stepId).queryKey,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: practiceStepDecisionQueryOptions(stepId).queryKey,
+      });
     },
   };
 }
 
 function usePracticeActions(stepId: string): PracticeActions {
+  const attemptActions = usePracticeAttemptActions(stepId);
+  const progressActions = usePracticeProgressActions(stepId);
+
+  return {
+    ...attemptActions,
+    ...progressActions,
+    saving: attemptActions.saving || progressActions.saving,
+  };
+}
+
+function usePracticeAttemptActions(stepId: string) {
   const queryClient = useQueryClient();
   const serverFunctions = usePracticePageFunctions();
   const [pendingAttempt, setPendingAttempt] = useState<{
@@ -167,7 +217,6 @@ function usePracticeActions(stepId: string): PracticeActions {
       await serverFunctions.undoAttempt({ data: { attemptId } }),
     ...callbacks,
   });
-
   return {
     correct: (attempt: PracticeRecord) =>
       correctMutation.mutate({
@@ -188,6 +237,96 @@ function usePracticeActions(stepId: string): PracticeActions {
     },
     saving: recordMutation.isPending || correctMutation.isPending || undoMutation.isPending,
     undo: (attemptId: string) => undoMutation.mutate(attemptId),
+  };
+}
+
+function usePracticeProgressActions(stepId: string) {
+  const queryClient = useQueryClient();
+  const callbacks = createPracticeProgressCallbacks(queryClient, stepId);
+  const totalsActions = usePracticeTotalsMutations(callbacks, stepId);
+  const decisionActions = usePracticeDecisionMutation(callbacks, stepId);
+
+  return {
+    ...totalsActions,
+    ...decisionActions,
+    saving: totalsActions.saving || decisionActions.saving,
+  };
+}
+
+function createPracticeProgressCallbacks(queryClient: QueryClient, stepId: string) {
+  return {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: practiceTotalsQueryOptions(stepId).queryKey,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: practiceStepDecisionQueryOptions(stepId).queryKey,
+      });
+    },
+  };
+}
+
+function usePracticeTotalsMutations(
+  callbacks: ReturnType<typeof createPracticeProgressCallbacks>,
+  stepId: string,
+) {
+  const recordTotals = useServerFn(recordPracticeTotalsFn);
+  const recordTotalsMutation = useMutation({
+    mutationFn: async ({
+      successCount,
+      notYetCount,
+    }: {
+      successCount: number;
+      notYetCount: number;
+    }) =>
+      await recordTotals({
+        data: {
+          notYetCount,
+          recordId: crypto.randomUUID(),
+          stepId,
+          successCount,
+          target: STEP_TARGET,
+        },
+      }),
+    ...callbacks,
+  });
+  const correctTotals = useServerFn(correctPracticeTotalsFn);
+  const correctTotalsMutation = useMutation({
+    mutationFn: async ({
+      recordId,
+      successCount,
+      notYetCount,
+    }: {
+      recordId: string;
+      successCount: number;
+      notYetCount: number;
+    }) => await correctTotals({ data: { notYetCount, recordId, successCount } }),
+    ...callbacks,
+  });
+  return {
+    correctTotals: (recordId: string, successCount: number, notYetCount: number) =>
+      correctTotalsMutation.mutate({ notYetCount, recordId, successCount }),
+    recordTotals: (successCount: number, notYetCount: number) =>
+      recordTotalsMutation.mutate({ notYetCount, successCount }),
+    saving: recordTotalsMutation.isPending || correctTotalsMutation.isPending,
+  };
+}
+
+function usePracticeDecisionMutation(
+  callbacks: ReturnType<typeof createPracticeProgressCallbacks>,
+  stepId: string,
+) {
+  const saveDecision = useServerFn(savePracticeStepDecisionFn);
+  const decisionMutation = useMutation({
+    mutationFn: async (decision: "keep_practicing" | "recommend_test") =>
+      await saveDecision({ data: { decision, stepId } }),
+    ...callbacks,
+  });
+
+  return {
+    saveDecision: (decision: "keep_practicing" | "recommend_test") =>
+      decisionMutation.mutate(decision),
+    saving: decisionMutation.isPending,
   };
 }
 

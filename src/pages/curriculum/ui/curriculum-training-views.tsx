@@ -4,7 +4,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import type { BehaviorCurriculumPage } from "@/shared/curriculum-data";
 
 import type { PRACTICE_STEP_OPTIONS, PracticePlan } from "../model/practice-ladders";
+import type { PracticeProgression } from "../model/practice-progression";
 import { CurriculumContentBlocks } from "./curriculum-content-blocks";
+import { CurriculumTrainingReadinessChoice } from "./curriculum-training-readiness-choice";
+import { CurriculumTrainingTotals, type PracticeTotalRecord } from "./curriculum-training-totals";
 
 const STEP_TARGET = "Dog moves away from a treat held in your hand while you are sitting.";
 const LAST_ITEM_OFFSET = 1;
@@ -13,6 +16,7 @@ const TIMER_TICK_MILLISECONDS = 1000;
 const NO_TARGET_INDEX = -1;
 type PracticeStepOption = (typeof PRACTICE_STEP_OPTIONS)[number];
 type Outcome = "success" | "not_yet";
+type PracticeDecision = "keep_practicing" | "recommend_test";
 interface PracticeRecord {
   attemptId: string;
   outcome: Outcome;
@@ -20,11 +24,14 @@ interface PracticeRecord {
   undoneAt: Date | null;
 }
 interface PracticeActions {
+  correctTotals: (recordId: string, successCount: number, notYetCount: number) => void;
   correct: (attempt: PracticeRecord) => void;
   errorMessage: string | null;
   handleRetry: () => void;
   pendingAttempt: { attemptId: string; outcome: Outcome; target: string } | null;
   record: (outcome: Outcome, target: string) => void;
+  recordTotals: (successCount: number, notYetCount: number) => void;
+  saveDecision: (decision: PracticeDecision) => void;
   saving: boolean;
   undo: (attemptId: string) => void;
 }
@@ -39,6 +46,7 @@ function TrainingHeading({ stepLabel }: { stepLabel: string }) {
 }
 
 function TrainingPrep({
+  decision,
   equipment,
   history,
   onSelectStep,
@@ -49,6 +57,7 @@ function TrainingPrep({
   target,
 }: {
   equipment: BehaviorCurriculumPage["equipment"];
+  decision: PracticeDecision | null;
   history: readonly PracticeRecord[];
   onSelectStep: (stepId: string) => void;
   onStart: () => void;
@@ -93,6 +102,7 @@ function TrainingPrep({
         <LadderDetails plan={plan} />
       )}
       <AttemptCounts history={currentHistory} />
+      <SavedDecisionNotice decision={decision} />
       <button
         className="rounded-md bg-primary px-4 py-2 text-primary-foreground"
         type="button"
@@ -129,6 +139,18 @@ function LadderDetails({ plan }: { plan: PracticePlan }) {
   );
 }
 
+function SavedDecisionNotice({ decision }: { decision: PracticeDecision | null }) {
+  if (decision !== "recommend_test") {
+    return null;
+  }
+
+  return (
+    <output className="rounded-md border p-3 text-sm">
+      You chose to recommend a Test next time for this Step.
+    </output>
+  );
+}
+
 function PrepDetail({ children, heading }: { children: ReactNode; heading: string }) {
   const headingId = `${heading.toLowerCase().replaceAll(" ", "-")}-heading`;
   return (
@@ -143,19 +165,25 @@ function PrepDetail({ children, heading }: { children: ReactNode; heading: strin
 
 function TrainingPractice({
   actions,
+  decision,
   history,
   onBreak,
   onChangeTarget,
   finishStep,
   plan,
+  progression,
+  totals,
   target,
 }: {
   actions: PracticeActions;
+  decision: PracticeDecision | null;
   history: readonly PracticeRecord[];
   onBreak: () => void;
   onChangeTarget: (target: string) => void;
   finishStep: PracticeStepOption;
   plan: PracticePlan | null;
+  progression: PracticeProgression | null;
+  totals: readonly PracticeTotalRecord[];
   target: string;
 }) {
   const currentHistory = history.filter((attempt) => attempt.undoneAt === null);
@@ -191,6 +219,9 @@ function TrainingPractice({
     }, TIMER_TICK_MILLISECONDS);
     return () => window.clearInterval(timerId);
   }, [deadlineTimestamp, timerActive]);
+  function handleSaveDecision(nextDecision: PracticeDecision) {
+    actions.saveDecision(nextDecision);
+  }
 
   return (
     <section aria-labelledby="practice-heading" className="space-y-5">
@@ -238,6 +269,26 @@ function TrainingPractice({
       <AttemptCounts history={currentHistory} />
       <SaveError actions={practiceActions} />
       <AttemptHistory actions={practiceActions} history={currentHistory} />
+      {progression === null ? null : (
+        <>
+          <p>{progression.nextTarget}</p>
+          <p className="text-sm text-muted-foreground">
+            Method: {progression.method.replaceAll("_", " ")}. Source: {progression.source}.
+          </p>
+          <p className="text-sm text-muted-foreground">App default: {progression.appDefault}</p>
+          <p className="rounded-md border p-3 text-sm">
+            Readiness check: {progression.readinessQuestion}
+          </p>
+          {progression.readyForTest ? (
+            <CurriculumTrainingReadinessChoice
+              decision={decision}
+              handleSave={handleSaveDecision}
+            />
+          ) : null}
+        </>
+      )}
+      <SavedDecisionNotice decision={decision} />
+      <CurriculumTrainingTotals actions={actions} totals={totals} />
       <RecordingControls
         actions={practiceActions}
         lastAttempt={lastAttempt}
