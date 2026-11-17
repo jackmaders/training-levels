@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/shadcn/tab
 export function HomePage() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 p-4">
-      <div className="max-w-md space-y-2 text-center">
+      <div className="flex max-w-md flex-col gap-2 text-center">
         <h1 className="text-2xl font-bold tracking-tight">Dog Training Levels</h1>
         <p className="text-sm text-muted-foreground">
           Sign in or create an account to read the curriculum and track your dog&apos;s progress

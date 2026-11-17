@@ -76,6 +76,66 @@ test("navigates via header to theory index, opens an article, and advances with 
   await expect(curriculumPage.getArticleHeading("The People of Training")).toBeVisible();
 });
 
+test("shows a visible keyboard focus indicator on section index cards", async ({
+  baseURL,
+  page,
+}) => {
+  // Arrange
+  const curriculumPage = new TheoryAppendicesPage(page);
+  await signUpAndVisitPath(page, baseURL, "/theory");
+  const cardLink = curriculumPage.main.getByRole("link", { name: "Why Are You Here?" });
+
+  // Act
+  await curriculumPage.focusLinkByKeyboard(cardLink);
+  const focusStyle = await cardLink.evaluate((element) => {
+    const focusIndicator = globalThis.getComputedStyle(element, "::after");
+    return {
+      boxShadow: focusIndicator.boxShadow,
+      content: focusIndicator.content,
+      focusVisible: element.matches(":focus-visible"),
+      inset: focusIndicator.inset,
+      position: focusIndicator.position,
+    };
+  });
+
+  // Assert
+  expect(focusStyle.boxShadow).not.toBe("none");
+  expect(focusStyle.content).not.toBe("none");
+  expect(focusStyle.inset).toBe("0px");
+  expect(focusStyle.position).toBe("absolute");
+  expect(focusStyle.focusVisible).toBe(true);
+});
+
+test("shows a visible keyboard focus indicator on theory article navigation cards", async ({
+  baseURL,
+  page,
+}) => {
+  // Arrange
+  const curriculumPage = new TheoryAppendicesPage(page);
+  await signUpAndVisitPath(page, baseURL, "/theory/03-why-are-you-here");
+  const cardLink = curriculumPage.articleNavigation.getByRole("link", { name: /Next/u });
+
+  // Act
+  await curriculumPage.focusLinkByKeyboard(cardLink);
+  const focusStyle = await cardLink.evaluate((element) => {
+    const focusIndicator = globalThis.getComputedStyle(element, "::after");
+    return {
+      boxShadow: focusIndicator.boxShadow,
+      content: focusIndicator.content,
+      focusVisible: element.matches(":focus-visible"),
+      inset: focusIndicator.inset,
+      position: focusIndicator.position,
+    };
+  });
+
+  // Assert
+  expect(focusStyle.boxShadow).not.toBe("none");
+  expect(focusStyle.content).not.toBe("none");
+  expect(focusStyle.inset).toBe("0px");
+  expect(focusStyle.position).toBe("absolute");
+  expect(focusStyle.focusVisible).toBe(true);
+});
+
 test("follows inline cross-link to appendix a, next link to appendix b, and header to appendices", async ({
   baseURL,
   page,

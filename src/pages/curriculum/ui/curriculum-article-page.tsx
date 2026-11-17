@@ -143,7 +143,7 @@ function ArticleNavLink({
       <CardContent>
         <Link
           className={cn(
-            "flex flex-col gap-1 after:absolute after:inset-0 focus-visible:outline-none",
+            "flex flex-col gap-1 after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring",
             isNext && "sm:items-end",
           )}
           to={target.href}

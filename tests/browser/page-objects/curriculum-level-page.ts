@@ -2,6 +2,8 @@ import type { Locator, Page } from "@playwright/test";
 
 import { waitForHydration } from "./hydration";
 
+const MAX_KEYBOARD_TABS_TO_FOCUS_LEVEL_LINK = 60;
+
 function escapeRegExp(value: string): string {
   return value.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);
 }
@@ -77,9 +79,48 @@ class CurriculumLevelPage {
     await waitForHydration(this.page);
   }
 
+  public async focusLinkByKeyboard(link: Locator) {
+    await this.focusControlByKeyboard(link);
+  }
+
+  public async focusControlByKeyboard(control: Locator) {
+    for (let attempt = 0; attempt < MAX_KEYBOARD_TABS_TO_FOCUS_LEVEL_LINK; attempt += 1) {
+      await this.page.keyboard.press("Tab");
+      if (await control.evaluate((element) => element === document.activeElement)) {
+        return;
+      }
+    }
+
+    throw new Error("Control was not reachable by keyboard tab navigation");
+  }
+
   public async gotoLevelPage(section: string, page: string) {
     await this.page.goto(`/levels/${section}/${page}`);
     await waitForHydration(this.page);
+  }
+
+  public async setVisualLayout({
+    width,
+    height,
+    theme,
+  }: {
+    width: number;
+    height: number;
+    theme: "light" | "dark";
+  }) {
+    await this.page.setViewportSize({ height, width });
+    await this.page.evaluate((nextTheme) => {
+      document.documentElement.classList.toggle("dark", nextTheme === "dark");
+    }, theme);
+  }
+
+  public horizontalOverflow() {
+    return this.page.evaluate(() => {
+      const documentWidth = document.documentElement.scrollWidth;
+      const bodyWidth = document.body.scrollWidth;
+      const viewportWidth = document.documentElement.clientWidth;
+      return Math.max(documentWidth, bodyWidth) - viewportWidth;
+    });
   }
 
   public async gotoLevelPageAnchor(section: string, page: string, anchor: string) {
@@ -102,6 +143,38 @@ class CurriculumLevelPage {
   public async openMobileDrawer() {
     await this.mobileMenuButton.click();
     await this.mobileDrawer.waitFor({ state: "visible" });
+  }
+
+  public mobileDrawerFitsViewport() {
+    return this.mobileDrawer.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      const viewportWidth = document.documentElement.clientWidth;
+      return bounds.left >= 0 && bounds.right <= viewportWidth;
+    });
+  }
+
+  public async openMobileDrawerByKeyboard() {
+    await this.focusControlByKeyboard(this.mobileMenuButton);
+    await this.page.keyboard.press("Enter");
+    await this.mobileDrawer.waitFor({ state: "visible" });
+  }
+
+  public async closeMobileDrawerWithEscape() {
+    await this.page.keyboard.press("Escape");
+  }
+
+  public async setDarkTheme() {
+    await this.page.evaluate(() => document.documentElement.classList.add("dark"));
+  }
+
+  public async toggleStepCheckboxByKeyboard(stepHeading: string) {
+    await this.focusControlByKeyboard(this.getStepCheckbox(stepHeading));
+    const responsePromise = this.page.waitForResponse(
+      (response) =>
+        response.url().includes("/_serverFn/") && response.request().method() === "POST",
+    );
+    await this.page.keyboard.press("Space");
+    await responsePromise;
   }
 
   public async toggleSection(title: string) {

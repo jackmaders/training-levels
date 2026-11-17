@@ -270,6 +270,20 @@ test("navigates via mobile drawer menu on narrow viewports", async ({ baseURL, p
   await expect(curriculumPage.heading).toHaveText("Level 1: Come");
 });
 
+test("closes the mobile curriculum drawer with Escape", async ({ baseURL, page }) => {
+  // Arrange
+  await page.setViewportSize(MOBILE_VIEWPORT);
+  const curriculumPage = await signUpAndVisitLevels(page, baseURL);
+  await curriculumPage.openMobileDrawer();
+
+  // Act
+  await page.keyboard.press("Escape");
+
+  // Assert
+  await expect(curriculumPage.mobileDrawer).toBeHidden();
+  await expect(curriculumPage.mobileMenuButton).toBeFocused();
+});
+
 test("renders page not found on client-side navigation to a missing level page", async ({
   baseURL,
   page,
