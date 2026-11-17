@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-const PRACTICE_STEP_ID = "level-1/zen:step-1";
 const TARGET_MAX_LENGTH = 256;
 const TRAINING_STEP_IDS = [
   "level-1/zen:step-1",
@@ -12,13 +11,13 @@ const TRAINING_STEP_IDS = [
 const TOTAL_COUNT_MAX = 10_000;
 
 export const practiceHistoryInputSchema = z.object({
-  stepId: z.literal(PRACTICE_STEP_ID),
+  stepId: z.string().trim().min(1),
 });
 
 export const recordPracticeAttemptInputSchema = z.object({
   attemptId: z.string().uuid(),
   outcome: z.enum(["success", "not_yet"]),
-  stepId: z.literal(PRACTICE_STEP_ID),
+  stepId: z.string().trim().min(1),
   target: z.string().trim().min(1).max(TARGET_MAX_LENGTH),
 });
 
