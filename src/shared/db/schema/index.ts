@@ -18,4 +18,10 @@ export {
   type Verification,
 } from "./auth";
 export { dogs, type Dog } from "./dogs";
+export {
+  practiceAttempts,
+  practiceAttemptCorrections,
+  type PracticeAttempt,
+  type PracticeAttemptCorrection,
+} from "./practice-attempts";
 export { stepCompletions, type StepCompletion } from "./step-completions";
