@@ -3,9 +3,19 @@ import { createServerFn } from "@tanstack/react-start";
 import { permissionMiddleware } from "@/shared/auth";
 
 import {
+  correctPracticeTotals,
+  getPracticeStepDecision,
+  getPracticeTotals,
+  recordPracticeTotals,
+  savePracticeStepDecision,
+} from "./practice-progress-service";
+import {
   correctPracticeAttemptInputSchema,
+  correctPracticeTotalsInputSchema,
   practiceHistoryInputSchema,
+  savePracticeStepDecisionInputSchema,
   recordPracticeAttemptInputSchema,
+  recordPracticeTotalsInputSchema,
   undoPracticeAttemptInputSchema,
 } from "./training-schema";
 import {
@@ -42,4 +52,40 @@ export const undoPracticeAttemptFn = createServerFn({ method: "POST" })
   .handler(
     async ({ context, data }) =>
       await undoPracticeAttempt(data.attemptId, { userId: context.user.id }),
+  );
+
+export const getPracticeTotalsFn = createServerFn({ method: "GET" })
+  .middleware([permissionMiddleware("curriculum:read")])
+  .validator(practiceHistoryInputSchema)
+  .handler(
+    async ({ context, data }) => await getPracticeTotals(data.stepId, { userId: context.user.id }),
+  );
+
+export const recordPracticeTotalsFn = createServerFn({ method: "POST" })
+  .middleware([permissionMiddleware("progress:update")])
+  .validator(recordPracticeTotalsInputSchema)
+  .handler(
+    async ({ context, data }) => await recordPracticeTotals(data, { userId: context.user.id }),
+  );
+
+export const correctPracticeTotalsFn = createServerFn({ method: "POST" })
+  .middleware([permissionMiddleware("progress:update")])
+  .validator(correctPracticeTotalsInputSchema)
+  .handler(
+    async ({ context, data }) => await correctPracticeTotals(data, { userId: context.user.id }),
+  );
+
+export const getPracticeStepDecisionFn = createServerFn({ method: "GET" })
+  .middleware([permissionMiddleware("curriculum:read")])
+  .validator(practiceHistoryInputSchema)
+  .handler(
+    async ({ context, data }) =>
+      await getPracticeStepDecision(data.stepId, { userId: context.user.id }),
+  );
+
+export const savePracticeStepDecisionFn = createServerFn({ method: "POST" })
+  .middleware([permissionMiddleware("progress:update")])
+  .validator(savePracticeStepDecisionInputSchema)
+  .handler(
+    async ({ context, data }) => await savePracticeStepDecision(data, { userId: context.user.id }),
   );

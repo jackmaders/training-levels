@@ -7,6 +7,13 @@ import { getDb } from "@/shared/db/index.server";
 import { user } from "@/shared/db/schema";
 
 import {
+  correctPracticeTotals,
+  getPracticeStepDecision,
+  getPracticeTotals,
+  recordPracticeTotals,
+  savePracticeStepDecision,
+} from "../../practice-progress-service";
+import {
   correctPracticeAttempt,
   getPracticeHistory,
   recordPracticeAttempt,
@@ -157,5 +164,72 @@ describe("training-service (workers D1)", () => {
     // Assert
     expect(secondOwnerHistory).toStrictEqual([]);
     expect(firstOwnerDogs).toHaveLength(1);
+  });
+
+  it("persists aggregate totals and corrections without creating ordered attempts", async () => {
+    expect.assertions(2);
+    // Arrange
+    const db = getDb(env.DB);
+    await db
+      .insert(user)
+      .values({ email: "totals@example.com", id: "totals-owner", name: "Totals Owner" });
+
+    // Act
+    await recordPracticeTotals(
+      {
+        notYetCount: 4,
+        recordId: "018f47ad-9d72-7a31-a50b-a88888888888",
+        stepId: "level-1/zen:step-1",
+        successCount: 7,
+        target: "Dog moves away from the protected treat while seated.",
+      },
+      { db, userId: "totals-owner" },
+    );
+    await correctPracticeTotals(
+      {
+        notYetCount: 3,
+        recordId: "018f47ad-9d72-7a31-a50b-a88888888888",
+        successCount: 8,
+      },
+      { db, userId: "totals-owner" },
+    );
+    const totals = await getPracticeTotals("level-1/zen:step-1", { db, userId: "totals-owner" });
+    const attempts = await getPracticeHistory("level-1/zen:step-1", { db, userId: "totals-owner" });
+
+    // Assert
+    expect(totals).toMatchObject([
+      {
+        notYetCount: 3,
+        recordId: "018f47ad-9d72-7a31-a50b-a88888888888",
+        successCount: 8,
+        target: "Dog moves away from the protected treat while seated.",
+      },
+    ]);
+    expect(attempts).toStrictEqual([]);
+  });
+
+  it("retains the handler's readiness choice for a later Test recommendation", async () => {
+    expect.assertions(1);
+    // Arrange
+    const db = getDb(env.DB);
+    await db
+      .insert(user)
+      .values({ email: "decision@example.com", id: "decision-owner", name: "Decision Owner" });
+
+    // Act
+    await savePracticeStepDecision(
+      { decision: "recommend_test", stepId: "level-1/zen:step-1" },
+      {
+        db,
+        userId: "decision-owner",
+      },
+    );
+    const decision = await getPracticeStepDecision("level-1/zen:step-1", {
+      db,
+      userId: "decision-owner",
+    });
+
+    // Assert
+    expect(decision).toMatchObject({ decision: "recommend_test", stepId: "level-1/zen:step-1" });
   });
 });

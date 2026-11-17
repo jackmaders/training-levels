@@ -3,12 +3,16 @@ import type { ReactNode } from "react";
 
 import type { BehaviorCurriculumPage } from "@/shared/curriculum-data";
 
+import type { PracticeProgression } from "../model/practice-progression";
 import { CurriculumContentBlocks } from "./curriculum-content-blocks";
+import { CurriculumTrainingReadinessChoice } from "./curriculum-training-readiness-choice";
+import { CurriculumTrainingTotals, type PracticeTotalRecord } from "./curriculum-training-totals";
 
 const STEP_TARGET = "Dog moves off a treat held in your hand while you are sitting.";
 const LAST_ITEM_OFFSET = 1;
 
 type Outcome = "success" | "not_yet";
+type PracticeDecision = "keep_practicing" | "recommend_test";
 interface PracticeRecord {
   attemptId: string;
   outcome: Outcome;
@@ -16,11 +20,14 @@ interface PracticeRecord {
   undoneAt: Date | null;
 }
 interface PracticeActions {
+  correctTotals: (recordId: string, successCount: number, notYetCount: number) => void;
   correct: (attempt: PracticeRecord) => void;
   errorMessage: string | null;
   handleRetry: () => void;
   pendingAttempt: { attemptId: string; outcome: Outcome } | null;
   record: (outcome: Outcome) => void;
+  recordTotals: (successCount: number, notYetCount: number) => void;
+  saveDecision: (decision: PracticeDecision) => void;
   saving: boolean;
   undo: (attemptId: string) => void;
 }
@@ -35,11 +42,13 @@ function TrainingHeading() {
 }
 
 function TrainingPrep({
+  decision,
   equipment,
   history,
   onStart,
 }: {
   equipment: BehaviorCurriculumPage["equipment"];
+  decision: PracticeDecision | null;
   history: readonly PracticeRecord[];
   onStart: () => void;
 }) {
@@ -68,6 +77,7 @@ function TrainingPrep({
         </p>
       </PrepDetail>
       <AttemptCounts history={currentHistory} />
+      <SavedDecisionNotice decision={decision} />
       <button
         className="rounded-md bg-primary px-4 py-2 text-primary-foreground"
         type="button"
@@ -76,6 +86,18 @@ function TrainingPrep({
         {currentHistory.length === 0 ? "Start Practice" : "Resume Practice"}
       </button>
     </section>
+  );
+}
+
+function SavedDecisionNotice({ decision }: { decision: PracticeDecision | null }) {
+  if (decision !== "recommend_test") {
+    return null;
+  }
+
+  return (
+    <output className="rounded-md border p-3 text-sm">
+      You chose to recommend a Test next time for this Step.
+    </output>
   );
 }
 
@@ -93,13 +115,22 @@ function PrepDetail({ children, heading }: { children: ReactNode; heading: strin
 
 function TrainingPractice({
   actions,
+  decision,
   history,
+  progression,
+  totals,
 }: {
   actions: PracticeActions;
+  decision: PracticeDecision | null;
   history: readonly PracticeRecord[];
+  progression: PracticeProgression;
+  totals: readonly PracticeTotalRecord[];
 }) {
   const currentHistory = history.filter((attempt) => attempt.undoneAt === null);
   const lastAttempt = currentHistory.at(-LAST_ITEM_OFFSET);
+  function handleSaveDecision(nextDecision: PracticeDecision) {
+    actions.saveDecision(nextDecision);
+  }
 
   return (
     <section aria-labelledby="practice-heading" className="space-y-5">
@@ -107,11 +138,22 @@ function TrainingPractice({
         <h2 className="text-xl font-semibold" id="practice-heading">
           Current target
         </h2>
-        <p>{STEP_TARGET}</p>
+        <p>{progression.nextTarget}</p>
+        <p className="text-sm text-muted-foreground">
+          Method: {progression.method.replaceAll("_", " ")}. Source: {progression.source}.
+        </p>
+        <p className="text-sm text-muted-foreground">App default: {progression.appDefault}</p>
       </div>
+      <p className="rounded-md border p-3 text-sm">
+        Readiness check: {progression.readinessQuestion}
+      </p>
+      {progression.readyForTest ? (
+        <CurriculumTrainingReadinessChoice decision={decision} handleSave={handleSaveDecision} />
+      ) : null}
       <AttemptCounts history={currentHistory} />
       <SaveError actions={actions} />
       <AttemptHistory actions={actions} history={currentHistory} />
+      <CurriculumTrainingTotals actions={actions} totals={totals} />
       <RecordingControls actions={actions} lastAttempt={lastAttempt} />
     </section>
   );
