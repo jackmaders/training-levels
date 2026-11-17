@@ -111,8 +111,27 @@ A prerequisite Behavior or Level recommended before starting a Behavior.
 _Avoid_: Prerequisite, Blocker.
 
 **Try It Cold**:
-The pass criterion within a Step testing whether the dog performs the Behavior on the first cue without warm-up repetitions.
+The source curriculum's cold-verification instructions for a Step, presented in the guided Training experience as a Test.
 _Avoid_: Pass Test, Final Exam.
+
+**Training**:
+Guided work with one Dog on one Behavior, through Practice or a Test.
+_Avoid_: Training session, Workout.
+
+**Practice**:
+Training that develops a Behavior toward a Step's criterion through appropriately adjusted targets and rewards.
+
+**Test**:
+Verification of a Step's full criterion without first warming up that Behavior, following its Try It Cold instructions.
+
+**Practice target**:
+The specific observable response sought in an attempt, including any relevant duration, distance, assistance, or conditions.
+
+**Attempt**:
+One opportunity for a Dog to meet the current Practice target or Test criterion, with an outcome recorded by the handler.
+
+**Ladder**:
+A progression of manageable Practice targets, increasing demands as the Dog understands and reducing them when the Dog struggles.
 
 **Comeafter**:
 A proofing or generalization prompt within a Step suggesting how to practice the Behavior across varied contexts.
