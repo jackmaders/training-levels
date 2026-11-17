@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AuthenticatedDependenciesRouteImport } from './routes/_authenticated/dependencies'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedAppendicesIndexRouteImport } from './routes/_authenticated/appendices/index'
 import { Route as AuthenticatedAppendicesPageRouteImport } from './routes/_authenticated/appendices/$page'
@@ -36,6 +37,12 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDependenciesRoute =
+  AuthenticatedDependenciesRouteImport.update({
+    id: '/dependencies',
+    path: '/dependencies',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -90,6 +97,7 @@ const AuthenticatedLevelsSectionPageRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/dependencies': typeof AuthenticatedDependenciesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/appendices/$page': typeof AuthenticatedAppendicesPageRoute
   '/theory/$page': typeof AuthenticatedTheoryPageRoute
@@ -103,6 +111,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/dependencies': typeof AuthenticatedDependenciesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/appendices/$page': typeof AuthenticatedAppendicesPageRoute
   '/theory/$page': typeof AuthenticatedTheoryPageRoute
@@ -118,6 +127,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/about': typeof AboutRoute
+  '/_authenticated/dependencies': typeof AuthenticatedDependenciesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/appendices/$page': typeof AuthenticatedAppendicesPageRoute
   '/_authenticated/theory/$page': typeof AuthenticatedTheoryPageRoute
@@ -133,6 +143,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/dependencies'
     | '/profile'
     | '/appendices/$page'
     | '/theory/$page'
@@ -146,6 +157,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/dependencies'
     | '/profile'
     | '/appendices/$page'
     | '/theory/$page'
@@ -160,6 +172,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/about'
+    | '/_authenticated/dependencies'
     | '/_authenticated/profile'
     | '/_authenticated/appendices/$page'
     | '/_authenticated/theory/$page'
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dependencies': {
+      id: '/_authenticated/dependencies'
+      path: '/dependencies'
+      fullPath: '/dependencies'
+      preLoaderRoute: typeof AuthenticatedDependenciesRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
@@ -269,6 +289,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedDependenciesRoute: typeof AuthenticatedDependenciesRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedAppendicesPageRoute: typeof AuthenticatedAppendicesPageRoute
   AuthenticatedTheoryPageRoute: typeof AuthenticatedTheoryPageRoute
@@ -279,6 +300,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedDependenciesRoute: AuthenticatedDependenciesRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedAppendicesPageRoute: AuthenticatedAppendicesPageRoute,
   AuthenticatedTheoryPageRoute: AuthenticatedTheoryPageRoute,
