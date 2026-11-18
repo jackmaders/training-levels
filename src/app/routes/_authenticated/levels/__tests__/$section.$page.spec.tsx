@@ -4,8 +4,10 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { Route as LevelPageRoute } from "@/app/routes/_authenticated/levels/$section.$page";
 import {
+  EMPTY_PAGE_GENERALIZATION,
   curriculumPageQueryOptions,
   curriculumSyllabusQueryOptions,
+  pageGeneralizationQueryOptions,
   stepProgressQueryOptions,
 } from "@/pages/curriculum";
 import { NotFoundPage } from "@/pages/not-found";
@@ -27,6 +29,7 @@ type LevelPageLoader = (ctx: {
 
 function createMockQueryClient(pageResult: CurriculumPage | null = TEST_BEHAVIOR_PAGE) {
   const responses = new Map<string, unknown>([
+    ["generalization", EMPTY_PAGE_GENERALIZATION],
     ["page", pageResult],
     ["step-progress", ["level-1/zen:step-1"]],
     ["syllabus", TEST_SYLLABUS],
@@ -81,8 +84,8 @@ describe("level page route options", () => {
 });
 
 describe("level page route loader", () => {
-  it("pre-fetches syllabus, page, and step progress in parallel for valid params", async () => {
-    expect.assertions(4);
+  it("pre-fetches syllabus, page, step progress, and generalization data for valid params", async () => {
+    expect.assertions(5);
 
     // Arrange
     const loader = getRouteOption(LevelPageRoute, "loader") as LevelPageLoader;
@@ -95,7 +98,7 @@ describe("level page route loader", () => {
     });
 
     // Assert
-    expect(queryClient.query).toHaveBeenCalledTimes(3);
+    expect(queryClient.query).toHaveBeenCalledTimes(4);
     expect(queryClient.query).toHaveBeenCalledWith(
       expect.objectContaining({
         queryKey: curriculumSyllabusQueryOptions().queryKey,
@@ -109,6 +112,11 @@ describe("level page route loader", () => {
     expect(queryClient.query).toHaveBeenCalledWith(
       expect.objectContaining({
         queryKey: stepProgressQueryOptions().queryKey,
+      }),
+    );
+    expect(queryClient.query).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: pageGeneralizationQueryOptions("level-1/zen").queryKey,
       }),
     );
   });
@@ -134,8 +142,8 @@ describe("level page route loader", () => {
     expect(queryClient.query).not.toHaveBeenCalled();
   });
 
-  it("throws notFound when curriculum page query resolves to null", async () => {
-    expect.assertions(1);
+  it("throws notFound before querying generalization when curriculum page query resolves to null", async () => {
+    expect.assertions(2);
 
     // Arrange
     const loader = getRouteOption(LevelPageRoute, "loader") as LevelPageLoader;
@@ -152,5 +160,10 @@ describe("level page route loader", () => {
       isNotFound: true,
       message: "Not Found",
     });
+    expect(queryClient.query).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: pageGeneralizationQueryOptions("level-1/nonexistent").queryKey,
+      }),
+    );
   });
 });

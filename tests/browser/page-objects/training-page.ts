@@ -186,6 +186,7 @@ class TrainingPage {
 
   public async recommendTestNextTime() {
     await this.recommendTestButton.click();
+    await this.page.getByText("Saved: Recommend a Test next time.").waitFor({ state: "visible" });
   }
 
   public totalsRegion() {

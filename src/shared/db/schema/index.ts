@@ -19,6 +19,12 @@ export {
 } from "./auth";
 export { dogs, type Dog } from "./dogs";
 export {
+  comeafterRecords,
+  homeworkReflections,
+  type ComeafterRecord,
+  type HomeworkReflection,
+} from "./generalization";
+export {
   practiceAttempts,
   practiceAttemptCorrections,
   practiceStepDecisions,

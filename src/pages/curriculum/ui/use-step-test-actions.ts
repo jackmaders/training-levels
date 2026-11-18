@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { stepProgressQueryOptions } from "../api/curriculum-query-options";
+import { generalizationKeys } from "../api/generalization-query-options";
 import { stepTestHistoryQueryOptions } from "../api/training-query-options";
 import { recordStepTestFn } from "../api/training.functions";
 import type { StepTestActions } from "./curriculum-training-test-views";
@@ -25,6 +26,7 @@ function useStepTestActions(stepId: string): StepTestActions {
         queryKey: stepTestHistoryQueryOptions(stepId).queryKey,
       });
       await queryClient.invalidateQueries({ queryKey: stepProgressQueryOptions().queryKey });
+      await queryClient.invalidateQueries({ queryKey: generalizationKeys.all });
     },
   });
 

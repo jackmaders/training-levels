@@ -1,5 +1,7 @@
 export {
+  comeafterRecords,
   dogs,
+  homeworkReflections,
   practiceAttempts,
   practiceAttemptCorrections,
   practiceStepDecisions,
@@ -7,7 +9,9 @@ export {
   practiceTotals,
   stepTests,
   stepCompletions,
+  type ComeafterRecord,
   type Dog,
+  type HomeworkReflection,
   type PracticeAttempt,
   type PracticeAttemptCorrection,
   type PracticeStepDecision,

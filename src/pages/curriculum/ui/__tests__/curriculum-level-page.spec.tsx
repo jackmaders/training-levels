@@ -26,9 +26,19 @@ import {
   getStepProgressFn,
   toggleStepFn,
 } from "../../api/curriculum.functions";
+import {
+  EMPTY_PAGE_GENERALIZATION,
+  pageGeneralizationQueryOptions,
+} from "../../api/generalization-query-options";
+import type { PageGeneralizationState } from "../../api/generalization-service";
+import {
+  getPageGeneralizationFn,
+  saveHomeworkReflectionFn,
+} from "../../api/generalization.functions";
 import { CurriculumLevelPage } from "../curriculum-level-page";
 
 vi.mock(import("../../api/curriculum.functions"));
+vi.mock(import("../../api/generalization.functions"));
 
 const LEVEL_ROUTE_PATHS = ["/", "/levels/$section/$page"];
 
@@ -37,12 +47,14 @@ beforeEach(() => {
 });
 
 function seedLevelQueries({
+  generalization = EMPTY_PAGE_GENERALIZATION,
   initialLocation = "/levels/level-1/zen",
   page = TEST_BEHAVIOR_PAGE,
   pageSlug = "level-1/zen",
   progress = [] as string[],
   syllabus = TEST_SYLLABUS,
 }: {
+  generalization?: PageGeneralizationState;
   initialLocation?: string;
   page?: typeof TEST_BEHAVIOR_PAGE | ReturnType<typeof createProsePageFixture> | null;
   pageSlug?: string;
@@ -59,7 +71,9 @@ function seedLevelQueries({
   queryClient.setQueryData(curriculumSyllabusQueryOptions().queryKey, syllabus);
   queryClient.setQueryData(curriculumPageQueryOptions(pageSlug).queryKey, page);
   queryClient.setQueryData(stepProgressQueryOptions().queryKey, progress);
+  queryClient.setQueryData(pageGeneralizationQueryOptions(pageSlug).queryKey, generalization);
   vi.mocked(getStepProgressFn).mockResolvedValue(progress);
+  vi.mocked(getPageGeneralizationFn).mockResolvedValue(generalization);
 
   return renderWithProviders(<CurriculumLevelPage pageSlug={pageSlug} />, {
     initialLocation,
@@ -165,18 +179,34 @@ describe("curriculum level page prose views and fallbacks", () => {
     expect(screen.queryByRole("navigation", { name: "Page navigation" })).toBeNull();
   });
 
-  it("renders homework page without behavior navigation", () => {
-    expect.assertions(2);
+  it("renders homework page with reflection form, readiness summary, and saves reflection", async () => {
+    expect.hasAssertions();
 
-    // Arrange & Act
-    seedLevelQueries({
+    // Arrange
+    vi.mocked(saveHomeworkReflectionFn).mockResolvedValueOnce({
+      pageSlug: "level-1/homework",
+      reflection: "Practice calm stays outdoors.",
+      updatedAt: new Date("2026-04-01T12:00:00.000Z"),
+    });
+    const { user } = seedLevelQueries({
       initialLocation: "/levels/level-1/homework",
       page: TEST_HOMEWORK_PAGE,
       pageSlug: "level-1/homework",
+      progress: ["level-1/zen:step-1"],
     });
+
+    // Act
+    await user.type(screen.getByLabelText("Homework reflection"), "Practice calm stays outdoors.");
+    await user.click(screen.getByRole("button", { name: "Save reflection" }));
+
     // Assert
+    await waitFor(() => {
+      expect(screen.getByRole("status").textContent).toBe("Reflection saved.");
+    });
     expect(screen.getByRole("heading", { level: 1, name: "Level 1 Homework" })).toBeDefined();
     expect(screen.queryByRole("navigation", { name: "Page navigation" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Level 1 1/10" })).toBeDefined();
+    expect(screen.getByText(/1 of 10 Behavior steps completed \(9 remaining\)\./u)).toBeDefined();
   });
 
   it("renders final level page with previous link and omits next link", () => {
