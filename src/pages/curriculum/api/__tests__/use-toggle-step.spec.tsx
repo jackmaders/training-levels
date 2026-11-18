@@ -332,7 +332,7 @@ describe("useToggleStep optimistic mutation hook", () => {
       result.current.mutate({ completed: true, stepId: "level-1/zen:step-1" });
     });
     await waitFor(() => {
-      expect(toggleStepFn).toHaveBeenCalledOnce();
+      expect(toggleStepFn).toHaveBeenCalledTimes(1);
       expect(queryClient.getQueryData(progressKey)).toStrictEqual(["level-1/zen:step-1"]);
     });
     await act(async () => {

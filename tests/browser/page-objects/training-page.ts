@@ -42,6 +42,15 @@ class TrainingPage {
   public get nextTargetButton(): Locator {
     return this.page.getByRole("button", { name: "Next ladder target" });
   }
+  public get targetSelect(): Locator {
+    return this.page.getByLabel("Choose target");
+  }
+  public get guidance(): Locator {
+    return this.page.getByRole("region", { name: "Practice guidance" });
+  }
+  public get recommendTestButton(): Locator {
+    return this.page.getByRole("button", { name: "Recommend a Test next time" });
+  }
   public get timerStartButton(): Locator {
     return this.page.getByRole("button", { name: "Start timer" });
   }
@@ -76,6 +85,10 @@ class TrainingPage {
     await this.nextTargetButton.click();
   }
 
+  public async chooseTarget(label: string) {
+    await this.targetSelect.selectOption({ label });
+  }
+
   public async startTimer() {
     await this.timerStartButton.click();
   }
@@ -88,8 +101,11 @@ class TrainingPage {
     await this.continueButton.click();
   }
 
-  public async enterPractice() {
+  public async enterPractice(stepLabel?: string) {
     await this.startFromPrep();
+    if (stepLabel !== undefined) {
+      await this.selectStep(stepLabel);
+    }
     await this.startButton.click();
     await this.successButton.waitFor({ state: "visible" });
   }
@@ -114,7 +130,7 @@ class TrainingPage {
   }
 
   public async recommendTestNextTime() {
-    await this.page.getByRole("button", { name: "Recommend a Test next time" }).click();
+    await this.recommendTestButton.click();
   }
 
   public totalsRegion() {

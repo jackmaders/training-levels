@@ -1,13 +1,13 @@
 import { z } from "zod";
 
+import { PRACTICE_STEP_OPTIONS } from "../model/practice-ladders";
+
 const TARGET_MAX_LENGTH = 256;
-const TRAINING_STEP_IDS = [
-  "level-1/zen:step-1",
-  "level-1/zen:step-2",
-  "level-1/zen:step-3",
+const TRAINING_STEP_IDS: readonly [string, ...string[]] = [
+  ...PRACTICE_STEP_OPTIONS.map((step) => step.stepId),
   "level-3/retrieve:step-1",
   "level-3/retrieve:step-2",
-] as const;
+];
 const TOTAL_COUNT_MAX = 10_000;
 
 export const practiceHistoryInputSchema = z.object({

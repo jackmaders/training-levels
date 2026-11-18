@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import type { BehaviorCurriculumPage } from "@/shared/curriculum-data";
 
+import type { PracticeGuidance } from "../model/practice-guidance";
 import type { PRACTICE_STEP_OPTIONS, PracticePlan } from "../model/practice-ladders";
 import type { PracticeProgression } from "../model/practice-progression";
 import { CurriculumContentBlocks } from "./curriculum-content-blocks";
@@ -48,6 +49,7 @@ function TrainingHeading({ stepLabel }: { stepLabel: string }) {
 function TrainingPrep({
   decision,
   equipment,
+  guidance,
   history,
   onSelectStep,
   onStart,
@@ -57,6 +59,7 @@ function TrainingPrep({
   target,
 }: {
   equipment: BehaviorCurriculumPage["equipment"];
+  guidance: PracticeGuidance | null;
   decision: PracticeDecision | null;
   history: readonly PracticeRecord[];
   onSelectStep: (stepId: string) => void;
@@ -94,13 +97,7 @@ function TrainingPrep({
       <PrepDetail heading="Practice target">
         <output aria-label="Current practice target">{target}</output>
       </PrepDetail>
-      {plan === null ? (
-        <PrepDetail heading="Observable success">
-          <p>Your Dog moves away from the treat hand. Mark and reward, then record it.</p>
-        </PrepDetail>
-      ) : (
-        <LadderDetails plan={plan} />
-      )}
+      <PracticePrepDetails guidance={guidance} plan={plan} />
       <AttemptCounts history={currentHistory} />
       <SavedDecisionNotice decision={decision} />
       <button
@@ -112,6 +109,75 @@ function TrainingPrep({
       </button>
     </section>
   );
+}
+
+function PracticeGuidanceDetails({ guidance }: { guidance: PracticeGuidance }) {
+  return (
+    <div className="space-y-3">
+      <PrepDetail heading="Observable success">
+        <p>{guidance.success}</p>
+      </PrepDetail>
+      <PrepDetail heading="Setup">
+        <p>{guidance.setup}</p>
+      </PrepDetail>
+      <PrepDetail heading="Conditions">
+        <p>{guidance.conditions}</p>
+      </PrepDetail>
+      <PrepDetail heading="Progression and restart">
+        <p>{guidance.progression}</p>
+        <p>{guidance.restart}</p>
+      </PrepDetail>
+      <PrepDetail heading="Readiness">
+        <p>{guidance.readiness}</p>
+        <p>{guidance.readinessBasis}</p>
+      </PrepDetail>
+      <PracticeTargetLadderDetails guidance={guidance} />
+      <PrepDetail heading="Practice limit (app default)">
+        <p>{guidance.suggestedLimit}</p>
+      </PrepDetail>
+      <PrepDetail heading="Source">
+        <p>{guidance.source}</p>
+      </PrepDetail>
+    </div>
+  );
+}
+
+function PracticeTargetLadderDetails({ guidance }: { guidance: PracticeGuidance }) {
+  const advancement = describeAdvancement(guidance);
+  if (advancement === null) {
+    return null;
+  }
+  return (
+    <PrepDetail heading="Practice target ladder">
+      <ol className="list-inside list-decimal">
+        {guidance.targetOptions.map((target) => (
+          <li key={target}>{target}</li>
+        ))}
+      </ol>
+      <p>{advancement}</p>
+    </PrepDetail>
+  );
+}
+
+function PracticePrepDetails({
+  guidance,
+  plan,
+}: {
+  guidance: PracticeGuidance | null;
+  plan: PracticePlan | null;
+}) {
+  if (guidance === null) {
+    if (plan === null) {
+      return (
+        <PrepDetail heading="Observable success">
+          <p>Your Dog moves away from the treat hand. Mark and reward, then record it.</p>
+        </PrepDetail>
+      );
+    }
+    return <LadderDetails plan={plan} />;
+  }
+
+  return <PracticeGuidanceDetails guidance={guidance} />;
 }
 
 function LadderDetails({ plan }: { plan: PracticePlan }) {
@@ -170,6 +236,7 @@ function TrainingPractice({
   onBreak,
   onChangeTarget,
   finishStep,
+  guidance,
   plan,
   progression,
   totals,
@@ -181,6 +248,7 @@ function TrainingPractice({
   onBreak: () => void;
   onChangeTarget: (target: string) => void;
   finishStep: PracticeStepOption;
+  guidance: PracticeGuidance | null;
   plan: PracticePlan | null;
   progression: PracticeProgression | null;
   totals: readonly PracticeTotalRecord[];
@@ -197,6 +265,7 @@ function TrainingPractice({
     plan?.targetOptions.find((option) => option.label === target)?.durationSeconds ??
     plan?.durationSeconds ??
     0;
+  const { readyForTest, targetOptions } = getPracticeChoices(plan, guidance, progression);
   const practiceActions: PracticeActions = {
     ...actions,
     record: (outcome, currentTarget) => {
@@ -225,31 +294,19 @@ function TrainingPractice({
 
   return (
     <section aria-labelledby="practice-heading" className="space-y-5">
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold" id="practice-heading">
-          Current target
-        </h2>
-        <output aria-label="Current practice target">{target}</output>
-        {plan === null ? null : (
-          <>
-            <TargetChoices
-              plan={plan}
-              target={target}
-              onChangeTarget={(nextTarget) => {
-                setRemainingSeconds(null);
-                setDeadlineTimestamp(null);
-                onChangeTarget(nextTarget);
-              }}
-            />
-            <p>Prior achievement: {plan.priorAchievement ?? "None recorded yet"}</p>
-            {plan.restartReason === null ? null : (
-              <p>
-                Restart suggestion: {plan.target}. {plan.restartReason}
-              </p>
-            )}
-          </>
-        )}
-      </div>
+      <PracticeTargetHeader
+        plan={plan}
+        target={target}
+        targetOptions={targetOptions}
+        onChangeTarget={(nextTarget) => {
+          setRemainingSeconds(null);
+          setDeadlineTimestamp(null);
+          onChangeTarget(nextTarget);
+        }}
+      />
+      {guidance === null ? null : (
+        <PracticeGuidanceSummary guidance={guidance} showReadiness={progression === null} />
+      )}
       {plan === null || targetDuration === 0 ? null : (
         <TimerControls
           complete={timerComplete}
@@ -269,24 +326,10 @@ function TrainingPractice({
       <AttemptCounts history={currentHistory} />
       <SaveError actions={practiceActions} />
       <AttemptHistory actions={practiceActions} history={currentHistory} />
-      {progression === null ? null : (
-        <>
-          <p>{progression.nextTarget}</p>
-          <p className="text-sm text-muted-foreground">
-            Method: {progression.method.replaceAll("_", " ")}. Source: {progression.source}.
-          </p>
-          <p className="text-sm text-muted-foreground">App default: {progression.appDefault}</p>
-          <p className="rounded-md border p-3 text-sm">
-            Readiness check: {progression.readinessQuestion}
-          </p>
-          {progression.readyForTest ? (
-            <CurriculumTrainingReadinessChoice
-              decision={decision}
-              handleSave={handleSaveDecision}
-            />
-          ) : null}
-        </>
-      )}
+      {progression === null ? null : <ProgressionDetails progression={progression} />}
+      {readyForTest ? (
+        <CurriculumTrainingReadinessChoice decision={decision} handleSave={handleSaveDecision} />
+      ) : null}
       <SavedDecisionNotice decision={decision} />
       <CurriculumTrainingTotals actions={actions} totals={totals} />
       <RecordingControls
@@ -300,31 +343,124 @@ function TrainingPractice({
   );
 }
 
-function TargetChoices({
+function getPracticeChoices(
+  plan: PracticePlan | null,
+  guidance: PracticeGuidance | null,
+  progression: PracticeProgression | null,
+): { readyForTest: boolean; targetOptions: readonly string[] } {
+  return {
+    readyForTest: progression?.readyForTest ?? guidance?.readyForTest ?? false,
+    targetOptions:
+      plan?.targetOptions.map((option) => option.label) ?? guidance?.targetOptions ?? [],
+  };
+}
+
+function PracticeTargetHeader({
   onChangeTarget,
   plan,
   target,
+  targetOptions,
 }: {
   onChangeTarget: (target: string) => void;
-  plan: PracticePlan;
+  plan: PracticePlan | null;
+  target: string;
+  targetOptions: readonly string[];
+}) {
+  return (
+    <div className="space-y-2">
+      <h2 className="text-xl font-semibold" id="practice-heading">
+        Current target
+      </h2>
+      <output aria-label="Current practice target">{target}</output>
+      {targetOptions.length === 0 ? null : (
+        <TargetChoices options={targetOptions} target={target} onChangeTarget={onChangeTarget} />
+      )}
+      {plan === null ? null : (
+        <>
+          <p>Prior achievement: {plan.priorAchievement ?? "None recorded yet"}</p>
+          {plan.restartReason === null ? null : (
+            <p>
+              Restart suggestion: {plan.target}. {plan.restartReason}
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function ProgressionDetails({ progression }: { progression: PracticeProgression }) {
+  return (
+    <>
+      <p>{progression.nextTarget}</p>
+      <p className="text-sm text-muted-foreground">
+        Method: {progression.method.replaceAll("_", " ")}. Source: {progression.source}.
+      </p>
+      <p className="text-sm text-muted-foreground">App default: {progression.appDefault}</p>
+      <p className="rounded-md border p-3 text-sm">
+        Readiness check: {progression.readinessQuestion}
+      </p>
+    </>
+  );
+}
+
+function describeAdvancement(guidance: PracticeGuidance): string | null {
+  if (guidance.targetOptions.length === 0) {
+    return null;
+  }
+  return guidance.targetAdvancement === "source"
+    ? "Source ladder: a success advances one rung; a miss returns to the restart target."
+    : "App default rungs: the curriculum does not set these intermediate targets. A success advances one rung; a miss returns to the restart target.";
+}
+
+function PracticeGuidanceSummary({
+  guidance,
+  showReadiness,
+}: {
+  guidance: PracticeGuidance;
+  showReadiness: boolean;
+}) {
+  const advancement = describeAdvancement(guidance);
+  return (
+    <section aria-label="Practice guidance" className="space-y-2 rounded-md border p-3 text-sm">
+      <p>{guidance.progression}</p>
+      <p>{guidance.restart}</p>
+      {advancement === null ? null : <p>{advancement}</p>}
+      {showReadiness ? (
+        <>
+          <p>Readiness check: {guidance.readiness}</p>
+          <p>{guidance.readinessBasis}</p>
+        </>
+      ) : null}
+    </section>
+  );
+}
+
+function TargetChoices({
+  onChangeTarget,
+  options,
+  target,
+}: {
+  onChangeTarget: (target: string) => void;
+  options: readonly string[];
   target: string;
 }) {
-  const targetIndex = plan.targetOptions.findIndex((option) => option.label === target);
+  const targetIndex = options.indexOf(target);
   return (
     <div className="flex flex-wrap gap-2 text-sm">
       <button
         className="rounded-md border px-3 py-2"
         disabled={targetIndex <= 0}
         type="button"
-        onClick={() => onChangeTarget(plan.targetOptions[targetIndex - 1]?.label ?? target)}
+        onClick={() => onChangeTarget(options[targetIndex - 1] ?? target)}
       >
         Easier target
       </button>
       <button
         className="rounded-md border px-3 py-2"
-        disabled={targetIndex === NO_TARGET_INDEX || targetIndex >= plan.targetOptions.length - 1}
+        disabled={targetIndex === NO_TARGET_INDEX || targetIndex >= options.length - 1}
         type="button"
-        onClick={() => onChangeTarget(plan.targetOptions[targetIndex + 1]?.label ?? target)}
+        onClick={() => onChangeTarget(options[targetIndex + 1] ?? target)}
       >
         Next ladder target
       </button>
@@ -337,9 +473,9 @@ function TargetChoices({
         value={target}
         onChange={(event) => onChangeTarget(event.currentTarget.value)}
       >
-        {plan.targetOptions.map((option) => (
-          <option key={option.label} value={option.label}>
-            {option.label}
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
           </option>
         ))}
       </select>

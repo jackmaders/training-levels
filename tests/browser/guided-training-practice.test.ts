@@ -77,6 +77,35 @@ test("records Practice attempts, retains history, and leaves the Step incomplete
   await expect(page.getByRole("checkbox", { name: /^Toggle Step 1:/u })).not.toBeChecked();
 });
 
+test("guides a Level 2 duration Step from Prep through a recorded Practice", async ({
+  baseURL,
+  page,
+}) => {
+  // Arrange
+  const trainingPage = await signUpAndVisit(page, baseURL);
+
+  // Act
+  await trainingPage.enterPractice("Level 2 Zen · Step 2");
+
+  // Assert
+  await expect(trainingPage.target).toContainText("1 second");
+  await expect(
+    page.getByText(/Build the floor Zen hold from 1 second toward 10 seconds/u),
+  ).toBeVisible();
+  await expect(page.getByText(/restart the count at 1 second/u)).toBeVisible();
+
+  // Act
+  await trainingPage.successButton.click();
+  await expect(trainingPage.target).toContainText("2 seconds");
+  await trainingPage.notYetButton.click();
+  await expect(trainingPage.target).toContainText("1 second");
+  await trainingPage.finishLink.click();
+
+  // Assert
+  await expect(page).toHaveURL(/\/levels\/level-2\/zen$/u);
+  await expect(page.getByRole("checkbox", { name: /^Toggle Step 2:/u })).not.toBeChecked();
+});
+
 test("uses the Crate Step 2 ladder, restarts after a miss, and offers break choices", async ({
   baseURL,
   page,
