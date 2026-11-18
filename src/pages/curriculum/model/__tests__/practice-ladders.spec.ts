@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { getPracticePlan, hasPracticeLadder, recordLadderOutcome } from "../practice-ladders";
+import {
+  getPracticePlan,
+  hasPracticeLadder,
+  PRACTICE_STEP_OPTIONS,
+  recordLadderOutcome,
+} from "../practice-ladders";
 
 describe("source-backed Practice ladders", () => {
   it("starts Crate Step 3 at five feet with no duration", () => {
@@ -116,5 +121,15 @@ describe("source-backed Practice ladders", () => {
     ]);
     expect(durationRestart.restartReason).toBe("Restart the distance ladder at 5 ft with no time.");
     expect(durationRestart.target).toBe("5 feet · 0 seconds");
+  });
+
+  it("exposes unique Practice step options without duplicate Crate ladder entries", () => {
+    expect.assertions(3);
+
+    const stepIds = PRACTICE_STEP_OPTIONS.map((step) => step.stepId);
+
+    expect(new Set(stepIds).size).toBe(stepIds.length);
+    expect(stepIds).toContain("level-3/crate:step-2");
+    expect(stepIds).toContain("level-3/crate:step-3");
   });
 });

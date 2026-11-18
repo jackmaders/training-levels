@@ -7,6 +7,7 @@ import { AuthClient, TrainingPage } from "./page-objects";
 const PREP_HEADING_COUNT = 3;
 const TIMER_TARGET_DURATION_MILLISECONDS = 15_000;
 const TIMER_INTERRUPTION_DURATION_MILLISECONDS = TIMER_TARGET_DURATION_MILLISECONDS / 3;
+const LONG_TIMER_TARGET_DURATION_MILLISECONDS = 60_000;
 
 async function signUpAndVisit(page: Page, baseURL: string | undefined) {
   const response = await new AuthClient(page).signUp({ baseURL });
@@ -177,4 +178,81 @@ test("timer completion waits for the handler to confirm success", async ({ baseU
 
   // Assert
   await expect(trainingPage.counts).toHaveText("1 Success · 0 Not yet");
+});
+
+async function expectLevelFourCrateInitialPrompt(trainingPage: TrainingPage) {
+  await expect(trainingPage.target).toContainText("1 minute");
+  await expect(trainingPage.guidance).toContainText("5 minutes");
+  await expect(trainingPage.timerStartButton).toBeVisible();
+}
+
+test("runs a Level 4 minute-duration timer from Practice and advances on confirmation", async ({
+  baseURL,
+  page,
+}) => {
+  // Arrange
+  await page.clock.install({ time: new Date("2026-01-01T09:00:00Z") });
+  const trainingPage = await signUpAndVisit(page, baseURL);
+
+  // Act
+  await trainingPage.enterPractice("Level 4 Crate · Step 1");
+
+  // Assert
+  await expectLevelFourCrateInitialPrompt(trainingPage);
+
+  // Act
+  await trainingPage.startTimer();
+
+  // Assert
+  await expect(page.getByText("60 seconds remaining.")).toBeVisible();
+
+  // Act
+  await page.clock.runFor(LONG_TIMER_TARGET_DURATION_MILLISECONDS);
+
+  // Assert
+  await expect(page.getByText("Timer complete.")).toBeVisible();
+
+  // Act
+  await trainingPage.confirmTimerSuccess.click();
+
+  // Assert
+  await expect(trainingPage.counts).toHaveText("1 Success · 0 Not yet");
+  await expect(trainingPage.target).toContainText("2 minutes");
+});
+
+async function expectRetrieveStepOneProgression(trainingPage: TrainingPage) {
+  await expect(trainingPage.target).toContainText(/pen or pencil/iu);
+  await expect(trainingPage.timerStartButton).toBeHidden();
+  await trainingPage.successButton.click();
+  await expect(trainingPage.counts).toHaveText("1 Success · 0 Not yet");
+  await expect(trainingPage.target).toContainText(/spoon/iu);
+}
+
+test("supports mixed-method Level 3 Retrieve across shaping and hold duration steps", async ({
+  baseURL,
+  page,
+}) => {
+  // Arrange
+  const trainingPage = await signUpAndVisit(page, baseURL);
+  await trainingPage.enterPractice("Level 3 Retrieve · Step 1");
+
+  // Act & Assert
+  await expectRetrieveStepOneProgression(trainingPage);
+
+  // Act
+  await trainingPage.finishPractice();
+  await expect(page).toHaveURL(/\/levels\/level-3\/retrieve$/u);
+  await trainingPage.gotoTraining();
+  await trainingPage.selectStep("Level 3 Retrieve · Step 2");
+  await trainingPage.startButton.click();
+
+  // Assert
+  await expect(trainingPage.timerStartButton).toBeHidden();
+
+  // Act
+  await trainingPage.chooseNextTarget();
+
+  // Assert
+  await expect(trainingPage.target).toContainText(/second/iu);
+  await expect(trainingPage.timerStartButton).toBeVisible();
 });

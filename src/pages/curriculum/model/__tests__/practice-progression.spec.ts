@@ -111,4 +111,60 @@ describe("practice progression rules", () => {
     expect(step2TwoGrabs?.nextTarget).toContain("1 seconds");
     expect(step2ThreeGrabs?.nextTarget).toContain("3 grabs");
   });
+
+  it("progresses Retrieve Step 3 from 15s shared hold through quarter-second lift to 5s solo", () => {
+    expect.assertions(5);
+
+    const start = getPracticeProgression("level-3/retrieve:step-3");
+    const quarterLift = getPracticeProgression("level-3/retrieve:step-3", {
+      consecutiveSuccesses: 1,
+    });
+    const oneSecondSolo = getPracticeProgression("level-3/retrieve:step-3", {
+      consecutiveSuccesses: 2,
+    });
+    const fiveSecondsSolo = getPracticeProgression("level-3/retrieve:step-3", {
+      consecutiveSuccesses: 6,
+    });
+
+    expect(start).toMatchObject({
+      method: "change_assistance_then_duration",
+      nextTarget: "You and the Dog hold the object together for 15 seconds.",
+      readyForTest: false,
+    });
+    expect(quarterLift?.nextTarget).toContain("quarter second");
+    expect(oneSecondSolo).toMatchObject({
+      nextTarget:
+        "Hold together 5 seconds, Dog holds alone for 1 second with Thank You, then hold together 5 seconds.",
+      readyForTest: false,
+    });
+    expect(fiveSecondsSolo?.nextTarget).toContain("5 seconds with Thank You");
+    expect(fiveSecondsSolo?.readyForTest).toBe(true);
+  });
+
+  it("uses shape approximation for Retrieve Steps 4 and 5", () => {
+    expect.assertions(4);
+
+    const step4Start = getPracticeProgression("level-3/retrieve:step-4");
+    const step4Next = getPracticeProgression("level-3/retrieve:step-4", {
+      consecutiveSuccesses: 3,
+    });
+    const step5Start = getPracticeProgression("level-3/retrieve:step-5");
+    const step5Next = getPracticeProgression("level-3/retrieve:step-5", {
+      consecutiveSuccesses: 3,
+    });
+
+    expect(step4Start).toMatchObject({
+      method: "shape_approximation",
+      nextTarget:
+        "Present the object to your Dog's right so she turns clockwise to put it in her mouth.",
+      readyForTest: false,
+    });
+    expect(step4Next).toMatchObject({
+      nextTarget:
+        "Take a small step back as she reaches so she moves forward to put the object in her mouth from your hand.",
+      readyForTest: true,
+    });
+    expect(step5Start?.nextTarget).toContain("household objects");
+    expect(step5Next?.readyForTest).toBe(true);
+  });
 });

@@ -10,14 +10,14 @@ import {
 } from "../practice-guidance";
 import type { PracticeGuidanceAttempt } from "../practice-guidance.types";
 
-const LEVEL_SECTION_SLUGS = new Set(["level-1", "level-2"]);
+const LEVEL_SECTION_SLUGS = new Set(["level-1", "level-2", "level-3", "level-4"]);
 const NUMERIC_CRITERION = /\d+ (?:second|minute|foot|feet|inch|step)/u;
 const COME_FORTY_FEET = "level-2/come:step-3";
 const COME_FORTY_FEET_CRITERION = "Dog comes 40 feet to you.";
 const FOCUS_TWO_SECONDS = "level-2/focus:step-2";
 const FOCUS_TWO_SECONDS_CRITERION = "Dog holds eye contact for 2 seconds.";
 
-function getLevelOneAndTwoSteps() {
+function getAuthoredLevelSteps() {
   return getCurriculumSyllabus()
     .sections.filter((section) => LEVEL_SECTION_SLUGS.has(section.sectionSlug))
     .flatMap((section) => section.pages.flatMap((page) => page.stepSummaries ?? []));
@@ -54,16 +54,16 @@ function hasCompleteGuidance(guidance: PracticeGuidance): boolean {
 }
 
 function getNumericStepsWithoutTargets(): string[] {
-  return getLevelOneAndTwoSteps()
+  return getAuthoredLevelSteps()
     .filter((step) => NUMERIC_CRITERION.test(step.label))
     .filter((step) => requireGuidance(step.stepId, step.label).targetOptions.length === 0)
     .map((step) => step.stepId);
 }
 
 describe("guided Practice authoring", () => {
-  it("provides source-backed setup and readiness guidance for every Level 1 and 2 Step", () => {
+  it("provides source-backed setup and readiness guidance for every Level 1 to 4 Step", () => {
     expect.assertions(3);
-    const steps = getLevelOneAndTwoSteps();
+    const steps = getAuthoredLevelSteps();
 
     const guidance = steps.map((step) => requireGuidance(step.stepId, step.label));
 
@@ -232,6 +232,86 @@ describe("guided Practice authoring", () => {
     );
   });
 
+  it("formats minute rungs in readable singular and plural units", () => {
+    expect.assertions(5);
+
+    const relaxThreeMinutes = requireGuidance("level-3/relax:step-1", "Dog settles for 3 minutes.");
+    const twoMinutes = requireGuidance("level-3/relax:step-1", "Dog settles for 3 minutes.", [
+      { outcome: "success", target: "Settle and remain truly relaxed for 1 minute." },
+    ]);
+    const readyAfterThree = requireGuidance("level-3/relax:step-1", "Dog settles for 3 minutes.", [
+      { outcome: "success", target: "Settle and remain truly relaxed for 3 minutes." },
+    ]);
+    const restarted = requireGuidance("level-3/relax:step-1", "Dog settles for 3 minutes.", [
+      { outcome: "not_yet", target: "Settle and remain truly relaxed for 2 minutes." },
+    ]);
+
+    expect(relaxThreeMinutes.targetOptions[0]).toBe(
+      "Settle and remain truly relaxed for 1 minute.",
+    );
+    expect(relaxThreeMinutes.targetOptions.at(-1)).toBe(
+      "Settle and remain truly relaxed for 3 minutes.",
+    );
+    expect(twoMinutes).toMatchObject({
+      readyForTest: false,
+      target: "Settle and remain truly relaxed for 2 minutes.",
+    });
+    expect(readyAfterThree.readyForTest).toBe(true);
+    expect(restarted.target).toBe("Settle and remain truly relaxed for 1 minute.");
+  });
+
+  it("authors mixed-method Level 3 Retrieve Steps with source rungs and judgment Steps", () => {
+    expect.assertions(5);
+
+    const retrieveOne = requireGuidance(
+      "level-3/retrieve:step-1",
+      "Dog puts a spoon, a pen, and another object in her mouth (not all at the same time!).",
+    );
+    const retrieveThree = requireGuidance(
+      "level-3/retrieve:step-3",
+      "You and the dog together hold an object for 5 seconds, then the dog alone for 5 seconds, then both for another 5 (15 second hold altogether).",
+    );
+    const retrieveFour = requireGuidance(
+      "level-3/retrieve:step-4",
+      "Dog moves to put an object in her mouth from your hand.",
+    );
+
+    expect([retrieveOne.targetAdvancement, retrieveThree.targetAdvancement]).toStrictEqual([
+      "source",
+      "source",
+    ]);
+    expect(retrieveOne.targetOptions).toHaveLength(3);
+    expect(retrieveThree.targetOptions.at(-1)).toContain("5 seconds with Thank You");
+    expect(retrieveFour.targetOptions).toStrictEqual([]);
+    expect(retrieveFour.readinessBasis).toContain("Handler judgment");
+  });
+
+  it("authors Level 4 long-duration minute ladders, the Go To Mat chute, and limited-hold rungs", () => {
+    expect.assertions(5);
+
+    const crateOne = requireGuidance(
+      "level-4/crate:step-1",
+      "Dog enters crate and remains calm for 5 minutes, you go out of sight momentarily.",
+    );
+    const goToMatFour = requireGuidance(
+      "level-4/go-to-mat:step-4",
+      "Dog goes 10 feet to a mat and stays down on it for 20 minutes while the trainer does chores.",
+    );
+    const handlingThree = requireGuidance(
+      "level-4/handling:step-3",
+      "Dog eliminates on lead within 30 seconds.",
+    );
+
+    expect([crateOne.targetOptions.length, crateOne.targetOptions[0]]).toStrictEqual([
+      5,
+      "Enter crate and remain calm for 1 minute while you step momentarily out of sight.",
+    ]);
+    expect(goToMatFour.targetAdvancement).toBe("source");
+    expect(goToMatFour.targetOptions).toHaveLength(7);
+    expect(goToMatFour.targetOptions.at(-1)).toContain("20 minutes");
+    expect(handlingThree.targetOptions.at(-1)).toContain("30 seconds");
+  });
+
   it("identifies handler judgment for Steps without a numeric ladder", () => {
     expect.assertions(3);
     const criterion = "Dog allows you to touch her head, tail, and feet.";
@@ -249,7 +329,8 @@ describe("guided Practice authoring", () => {
   it("returns no guidance for Steps outside the authored Levels or criteria", () => {
     expect.assertions(5);
 
-    const otherLevel = getPracticeGuidance("level-3/crate:step-2", "The dog stays in the crate");
+    // Phase 3 expands guided Practice to level-5.
+    const otherLevel = getPracticeGuidance("level-5/zen:step-1", "Dog waits for an invitation.");
     const unknownStep = getPracticeGuidance("level-1/zen:step-9", "Dog stays away.");
     const blankCriterion = getPracticeGuidance("level-1/zen:step-1", "   ");
 

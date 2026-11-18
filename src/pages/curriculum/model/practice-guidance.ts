@@ -1,7 +1,9 @@
 /* oxlint-disable eslint/capitalized-comments */
 import type { StepNumber } from "@/shared/curriculum-data";
 
+import { PRACTICE_GUIDANCE_LEVEL_FOUR } from "./practice-guidance-level-four";
 import { PRACTICE_GUIDANCE_LEVEL_ONE } from "./practice-guidance-level-one";
+import { PRACTICE_GUIDANCE_LEVEL_THREE } from "./practice-guidance-level-three";
 import { PRACTICE_GUIDANCE_LEVEL_TWO_FOUNDATIONS } from "./practice-guidance-level-two-foundations";
 import { PRACTICE_GUIDANCE_LEVEL_TWO_GENERALIZATION } from "./practice-guidance-level-two-generalization";
 import { PRACTICE_GUIDANCE_LEVEL_TWO_POSITION } from "./practice-guidance-level-two-position";
@@ -22,12 +24,14 @@ const LADDER_READINESS =
 const JUDGMENT_READINESS =
   "Handler judgment: this Step has no numeric ladder. After a recorded Success, decide from the readiness question whether your Dog met the full criterion.";
 const STEPS_PER_BEHAVIOR = 5;
+const STEP_TWO = 2;
 const STEP_ID_SEPARATOR = ":step-";
 const LAST_INDEX = -1;
 const DEFAULT_INCREMENT = 1;
 const UNIT_LABELS: Readonly<Record<TargetUnit, readonly [string, string]>> = {
   foot: ["foot", "feet"],
   inch: ["inch", "inches"],
+  minute: ["minute", "minutes"],
   second: ["second", "seconds"],
 };
 /** Main Quest order, so Practice options follow the curriculum and Level 1 Zen Step 1 stays first. */
@@ -52,6 +56,33 @@ const CURRICULUM_BEHAVIOR_ORDER = [
   "level-2/handling",
   "level-2/tricks",
   "level-2/communication",
+  "level-3/zen",
+  "level-3/focus",
+  "level-3/come",
+  "level-3/sit",
+  "level-3/down",
+  "level-3/lazy-leash",
+  "level-3/retrieve",
+  "level-3/target",
+  "level-3/crate",
+  "level-3/relax",
+  "level-3/distance",
+  "level-3/jump",
+  "level-3/go-to-mat",
+  "level-3/handling",
+  "level-3/communication",
+  "level-4/zen",
+  "level-4/focus",
+  "level-4/come",
+  "level-4/lazy-leash",
+  "level-4/retrieve",
+  "level-4/target",
+  "level-4/crate",
+  "level-4/relax",
+  "level-4/distance",
+  "level-4/go-to-mat",
+  "level-4/handling",
+  "level-4/communication",
 ] as const;
 const BEHAVIOR_RULES: Readonly<Record<string, BehaviorRule>> = {
   ...PRACTICE_GUIDANCE_LEVEL_ONE,
@@ -59,6 +90,8 @@ const BEHAVIOR_RULES: Readonly<Record<string, BehaviorRule>> = {
   ...PRACTICE_GUIDANCE_LEVEL_TWO_POSITION,
   ...PRACTICE_GUIDANCE_LEVEL_TWO_GENERALIZATION,
   ...PRACTICE_GUIDANCE_LEVEL_TWO_STAYS,
+  ...PRACTICE_GUIDANCE_LEVEL_THREE,
+  ...PRACTICE_GUIDANCE_LEVEL_FOUR,
 };
 
 interface ParsedStepId {
@@ -195,24 +228,53 @@ function getTargetIndex(
   return lastIndex === NOT_FOUND_INDEX ? 0 : Math.min(lastIndex + 1, targets.length - 1);
 }
 
-function getPracticeGuidanceCoverage(): readonly string[] {
-  return CURRICULUM_BEHAVIOR_ORDER.flatMap((pageSlug) =>
-    Array.from(
-      { length: STEPS_PER_BEHAVIOR },
-      (_unused, index) => `${pageSlug}${STEP_ID_SEPARATOR}${String(index + 1)}`,
-    ),
+interface PracticeStepOption {
+  label: string;
+  pageSlug: string;
+  stepId: string;
+}
+
+function toStepId(pageSlug: string, stepNumber: number): string {
+  return `${pageSlug}${STEP_ID_SEPARATOR}${String(stepNumber)}`;
+}
+
+function getBehaviorStepIds(pageSlug: string): readonly string[] {
+  return Array.from({ length: STEPS_PER_BEHAVIOR }, (_unused, index) =>
+    toStepId(pageSlug, index + 1),
   );
 }
 
-function getPracticeStepOptions(): readonly { label: string; pageSlug: string; stepId: string }[] {
-  return getPracticeGuidanceCoverage().map((stepId) => {
-    const { behaviorName, levelNumber, pageSlug, stepNumber } = parseStepId(stepId);
-    return {
-      label: `Level ${levelNumber} ${behaviorName} · Step ${String(stepNumber)}`,
-      pageSlug,
-      stepId,
-    };
-  });
+function getPracticeGuidanceCoverage(): readonly [string, string, ...string[]] {
+  const [firstBehavior, ...restBehaviors] = CURRICULUM_BEHAVIOR_ORDER;
+  const remainingStepIds = getBehaviorStepIds(firstBehavior).slice(STEP_TWO);
+  return [
+    toStepId(firstBehavior, 1),
+    toStepId(firstBehavior, STEP_TWO),
+    ...remainingStepIds,
+    ...restBehaviors.flatMap((pageSlug) => getBehaviorStepIds(pageSlug)),
+  ];
+}
+
+function toPracticeStepOption(stepId: string): PracticeStepOption {
+  const { behaviorName, levelNumber, pageSlug, stepNumber } = parseStepId(stepId);
+  return {
+    label: `Level ${levelNumber} ${behaviorName} · Step ${String(stepNumber)}`,
+    pageSlug,
+    stepId,
+  };
+}
+
+function getPracticeStepOptions(): readonly [
+  PracticeStepOption,
+  PracticeStepOption,
+  ...PracticeStepOption[],
+] {
+  const [firstStep, secondStep, ...restSteps] = getPracticeGuidanceCoverage();
+  return [
+    toPracticeStepOption(firstStep),
+    toPracticeStepOption(secondStep),
+    ...restSteps.map((stepId) => toPracticeStepOption(stepId)),
+  ];
 }
 
 export { getPracticeGuidance, getPracticeGuidanceCoverage, getPracticeStepOptions };
