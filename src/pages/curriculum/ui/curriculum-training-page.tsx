@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 
 import { curriculumSyllabusQueryOptions } from "../api/curriculum-query-options";
 import { trainingOverviewQueryOptions } from "../api/recommendation-query-options";
@@ -9,6 +9,7 @@ import {
   type TrainingRecommendationMode,
 } from "../model/training-recommendation";
 import { TrainingStepContent } from "./curriculum-training-step-content";
+import { useHydratedNow } from "./use-hydrated-now";
 
 interface CurriculumTrainingPageProps {
   onModeChange?: ((mode?: TrainingRecommendationMode) => void) | undefined;
@@ -16,28 +17,6 @@ interface CurriculumTrainingPageProps {
   selectedMode?: TrainingRecommendationMode | undefined;
   selectedStepId: string | undefined;
   selectedTarget: string | undefined;
-}
-
-let cachedClientDateSnapshot: { date: Date; dayKey: string } | null = null;
-
-function subscribeToClock() {
-  return () => {
-    // Wall-clock day check is evaluated on hydration; no live clock subscription.
-  };
-}
-
-function getServerHydratedDate(): Date | null {
-  return null;
-}
-
-function getClientHydratedDate(): Date {
-  const now = new Date();
-  const dayKey = now.toDateString();
-  if (cachedClientDateSnapshot?.dayKey === dayKey) {
-    return cachedClientDateSnapshot.date;
-  }
-  cachedClientDateSnapshot = { date: now, dayKey };
-  return now;
 }
 
 function useTrainingPageResolution({
@@ -54,11 +33,7 @@ function useTrainingPageResolution({
   const [lockedStepId, setLockedStepId] = useState<string | null>(null);
   const { data: overview } = useSuspenseQuery(trainingOverviewQueryOptions());
   const { data: syllabus } = useSuspenseQuery(curriculumSyllabusQueryOptions());
-  const effectiveNow = useSyncExternalStore(
-    subscribeToClock,
-    getClientHydratedDate,
-    getServerHydratedDate,
-  );
+  const effectiveNow = useHydratedNow();
   const recommendation = recommendNextTrainingActivity({
     excludedStepIds,
     now: effectiveNow,

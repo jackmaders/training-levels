@@ -5,21 +5,22 @@ import type { BehaviorStep } from "@/shared/curriculum-data";
 import { Card } from "@/shared/ui/shadcn/card";
 import { Collapsible } from "@/shared/ui/shadcn/collapsible";
 
-import type { SaveComeafterInput } from "../api/generalization-schema";
-import type { ComeafterRecordState } from "../api/generalization-service";
-import type { StepProvenanceSummary } from "../model/step-provenance";
 import { StepCardBody } from "./curriculum-step-card-body";
 import { StepCardHeader } from "./curriculum-step-card-header";
 
+type HeaderProps = ComponentProps<typeof StepCardHeader>;
+type BodyProps = ComponentProps<typeof StepCardBody>;
+
 interface CurriculumStepCardProps extends Omit<ComponentProps<typeof Card>, "id" | "onToggle"> {
-  comeafterRecord: ComeafterRecordState | null;
+  comeafterRecord: BodyProps["comeafterRecord"];
   isCompleted: boolean;
   onOpenChange: (open: boolean) => void;
-  onSaveComeafter: (input: SaveComeafterInput) => Promise<unknown>;
+  onSaveComeafter: BodyProps["onSaveComeafter"];
   onToggle: (stepId: string, completed: boolean) => void;
   open: boolean;
-  provenanceSummary: StepProvenanceSummary;
+  provenanceSummary: HeaderProps["provenanceSummary"];
   step: BehaviorStep;
+  stepState?: HeaderProps["stepState"];
 }
 
 function CurriculumStepCard({
@@ -32,6 +33,7 @@ function CurriculumStepCard({
   open,
   provenanceSummary,
   step,
+  stepState,
   ...props
 }: CurriculumStepCardProps) {
   return (
@@ -46,11 +48,13 @@ function CurriculumStepCard({
           isCompleted={isCompleted}
           provenanceSummary={provenanceSummary}
           step={step}
+          stepState={stepState}
           onToggle={onToggle}
         />
         <StepCardBody
           comeafterRecord={comeafterRecord}
           step={step}
+          stepState={stepState}
           onSaveComeafter={onSaveComeafter}
         />
       </Collapsible>

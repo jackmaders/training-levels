@@ -4,6 +4,7 @@ import {
   CurriculumDependenciesPage,
   curriculumSyllabusQueryOptions,
   stepProgressQueryOptions,
+  trainingOverviewQueryOptions,
 } from "@/pages/curriculum";
 
 const Route = createFileRoute("/_authenticated/dependencies")({
@@ -11,6 +12,7 @@ const Route = createFileRoute("/_authenticated/dependencies")({
     await Promise.all([
       queryClient.query(curriculumSyllabusQueryOptions()),
       queryClient.query(stepProgressQueryOptions()),
+      queryClient.query(trainingOverviewQueryOptions()),
     ]);
   },
   component: CurriculumDependenciesPage,
