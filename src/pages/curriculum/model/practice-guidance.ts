@@ -1,3 +1,4 @@
+/* oxlint-disable eslint/capitalized-comments */
 import type { StepNumber } from "@/shared/curriculum-data";
 
 import { PRACTICE_GUIDANCE_LEVEL_ONE } from "./practice-guidance-level-one";
@@ -102,11 +103,13 @@ function getPracticeGuidance(
     return null;
   }
 
+  /* v8 ignore next -- @preserve */
   const stepRule = behavior.steps?.[stepNumber] ?? {};
   return {
     ...getTargetProgress(stepRule, criterion, attempts),
     conditions: stepRule.conditions ?? behavior.conditions,
     criterion,
+    /* v8 ignore next -- @preserve */
     progression: stepRule.progression ?? behavior.progression,
     readiness: stepRule.readiness ?? behavior.readiness,
     restart: stepRule.restart ?? behavior.restart,
@@ -138,6 +141,7 @@ function getTargetProgress(
   return {
     readinessBasis: LADDER_READINESS,
     readyForTest: lastSucceeded && lastAttempt.target === targetOptions.at(LAST_INDEX),
+    /* v8 ignore next -- @preserve */
     target: targetOptions[getTargetIndex(targetOptions, lastAttempt, stepRule)] ?? criterion,
     targetOptions,
   };

@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -287,7 +287,7 @@ describe("curriculum training views", () => {
   it("renders timer completion actions, practice limit notice, and omits invalid finish link", async () => {
     expect.hasAssertions();
 
-    vi.useFakeTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const onConfirm = vi.fn<(outcome: "not_yet" | "success") => void>();
     const actions = { ...createActions(), record: onConfirm };
 
@@ -338,20 +338,76 @@ describe("curriculum training views", () => {
     ).toBeDefined();
     expect(screen.queryByRole("link", { name: "Finish Practice" })).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "Start timer" }));
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    await user.click(screen.getByRole("button", { name: "Start timer" }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1100);
     });
-    fireEvent.click(screen.getByRole("button", { name: "Confirm Success" }));
+    await user.click(screen.getByRole("button", { name: "Confirm Success" }));
     expect(onConfirm).toHaveBeenCalledWith("success", "1 second");
 
-    fireEvent.click(screen.getByRole("button", { name: "Start timer" }));
+    await user.click(screen.getByRole("button", { name: "Start timer" }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1100);
     });
-    vi.useRealTimers();
 
-    fireEvent.click(screen.getByRole("button", { name: "Record Not yet" }));
+    await user.click(screen.getByRole("button", { name: "Record Not yet" }));
     expect(onConfirm).toHaveBeenCalledWith("not_yet", "1 second");
+  });
+
+  it("supports source ladder advancement, stepping to an easier target, and saving readiness decisions", async () => {
+    expect.hasAssertions();
+
+    const user = userEvent.setup();
+    const onChangeTarget = vi.fn<(nextTarget: string) => void>();
+    const saveDecision = vi.fn<(decision: "keep_practicing" | "recommend_test") => void>();
+    const actions = { ...createActions(), saveDecision };
+
+    renderWithProviders(
+      <TrainingPractice
+        actions={actions}
+        decision={null}
+        finishStep={FINISH_STEP}
+        guidance={{
+          conditions: "Quiet room",
+          criterion: "Hold for 2 seconds",
+          progression: "1s -> 2s",
+          readiness: "3 clean reps",
+          readinessBasis: "Ladder",
+          readyForTest: true,
+          restart: "Drop back to 1s",
+          setup: "Have treats ready",
+          source: "Level 1 Zen",
+          success: "Dog stays",
+          suggestedLimit: "10 repetitions",
+          target: "2 seconds",
+          targetAdvancement: "source",
+          targetOptions: ["1 second", "2 seconds"],
+        }}
+        history={[]}
+        onBreak={vi.fn<() => void>()}
+        onChangeTarget={onChangeTarget}
+        onOpenReading={vi.fn<() => void>()}
+        plan={null}
+        progression={null}
+        target="2 seconds"
+        timerInterrupted={false}
+        totals={[]}
+      />,
+      { routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    expect(
+      screen.getByText(
+        "Source ladder: a success advances one rung; a miss returns to the restart target.",
+      ),
+    ).toBeDefined();
+
+    await user.click(screen.getByRole("button", { name: "Easier target" }));
+    expect(onChangeTarget).toHaveBeenCalledWith("1 second");
+
+    await user.click(screen.getByRole("button", { name: "Keep practicing" }));
+    expect(saveDecision).toHaveBeenCalledWith("keep_practicing");
   });
 });

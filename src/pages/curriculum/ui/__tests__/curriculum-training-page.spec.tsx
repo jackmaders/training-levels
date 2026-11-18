@@ -188,6 +188,22 @@ describe("curriculum training page", () => {
           target: "10 seconds",
           undoneAt: null,
         },
+        {
+          attemptId: "a2",
+          createdAt: new Date("2026-01-01T00:01:00.000Z"),
+          outcome: "success",
+          stepId: PRACTICE_STEP_ID,
+          target: "10 seconds",
+          undoneAt: null,
+        },
+        {
+          attemptId: "a3",
+          createdAt: new Date("2026-01-01T00:02:00.000Z"),
+          outcome: "success",
+          stepId: PRACTICE_STEP_ID,
+          target: "10 seconds",
+          undoneAt: null,
+        },
       ],
     });
     const [, secondOption] = PRACTICE_STEP_OPTIONS;
@@ -233,6 +249,22 @@ describe("curriculum training page", () => {
         {
           attemptId: "a1",
           createdAt: new Date("2026-01-01T00:00:00.000Z"),
+          outcome: "success",
+          stepId: PRACTICE_STEP_ID,
+          target: "10 seconds",
+          undoneAt: null,
+        },
+        {
+          attemptId: "a2",
+          createdAt: new Date("2026-01-01T00:01:00.000Z"),
+          outcome: "success",
+          stepId: PRACTICE_STEP_ID,
+          target: "10 seconds",
+          undoneAt: null,
+        },
+        {
+          attemptId: "a3",
+          createdAt: new Date("2026-01-01T00:02:00.000Z"),
           outcome: "success",
           stepId: PRACTICE_STEP_ID,
           target: "10 seconds",
@@ -293,6 +325,22 @@ describe("curriculum training page", () => {
           target: "10 seconds",
           undoneAt: null,
         },
+        {
+          attemptId: "a2",
+          createdAt: new Date("2026-01-01T00:01:00.000Z"),
+          outcome: "success",
+          stepId: PRACTICE_STEP_ID,
+          target: "10 seconds",
+          undoneAt: null,
+        },
+        {
+          attemptId: "a3",
+          createdAt: new Date("2026-01-01T00:02:00.000Z"),
+          outcome: "success",
+          stepId: PRACTICE_STEP_ID,
+          target: "10 seconds",
+          undoneAt: null,
+        },
       ],
     });
     renderWithProviders(
@@ -314,7 +362,9 @@ describe("curriculum training page", () => {
     expect(screen.getByRole("heading", { name: "Current target" })).toBeDefined();
 
     // Act: correct attempt
-    await user.click(screen.getByRole("button", { name: "Correct" }));
+    const [firstCorrectButton] = screen.getAllByRole("button", { name: "Correct" });
+    // oxlint-disable-next-line vitest/no-conditional-in-test -- Narrow array destructure without non-null assertion
+    await user.click(firstCorrectButton ?? document.body);
     await waitFor(() => {
       expect(correctPracticeAttemptFn).toHaveBeenCalledOnce();
     });
@@ -435,6 +485,22 @@ describe("curriculum training page", () => {
           target: "10 seconds",
           undoneAt: null,
         },
+        {
+          attemptId: "a2",
+          createdAt: new Date("2026-01-01T00:01:00.000Z"),
+          outcome: "success",
+          stepId: PRACTICE_STEP_ID,
+          target: "10 seconds",
+          undoneAt: null,
+        },
+        {
+          attemptId: "a3",
+          createdAt: new Date("2026-01-01T00:02:00.000Z"),
+          outcome: "success",
+          stepId: PRACTICE_STEP_ID,
+          target: "10 seconds",
+          undoneAt: null,
+        },
       ],
       totals: [
         {
@@ -461,6 +527,13 @@ describe("curriculum training page", () => {
     await user.click(screen.getByRole("button", { name: "Correct totals" }));
     await waitFor(() => {
       expect(correctPracticeTotalsFn).toHaveBeenCalledOnce();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Keep practicing" }));
+    await waitFor(() => {
+      expect(savePracticeStepDecisionFn).toHaveBeenCalledWith({
+        data: { decision: "keep_practicing", stepId: PRACTICE_STEP_ID },
+      });
     });
   });
 });

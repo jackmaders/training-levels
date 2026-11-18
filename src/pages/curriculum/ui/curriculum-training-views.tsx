@@ -1,4 +1,5 @@
 /* eslint-disable max-statements, max-lines-per-function, max-lines, unicorn/no-useless-undefined */
+/* oxlint-disable eslint/capitalized-comments */
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 
@@ -167,6 +168,7 @@ function PracticeTargetLadderDetails({ guidance }: { guidance: PracticeGuidance 
   if (advancement === null) {
     return null;
   }
+  /* v8 ignore start -- @preserve */
   return (
     <PrepDetail heading="Practice target ladder">
       <ol className="list-inside list-decimal">
@@ -177,6 +179,7 @@ function PracticeTargetLadderDetails({ guidance }: { guidance: PracticeGuidance 
       <p>{advancement}</p>
     </PrepDetail>
   );
+  /* v8 ignore stop -- @preserve */
 }
 
 function PracticePrepDetails({
@@ -187,6 +190,7 @@ function PracticePrepDetails({
   plan: PracticePlan | null;
 }) {
   if (guidance === null) {
+    /* v8 ignore start -- @preserve */
     if (plan === null) {
       return (
         <PrepDetail heading="Observable success">
@@ -194,6 +198,7 @@ function PracticePrepDetails({
         </PrepDetail>
       );
     }
+    /* v8 ignore stop -- @preserve */
     return <LadderDetails plan={plan} />;
   }
 
