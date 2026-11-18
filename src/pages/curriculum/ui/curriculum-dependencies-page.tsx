@@ -203,7 +203,6 @@ function CurriculumDependenciesPage() {
                 <li key={step.stepId}>
                   <p className="font-medium">{step.heading}</p>
                   <p className="text-sm text-muted-foreground">
-                    {/* v8 ignore next -- @preserve */}
                     {completed.has(step.stepId) ? "Completed" : "Not completed"}
                   </p>
                 </li>

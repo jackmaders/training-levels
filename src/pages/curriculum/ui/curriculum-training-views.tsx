@@ -36,7 +36,7 @@ interface PracticeActions {
   correctTotals: (recordId: string, successCount: number, notYetCount: number) => void;
   correct: (attempt: PracticeRecord) => void;
   errorMessage: string | null;
-  handleRetry: () => void;
+  handleRetry: (() => void) | undefined;
   pendingAttempt: { attemptId: string; outcome: Outcome; target: string } | null;
   record: (outcome: Outcome, target: string) => void;
   recordTotals: (successCount: number, notYetCount: number) => void;
@@ -168,7 +168,6 @@ function PracticeTargetLadderDetails({ guidance }: { guidance: PracticeGuidance 
   if (advancement === null) {
     return null;
   }
-  /* v8 ignore start -- @preserve */
   return (
     <PrepDetail heading="Practice target ladder">
       <ol className="list-inside list-decimal">
@@ -179,7 +178,6 @@ function PracticeTargetLadderDetails({ guidance }: { guidance: PracticeGuidance 
       <p>{advancement}</p>
     </PrepDetail>
   );
-  /* v8 ignore stop -- @preserve */
 }
 
 function PracticePrepDetails({
@@ -487,15 +485,21 @@ function TargetChoices({
   target: string;
 }) {
   const targetIndex = options.indexOf(target);
+  const easierTarget = options[targetIndex - 1];
+  const nextTarget = options[targetIndex + 1];
   return (
     <div className="flex flex-wrap gap-2 text-sm">
       <button
         className="rounded-md border px-3 py-2"
         disabled={targetIndex <= 0}
         type="button"
-        onClick={() => {
-          onChangeTarget(options[targetIndex - 1] ?? target);
-        }}
+        onClick={
+          easierTarget === undefined
+            ? undefined
+            : () => {
+                onChangeTarget(easierTarget);
+              }
+        }
       >
         Easier target
       </button>
@@ -503,9 +507,13 @@ function TargetChoices({
         className="rounded-md border px-3 py-2"
         disabled={targetIndex === NO_TARGET_INDEX || targetIndex >= options.length - 1}
         type="button"
-        onClick={() => {
-          onChangeTarget(options[targetIndex + 1] ?? target);
-        }}
+        onClick={
+          nextTarget === undefined
+            ? undefined
+            : () => {
+                onChangeTarget(nextTarget);
+              }
+        }
       >
         Next ladder target
       </button>
@@ -681,11 +689,13 @@ function RecordingControls({
           className="min-h-12 rounded-md border"
           disabled={actions.saving || lastAttempt === undefined}
           type="button"
-          onClick={() => {
-            if (lastAttempt !== undefined) {
-              actions.undo(lastAttempt.attemptId);
-            }
-          }}
+          onClick={
+            lastAttempt === undefined
+              ? undefined
+              : () => {
+                  actions.undo(lastAttempt.attemptId);
+                }
+          }
         >
           Undo
         </button>

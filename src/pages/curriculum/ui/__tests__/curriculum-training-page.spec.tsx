@@ -3,7 +3,12 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { TEST_BEHAVIOR_PAGE, createProsePageFixture } from "@test/vitest/fixtures/curriculum";
+import {
+  TEST_BEHAVIOR_PAGE,
+  createBehaviorPageFixture,
+  createBehaviorStepFixture,
+  createProsePageFixture,
+} from "@test/vitest/fixtures/curriculum";
 import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
 
 import { curriculumPageQueryOptions } from "../../api/curriculum-query-options";
@@ -28,6 +33,7 @@ import {
 } from "../../api/training.functions";
 import { PRACTICE_STEP_OPTIONS } from "../../model/practice-ladders";
 import { CurriculumTrainingPage } from "../curriculum-training-page";
+import { STEP_TARGET } from "../curriculum-training-views";
 
 vi.mock(import("../../api/training.functions"));
 
@@ -40,11 +46,17 @@ beforeEach(() => {
 });
 
 function createTrainingQueryClient({
+  decisionRecord = null,
   history = [],
   page = TEST_BEHAVIOR_PAGE,
   stepId = PRACTICE_STEP_ID,
   totals = [],
 }: {
+  decisionRecord?: {
+    decidedAt: Date;
+    decision: "keep_practicing" | "recommend_test";
+    stepId: string;
+  } | null;
   history?: {
     attemptId: string;
     createdAt: Date;
@@ -66,13 +78,14 @@ function createTrainingQueryClient({
 } = {}) {
   vi.mocked(getPracticeHistoryFn).mockResolvedValue(history);
   vi.mocked(getPracticeTotalsFn).mockResolvedValue(totals);
+  vi.mocked(getPracticeStepDecisionFn).mockResolvedValue(decisionRecord);
   const queryClient = new QueryClient({
     defaultOptions: { mutations: { retry: false }, queries: { retry: false, staleTime: Infinity } },
   });
   queryClient.setQueryData(curriculumPageQueryOptions("level-1/zen").queryKey, page);
   queryClient.setQueryData(practiceHistoryQueryOptions(stepId).queryKey, history);
   queryClient.setQueryData(practiceTotalsQueryOptions(stepId).queryKey, totals);
-  queryClient.setQueryData(practiceStepDecisionQueryOptions(stepId).queryKey, null);
+  queryClient.setQueryData(practiceStepDecisionQueryOptions(stepId).queryKey, decisionRecord);
   queryClient.setQueryData(stepTestHistoryQueryOptions().queryKey, []);
   return queryClient;
 }
@@ -535,5 +548,216 @@ describe("curriculum training page", () => {
         data: { decision: "keep_practicing", stepId: PRACTICE_STEP_ID },
       });
     });
+  });
+
+  it("defaults to the first practice step when selectedStepId is undefined", () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const queryClient = createTrainingQueryClient();
+
+    // Act
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={undefined}
+        selectedTarget={undefined}
+        onSelectionChange={vi.fn<() => void>()}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    // Assert
+    expect(screen.getByText(/Practice · Level 1 Zen · Step 1/u)).toBeDefined();
+  });
+
+  it("falls back to selected step label when curriculum page omits the selected step", () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const queryClient = createTrainingQueryClient({
+      page: createBehaviorPageFixture({ steps: [] }),
+    });
+
+    // Act
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={PRACTICE_STEP_ID}
+        selectedTarget={undefined}
+        onSelectionChange={vi.fn<() => void>()}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    // Assert
+    expect(screen.getByText(/full criterion: Level 1 Zen · Step 1/u)).toBeDefined();
+  });
+
+  it("switches to Guided Test view when starting a recommended test", async () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const user = userEvent.setup();
+    const queryClient = createTrainingQueryClient({
+      decisionRecord: {
+        decidedAt: new Date("2026-01-01T00:00:00.000Z"),
+        decision: "recommend_test",
+        stepId: PRACTICE_STEP_ID,
+      },
+    });
+
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={PRACTICE_STEP_ID}
+        selectedTarget={undefined}
+        onSelectionChange={vi.fn<() => void>()}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Start Test" }));
+
+    // Assert
+    expect(screen.getByRole("heading", { name: "Guided Test" })).toBeDefined();
+  });
+
+  it("uses ladder plan target options when selected step has a practice ladder", () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const stepId = "level-3/crate:step-2";
+    const queryClient = createTrainingQueryClient({ stepId });
+    queryClient.setQueryData(
+      curriculumPageQueryOptions("level-3/crate").queryKey,
+      createBehaviorPageFixture({ pageSlug: "level-3/crate", title: "Crate" }),
+    );
+
+    // Act
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={stepId}
+        selectedTarget={undefined}
+        onSelectionChange={vi.fn<() => void>()}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    // Assert
+    expect(screen.getByLabelText("Current practice target").textContent).toBe("2 feet · 0 seconds");
+  });
+
+  it("skips undone attempts when counting trailing successes", () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const stepId = "level-1/zen:step-2";
+    const queryClient = createTrainingQueryClient({
+      history: [
+        {
+          attemptId: "a1",
+          createdAt: new Date("2026-01-01T00:00:00.000Z"),
+          outcome: "success",
+          stepId,
+          target: "Dog stays away from the treat in your closed fist for 1 second.",
+          undoneAt: null,
+        },
+        {
+          attemptId: "a2",
+          createdAt: new Date("2026-01-01T00:01:00.000Z"),
+          outcome: "success",
+          stepId,
+          target: "2 seconds",
+          undoneAt: new Date("2026-01-01T00:02:00.000Z"),
+        },
+      ],
+      stepId,
+    });
+
+    // Act
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={stepId}
+        selectedTarget={undefined}
+        onSelectionChange={vi.fn<() => void>()}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    // Assert
+    expect(screen.getByLabelText("Current practice target").textContent).toBe(
+      "Dog stays away from the treat in your closed fist for 2 seconds.",
+    );
+  });
+
+  it("selects guidance target when progression is unavailable", () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const stepId = "level-1/sit:step-1";
+    const queryClient = createTrainingQueryClient({ stepId });
+    queryClient.setQueryData(
+      curriculumPageQueryOptions("level-1/sit").queryKey,
+      createBehaviorPageFixture({
+        pageSlug: "level-1/sit",
+        steps: [
+          createBehaviorStepFixture({
+            heading: "Step 1: Capture offered sit",
+            stepId,
+            stepNumber: 1,
+          }),
+        ],
+        title: "Sit",
+      }),
+    );
+
+    // Act
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={stepId}
+        selectedTarget={undefined}
+        onSelectionChange={vi.fn<() => void>()}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    // Assert
+    expect(screen.getByLabelText("Current practice target").textContent).toBe(
+      "Step 1: Capture offered sit",
+    );
+  });
+
+  it("falls back to default target when plan, guidance, and progression are unavailable", () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const stepId = "level-1/sit:step-1";
+    const queryClient = createTrainingQueryClient({ stepId });
+    queryClient.setQueryData(
+      curriculumPageQueryOptions("level-1/sit").queryKey,
+      createBehaviorPageFixture({
+        pageSlug: "level-1/sit",
+        steps: [
+          createBehaviorStepFixture({
+            heading: " ",
+            stepId,
+            stepNumber: 1,
+          }),
+        ],
+        title: "Sit",
+      }),
+    );
+
+    // Act
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={stepId}
+        selectedTarget={undefined}
+        onSelectionChange={vi.fn<() => void>()}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    // Assert
+    expect(screen.getByLabelText("Current practice target").textContent).toBe(STEP_TARGET);
   });
 });
