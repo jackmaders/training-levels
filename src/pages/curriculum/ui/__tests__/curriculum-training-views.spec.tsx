@@ -410,4 +410,161 @@ describe("curriculum training views", () => {
     await user.click(screen.getByRole("button", { name: "Keep practicing" }));
     expect(saveDecision).toHaveBeenCalledWith("keep_practicing");
   });
+
+  it("renders TrainingPrep with guidance target ladder and app-default advancement", () => {
+    expect.hasAssertions();
+
+    // Arrange & Act
+    renderWithProviders(
+      <TrainingPrep
+        decision={null}
+        equipment={[]}
+        guidance={{
+          conditions: "Quiet room",
+          criterion: "Stand 4 feet apart",
+          progression: "Increase distance gradually",
+          readiness: "Dog runs happily",
+          readinessBasis: "Ladder",
+          readyForTest: false,
+          restart: "Move closer",
+          setup: "Have treats ready",
+          source: "Level 1 Come, Step 2",
+          success: "Dog comes reliably",
+          suggestedLimit: "5 attempts",
+          target: "3 feet",
+          targetAdvancement: "app default",
+          targetOptions: ["3 feet", "4 feet"],
+        }}
+        history={[]}
+        onSelectStep={vi.fn<() => void>()}
+        onStart={vi.fn<() => void>()}
+        plan={null}
+        selectedStepId={FINISH_STEP.stepId}
+        stepOptions={PRACTICE_STEP_OPTIONS}
+        target="3 feet"
+      />,
+      { routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    // Assert
+    expect(screen.getByRole("heading", { name: "Practice target ladder" })).toBeDefined();
+    expect(screen.getAllByText("3 feet")).toHaveLength(2);
+    expect(screen.getByText("4 feet")).toBeDefined();
+    expect(
+      screen.getByText(
+        "App default rungs: the curriculum does not set these intermediate targets. A success advances one rung; a miss returns to the restart target.",
+      ),
+    ).toBeDefined();
+  });
+
+  it("renders TrainingPrep with ladder prior achievement and restart suggestion", () => {
+    expect.hasAssertions();
+
+    // Arrange & Act
+    renderWithProviders(
+      <TrainingPrep
+        decision={null}
+        equipment={[]}
+        guidance={null}
+        history={[]}
+        onSelectStep={vi.fn<() => void>()}
+        onStart={vi.fn<() => void>()}
+        plan={{
+          appDefaultPracticeLimit: 10,
+          appDefaultRepetitions: 1,
+          distanceFeet: 0,
+          durationSeconds: 3,
+          easierTarget: null,
+          nextTarget: "5 seconds",
+          priorAchievement: "3 seconds",
+          restartReason: "Missed target",
+          source: "Zen ladder",
+          stepId: "level-1/zen:step-1",
+          target: "3 seconds",
+          targetOptions: [{ distanceFeet: 0, durationSeconds: 3, label: "3 seconds" }],
+        }}
+        selectedStepId={FINISH_STEP.stepId}
+        stepOptions={PRACTICE_STEP_OPTIONS}
+        target="3 seconds"
+      />,
+      { routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    // Assert
+    expect(screen.getByText(/3 seconds\. Missed target/u)).toBeDefined();
+    expect(screen.getAllByText("3 seconds")).toHaveLength(2);
+  });
+
+  it("renders TrainingPractice with null plan and guidance, and save error without retry", () => {
+    expect.hasAssertions();
+
+    // Arrange & Act
+    renderWithProviders(
+      <TrainingPractice
+        actions={createActions({ errorMessage: "Undo failed", pendingAttempt: null })}
+        decision={null}
+        finishStep={FINISH_STEP}
+        guidance={null}
+        history={[]}
+        onBreak={vi.fn<() => void>()}
+        onChangeTarget={vi.fn<() => void>()}
+        onOpenReading={vi.fn<() => void>()}
+        plan={null}
+        progression={null}
+        target={STEP_TARGET}
+        timerInterrupted={false}
+        totals={[]}
+      />,
+      { routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    // Assert
+    expect(screen.getByText(/Undo failed/u)).toBeDefined();
+    expect(screen.queryByRole("button", { name: "Retry save" })).toBeNull();
+    expect(screen.queryByLabelText("Choose target")).toBeNull();
+  });
+
+  it("renders TrainingPractice with plan prior achievement, restart suggestion, and zero timer", () => {
+    expect.hasAssertions();
+
+    // Arrange & Act
+    renderWithProviders(
+      <TrainingPractice
+        actions={createActions()}
+        decision={null}
+        finishStep={FINISH_STEP}
+        guidance={null}
+        history={[]}
+        onBreak={vi.fn<() => void>()}
+        onChangeTarget={vi.fn<() => void>()}
+        onOpenReading={vi.fn<() => void>()}
+        plan={{
+          appDefaultPracticeLimit: 5,
+          appDefaultRepetitions: 1,
+          distanceFeet: 2,
+          durationSeconds: 0,
+          easierTarget: null,
+          nextTarget: null,
+          priorAchievement: "3 seconds",
+          restartReason: "Restart at 2 seconds",
+          source: "Crate ladder",
+          stepId: "level-3/crate:step-2",
+          target: "2 feet · 0 seconds",
+          targetOptions: [],
+        }}
+        progression={null}
+        target="2 feet · 0 seconds"
+        timerInterrupted={false}
+        totals={[]}
+      />,
+      { routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    // Assert
+    expect(screen.getByText("Prior achievement: 3 seconds")).toBeDefined();
+    expect(
+      screen.getByText("Restart suggestion: 2 feet · 0 seconds. Restart at 2 seconds"),
+    ).toBeDefined();
+    expect(screen.queryByRole("button", { name: "Start timer" })).toBeNull();
+  });
 });

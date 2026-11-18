@@ -1,9 +1,10 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { TEST_BEHAVIOR_PAGE } from "@test/vitest/fixtures/curriculum";
-import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
+import { createTestingWrapper, renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
 
 import { CurriculumTrainingTestOffer, TrainingTest } from "../curriculum-training-test-views";
 
@@ -221,5 +222,30 @@ describe("curriculum training test views", () => {
 
     // Assert
     expect(screen.getByText("Latest Test: Passed — Step complete.")).toBeDefined();
+  });
+
+  it("defers wall-clock test eligibility during SSR so hydration matches", () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const { wrapper: Wrapper } = createTestingWrapper({ routePaths: ["/"] });
+
+    // Act
+    const view = renderToString(
+      <Wrapper>
+        <CurriculumTrainingTestOffer
+          decision="recommend_test"
+          onStartTest={vi.fn<(coldOverride: boolean) => void>()}
+          practiceDates={[]}
+          step={STEP_WITH_COLD}
+          testHistory={[]}
+        />
+      </Wrapper>,
+    );
+
+    // Assert
+    expect(view).toContain(
+      "You recorded Practice or a Test today. Wait until another day, or confirm that you can test the Behavior cold now.",
+    );
   });
 });

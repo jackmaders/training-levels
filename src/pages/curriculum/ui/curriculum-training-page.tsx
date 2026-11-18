@@ -333,11 +333,12 @@ function usePracticeAttemptActions(stepId: string) {
       });
     },
     errorMessage,
-    handleRetry: () => {
-      if (pendingAttempt !== null) {
-        recordMutation.mutate(pendingAttempt);
-      }
-    },
+    handleRetry:
+      pendingAttempt === null
+        ? undefined
+        : () => {
+            recordMutation.mutate(pendingAttempt);
+          },
     pendingAttempt,
     record: (outcome: Outcome, target: string) => {
       const nextAttempt = pendingAttempt ?? { attemptId: crypto.randomUUID(), outcome, target };

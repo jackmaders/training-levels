@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import type { BehaviorStep } from "@/shared/curriculum-data";
 
@@ -7,6 +7,16 @@ import { canTestToday } from "../model/test-eligibility";
 import { CurriculumContentBlocks } from "./curriculum-content-blocks";
 
 const LAST_ITEM_OFFSET = 1;
+
+function subscribeToClock() {
+  return () => {
+    // Wall-clock day check is evaluated on hydration; no live clock subscription.
+  };
+}
+
+function getServerTestEligibility() {
+  return false;
+}
 
 type Outcome = "success" | "not_yet";
 type PracticeDecision = "keep_practicing" | "recommend_test";
@@ -22,6 +32,13 @@ interface StepTestActions {
   record: (outcome: Outcome, coldOverride: boolean) => void;
   saving: boolean;
 }
+interface CurriculumTrainingTestOfferProps {
+  decision: PracticeDecision | null;
+  onStartTest: (coldOverride: boolean) => void;
+  practiceDates: readonly Date[];
+  step: BehaviorStep;
+  testHistory: readonly StepTestRecord[];
+}
 
 function CurriculumTrainingTestOffer({
   decision,
@@ -29,18 +46,14 @@ function CurriculumTrainingTestOffer({
   practiceDates,
   step,
   testHistory,
-}: {
-  decision: PracticeDecision | null;
-  onStartTest: (coldOverride: boolean) => void;
-  practiceDates: readonly Date[];
-  step: BehaviorStep;
-  testHistory: readonly StepTestRecord[];
-}) {
+}: CurriculumTrainingTestOfferProps) {
   const [coldOverride, setColdOverride] = useState(false);
-  const eligibleByDay = canTestToday([
-    ...practiceDates,
-    ...testHistory.map((test) => test.testedAt),
-  ]);
+  // Defer wall-clock eligibility until post-hydration snapshot so SSR and client hydration match.
+  const eligibleByDay = useSyncExternalStore(
+    subscribeToClock,
+    () => canTestToday([...practiceDates, ...testHistory.map((test) => test.testedAt)]),
+    getServerTestEligibility,
+  );
   const testRecommended = decision === "recommend_test" || testHistory.length > 0;
   if (!testRecommended) {
     return null;

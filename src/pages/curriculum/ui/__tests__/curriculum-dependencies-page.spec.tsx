@@ -86,7 +86,7 @@ describe("curriculum dependencies page", () => {
       defaultOptions: { queries: { retry: false, staleTime: Infinity } },
     });
     queryClient.setQueryData(curriculumSyllabusQueryOptions().queryKey, syllabus);
-    queryClient.setQueryData(stepProgressQueryOptions().queryKey, ["level-1/zen#step-1"]);
+    queryClient.setQueryData(stepProgressQueryOptions().queryKey, ["level-1/zen:step-1"]);
     queryClient.setQueryData(
       curriculumPageQueryOptions("level-1/zen").queryKey,
       TEST_BEHAVIOR_PAGE,
@@ -114,6 +114,8 @@ describe("curriculum dependencies page", () => {
 
     // Assert
     expect(screen.getByRole("heading", { name: "Zen" })).toBeDefined();
+    expect(screen.getByText("Completed")).toBeDefined();
+    expect(screen.getAllByText("Not completed")).toHaveLength(4);
   });
 
   it("handles dependency list clicks, relationship target clicks, and missing stepIds or detail", async () => {
