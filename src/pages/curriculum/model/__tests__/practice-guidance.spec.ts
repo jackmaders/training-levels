@@ -10,7 +10,7 @@ import {
 } from "../practice-guidance";
 import type { PracticeGuidanceAttempt } from "../practice-guidance.types";
 
-const LEVEL_SECTION_SLUGS = new Set(["level-1", "level-2", "level-3"]);
+const LEVEL_SECTION_SLUGS = new Set(["level-1", "level-2", "level-3", "level-4"]);
 const NUMERIC_CRITERION = /\d+ (?:second|minute|foot|feet|inch|step)/u;
 const COME_FORTY_FEET = "level-2/come:step-3";
 const COME_FORTY_FEET_CRITERION = "Dog comes 40 feet to you.";
@@ -61,7 +61,7 @@ function getNumericStepsWithoutTargets(): string[] {
 }
 
 describe("guided Practice authoring", () => {
-  it("provides source-backed setup and readiness guidance for every Level 1 to 3 Step", () => {
+  it("provides source-backed setup and readiness guidance for every Level 1 to 4 Step", () => {
     expect.assertions(3);
     const steps = getAuthoredLevelSteps();
 
@@ -286,6 +286,32 @@ describe("guided Practice authoring", () => {
     expect(retrieveFour.readinessBasis).toContain("Handler judgment");
   });
 
+  it("authors Level 4 long-duration minute ladders, the Go To Mat chute, and limited-hold rungs", () => {
+    expect.assertions(5);
+
+    const crateOne = requireGuidance(
+      "level-4/crate:step-1",
+      "Dog enters crate and remains calm for 5 minutes, you go out of sight momentarily.",
+    );
+    const goToMatFour = requireGuidance(
+      "level-4/go-to-mat:step-4",
+      "Dog goes 10 feet to a mat and stays down on it for 20 minutes while the trainer does chores.",
+    );
+    const handlingThree = requireGuidance(
+      "level-4/handling:step-3",
+      "Dog eliminates on lead within 30 seconds.",
+    );
+
+    expect([crateOne.targetOptions.length, crateOne.targetOptions[0]]).toStrictEqual([
+      5,
+      "Enter crate and remain calm for 1 minute while you step momentarily out of sight.",
+    ]);
+    expect(goToMatFour.targetAdvancement).toBe("source");
+    expect(goToMatFour.targetOptions).toHaveLength(7);
+    expect(goToMatFour.targetOptions.at(-1)).toContain("20 minutes");
+    expect(handlingThree.targetOptions.at(-1)).toContain("30 seconds");
+  });
+
   it("identifies handler judgment for Steps without a numeric ladder", () => {
     expect.assertions(3);
     const criterion = "Dog allows you to touch her head, tail, and feet.";
@@ -303,8 +329,8 @@ describe("guided Practice authoring", () => {
   it("returns no guidance for Steps outside the authored Levels or criteria", () => {
     expect.assertions(5);
 
-    // Phase 2 expands guided Practice to level-4.
-    const otherLevel = getPracticeGuidance("level-4/zen:step-1", "Dog waits for an invitation.");
+    // Phase 3 expands guided Practice to level-5.
+    const otherLevel = getPracticeGuidance("level-5/zen:step-1", "Dog waits for an invitation.");
     const unknownStep = getPracticeGuidance("level-1/zen:step-9", "Dog stays away.");
     const blankCriterion = getPracticeGuidance("level-1/zen:step-1", "   ");
 

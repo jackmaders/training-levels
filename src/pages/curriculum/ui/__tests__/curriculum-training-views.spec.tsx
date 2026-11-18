@@ -567,4 +567,145 @@ describe("curriculum training views", () => {
     ).toBeDefined();
     expect(screen.queryByRole("button", { name: "Start timer" })).toBeNull();
   });
+
+  it("renders and runs TimerControls for a guidance minute target when plan is null", async () => {
+    expect.hasAssertions();
+
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const minuteTarget = "Stay out of sight for 1 minute while she leaves the table treat alone.";
+
+    renderWithProviders(
+      <TrainingPractice
+        actions={createActions()}
+        decision={null}
+        finishStep={FINISH_STEP}
+        guidance={{
+          conditions: "Quiet room",
+          criterion: "Leave treat for 1 minute.",
+          progression: "Build out-of-sight holds",
+          readiness: "Leaves treat untouched",
+          readinessBasis: "Ladder",
+          readyForTest: false,
+          restart: "Restart at 5 seconds",
+          setup: "Coffee table and kibble",
+          source: "Level 4 Zen, Step 3",
+          success: "Leaves treat untouched",
+          suggestedLimit: "5 attempts",
+          target: minuteTarget,
+          targetAdvancement: "app default",
+          targetOptions: [minuteTarget],
+        }}
+        history={[]}
+        onBreak={vi.fn<() => void>()}
+        onChangeTarget={vi.fn<() => void>()}
+        onOpenReading={vi.fn<() => void>()}
+        plan={null}
+        progression={null}
+        target={minuteTarget}
+        timerInterrupted={false}
+        totals={[]}
+      />,
+      { routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    expect(screen.getByText(`Optional timer for ${minuteTarget}`)).toBeDefined();
+    await user.click(screen.getByRole("button", { name: "Start timer" }));
+    expect(screen.getByText("60 seconds remaining.")).toBeDefined();
+  });
+
+  it("completes TimerControls countdown for a guidance seconds target when plan is null", async () => {
+    expect.hasAssertions();
+
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const onRecord = vi.fn<(outcome: "not_yet" | "success") => void>();
+    const secondTarget = "Hold eye contact for 10 seconds.";
+
+    renderWithProviders(
+      <TrainingPractice
+        actions={{ ...createActions(), record: onRecord }}
+        decision={null}
+        finishStep={FINISH_STEP}
+        guidance={{
+          conditions: "Quiet room",
+          criterion: "Hold eye contact for 10 seconds.",
+          progression: "Build focus duration",
+          readiness: "Holds steady eye contact",
+          readinessBasis: "Ladder",
+          readyForTest: false,
+          restart: "Restart at 1 second",
+          setup: "Treats and clicker",
+          source: "Level 2 Focus, Step 4",
+          success: "Holds eye contact",
+          suggestedLimit: "5 attempts",
+          target: secondTarget,
+          targetAdvancement: "source",
+          targetOptions: [secondTarget],
+        }}
+        history={[]}
+        onBreak={vi.fn<() => void>()}
+        onChangeTarget={vi.fn<() => void>()}
+        onOpenReading={vi.fn<() => void>()}
+        plan={null}
+        progression={null}
+        target={secondTarget}
+        timerInterrupted={false}
+        totals={[]}
+      />,
+      { routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    await user.click(screen.getByRole("button", { name: "Start timer" }));
+    expect(screen.getByText("10 seconds remaining.")).toBeDefined();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_100);
+    });
+    expect(screen.getByText("Timer complete.")).toBeDefined();
+    await user.click(screen.getByRole("button", { name: "Confirm Success" }));
+    expect(onRecord).toHaveBeenCalledWith("success", secondTarget);
+  });
+
+  it("hides TimerControls for non-timed guidance targets when plan is null", () => {
+    expect.hasAssertions();
+
+    const distanceTarget = "Call her 5 feet away.";
+    renderWithProviders(
+      <TrainingPractice
+        actions={createActions()}
+        decision={null}
+        finishStep={FINISH_STEP}
+        guidance={{
+          conditions: "Quiet room",
+          criterion: "Call from 5 feet.",
+          progression: "Build distance",
+          readiness: "Comes eagerly",
+          readinessBasis: "Ladder",
+          readyForTest: false,
+          restart: "Move closer",
+          setup: "Long line and treats",
+          source: "Level 3 Come, Step 1",
+          success: "Comes cleanly",
+          suggestedLimit: "5 attempts",
+          target: distanceTarget,
+          targetAdvancement: "app default",
+          targetOptions: [distanceTarget],
+        }}
+        history={[]}
+        onBreak={vi.fn<() => void>()}
+        onChangeTarget={vi.fn<() => void>()}
+        onOpenReading={vi.fn<() => void>()}
+        plan={null}
+        progression={null}
+        target={distanceTarget}
+        timerInterrupted={false}
+        totals={[]}
+      />,
+      { routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    expect(screen.queryByRole("button", { name: "Start timer" })).toBeNull();
+  });
 });

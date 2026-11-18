@@ -1,6 +1,7 @@
 /* oxlint-disable eslint/capitalized-comments */
 import type { StepNumber } from "@/shared/curriculum-data";
 
+import { PRACTICE_GUIDANCE_LEVEL_FOUR } from "./practice-guidance-level-four";
 import { PRACTICE_GUIDANCE_LEVEL_ONE } from "./practice-guidance-level-one";
 import { PRACTICE_GUIDANCE_LEVEL_THREE } from "./practice-guidance-level-three";
 import { PRACTICE_GUIDANCE_LEVEL_TWO_FOUNDATIONS } from "./practice-guidance-level-two-foundations";
@@ -70,6 +71,18 @@ const CURRICULUM_BEHAVIOR_ORDER = [
   "level-3/go-to-mat",
   "level-3/handling",
   "level-3/communication",
+  "level-4/zen",
+  "level-4/focus",
+  "level-4/come",
+  "level-4/lazy-leash",
+  "level-4/retrieve",
+  "level-4/target",
+  "level-4/crate",
+  "level-4/relax",
+  "level-4/distance",
+  "level-4/go-to-mat",
+  "level-4/handling",
+  "level-4/communication",
 ] as const;
 const BEHAVIOR_RULES: Readonly<Record<string, BehaviorRule>> = {
   ...PRACTICE_GUIDANCE_LEVEL_ONE,
@@ -78,6 +91,7 @@ const BEHAVIOR_RULES: Readonly<Record<string, BehaviorRule>> = {
   ...PRACTICE_GUIDANCE_LEVEL_TWO_GENERALIZATION,
   ...PRACTICE_GUIDANCE_LEVEL_TWO_STAYS,
   ...PRACTICE_GUIDANCE_LEVEL_THREE,
+  ...PRACTICE_GUIDANCE_LEVEL_FOUR,
 };
 
 interface ParsedStepId {
