@@ -187,7 +187,8 @@ function getTargetIndex(
     return getRestartIndex(stepRule);
   }
   const lastIndex = targets.indexOf(lastAttempt.target);
-  return lastIndex === -1 ? 0 : Math.min(lastIndex + 1, targets.length - 1);
+  const NOT_FOUND_INDEX = -1;
+  return lastIndex === NOT_FOUND_INDEX ? 0 : Math.min(lastIndex + 1, targets.length - 1);
 }
 
 function getPracticeGuidanceCoverage(): readonly string[] {

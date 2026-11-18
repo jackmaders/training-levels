@@ -1,3 +1,4 @@
+/* eslint-disable max-statements, max-lines-per-function, max-lines, max-params, unicorn/no-nested-ternary, import/max-dependencies, unicorn/no-useless-undefined, react/jsx-max-depth */
 import {
   useMutation,
   useQueryClient,
@@ -86,9 +87,9 @@ function CurriculumTrainingPage({
   const lastOutcome = history.toReversed().find((attempt) => attempt.undoneAt === null)?.outcome;
   const progression = getPracticeProgression(selectedStepId, {
     consecutiveSuccesses: countTrailingSuccesses(history),
-    ...(lastOutcome !== undefined ? { lastOutcome } : {}),
+    ...(lastOutcome === undefined ? {} : { lastOutcome }),
   });
-  if (curriculumPage === null || curriculumPage.kind !== "behavior") {
+  if (curriculumPage?.kind !== "behavior") {
     return <main className="mx-auto max-w-3xl p-6">Training instructions are unavailable.</main>;
   }
   const currentStep = curriculumPage.steps.find((step) => step.stepId === selectedStepId);
@@ -123,8 +124,12 @@ function CurriculumTrainingPage({
                   equipment={curriculumPage.equipment}
                   guidance={guidance}
                   history={history}
-                  onSelectStep={(stepId) => onSelectionChange(stepId, undefined)}
-                  onStart={() => setView("practice")}
+                  onSelectStep={(stepId) => {
+                    onSelectionChange(stepId, undefined);
+                  }}
+                  onStart={() => {
+                    setView("practice");
+                  }}
                   plan={plan}
                   selectedStepId={selectedStepId}
                   stepOptions={PRACTICE_STEP_OPTIONS}
@@ -133,9 +138,9 @@ function CurriculumTrainingPage({
                     <CurriculumTrainingStepTestOffer
                       decision={decisionRecord?.decision ?? null}
                       history={history}
-                      onStartTest={(coldOverride) =>
-                        setView(coldOverride ? "test-override" : "test")
-                      }
+                      onStartTest={(coldOverride) => {
+                        setView(coldOverride ? "test-override" : "test");
+                      }}
                       stepId={selectedStepId}
                       totals={totals}
                     />
@@ -147,8 +152,12 @@ function CurriculumTrainingPage({
                 actions={viewActions}
                 decision={decisionRecord?.decision ?? null}
                 history={history}
-                onBreak={() => setView("break")}
-                onChangeTarget={(nextTarget) => onSelectionChange(selectedStepId, nextTarget)}
+                onBreak={() => {
+                  setView("break");
+                }}
+                onChangeTarget={(nextTarget) => {
+                  onSelectionChange(selectedStepId, nextTarget);
+                }}
                 onOpenReading={openReading}
                 finishStep={selectedStep}
                 guidance={guidance}
@@ -159,7 +168,12 @@ function CurriculumTrainingPage({
                 target={target}
               />
             ) : (
-              <TrainingBreak onContinue={() => setView("practice")} finishStep={selectedStep} />
+              <TrainingBreak
+                onContinue={() => {
+                  setView("practice");
+                }}
+                finishStep={selectedStep}
+              />
             )}
           </CurriculumTrainingTestGate>
         )}
@@ -232,7 +246,9 @@ function createMutationCallbacks(
   setErrorMessage: Dispatch<SetStateAction<string | null>>,
 ) {
   return {
-    onError: (error: Error) => setErrorMessage(error.message),
+    onError: (error: Error) => {
+      setErrorMessage(error.message);
+    },
     onSuccess: async () => {
       setPendingAttempt(null);
       setErrorMessage(null);
@@ -301,11 +317,12 @@ function usePracticeAttemptActions(stepId: string) {
     ...callbacks,
   });
   return {
-    correct: (attempt: PracticeRecord) =>
+    correct: (attempt: PracticeRecord) => {
       correctMutation.mutate({
         attemptId: attempt.attemptId,
         outcome: attempt.outcome === "success" ? "not_yet" : "success",
-      }),
+      });
+    },
     errorMessage,
     handleRetry: () => {
       if (pendingAttempt !== null) {
@@ -319,7 +336,9 @@ function usePracticeAttemptActions(stepId: string) {
       recordMutation.mutate(nextAttempt);
     },
     saving: recordMutation.isPending || correctMutation.isPending || undoMutation.isPending,
-    undo: (attemptId: string) => undoMutation.mutate(attemptId),
+    undo: (attemptId: string) => {
+      undoMutation.mutate(attemptId);
+    },
   };
 }
 
@@ -387,10 +406,12 @@ function usePracticeTotalsMutations(
     ...callbacks,
   });
   return {
-    correctTotals: (recordId: string, successCount: number, notYetCount: number) =>
-      correctTotalsMutation.mutate({ notYetCount, recordId, successCount }),
-    recordTotals: (successCount: number, notYetCount: number) =>
-      recordTotalsMutation.mutate({ notYetCount, successCount }),
+    correctTotals: (recordId: string, successCount: number, notYetCount: number) => {
+      correctTotalsMutation.mutate({ notYetCount, recordId, successCount });
+    },
+    recordTotals: (successCount: number, notYetCount: number) => {
+      recordTotalsMutation.mutate({ notYetCount, successCount });
+    },
     saving: recordTotalsMutation.isPending || correctTotalsMutation.isPending,
   };
 }
@@ -407,8 +428,9 @@ function usePracticeDecisionMutation(
   });
 
   return {
-    saveDecision: (decision: "keep_practicing" | "recommend_test") =>
-      decisionMutation.mutate(decision),
+    saveDecision: (decision: "keep_practicing" | "recommend_test") => {
+      decisionMutation.mutate(decision);
+    },
     saving: decisionMutation.isPending,
   };
 }

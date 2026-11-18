@@ -11,28 +11,28 @@ const PRACTICE_STEP_ID = "level-1/zen:step-1";
 
 function practiceHistoryQueryOptions(stepId = PRACTICE_STEP_ID) {
   return queryOptions({
-    queryFn: () => getPracticeHistoryFn({ data: { stepId } }),
+    queryFn: async () => await getPracticeHistoryFn({ data: { stepId } }),
     queryKey: ["training", "practice-history", stepId],
   });
 }
 
 function practiceTotalsQueryOptions(stepId = PRACTICE_STEP_ID) {
   return queryOptions({
-    queryFn: () => getPracticeTotalsFn({ data: { stepId } }),
+    queryFn: async () => await getPracticeTotalsFn({ data: { stepId } }),
     queryKey: ["training", "practice-totals", stepId],
   });
 }
 
 function practiceStepDecisionQueryOptions(stepId = PRACTICE_STEP_ID) {
   return queryOptions({
-    queryFn: () => getPracticeStepDecisionFn({ data: { stepId } }),
+    queryFn: async () => await getPracticeStepDecisionFn({ data: { stepId } }),
     queryKey: ["training", "practice-step-decision", stepId],
   });
 }
 
 function stepTestHistoryQueryOptions(stepId = PRACTICE_STEP_ID) {
   return queryOptions({
-    queryFn: () => getStepTestHistoryFn({ data: { stepId } }),
+    queryFn: async () => await getStepTestHistoryFn({ data: { stepId } }),
     queryKey: ["training", "step-test-history", stepId],
   });
 }

@@ -14,6 +14,7 @@ class DependenciesPage {
     this.page = page;
     this.dependencyList = page.getByRole("region", { name: "Dependency list" });
     this.levelScroller = page.getByRole("region", { name: "Curriculum dependency graph" });
+    // eslint-disable-next-line playwright/no-raw-locators
     this.relationshipConnectors = this.levelScroller.locator('svg path[fill="none"]');
     this.selectedDetails = page.getByRole("region", { name: "Selected behavior" });
     this.levelColumns = page.getByRole("region", { name: /^Level [1-4]$/u });

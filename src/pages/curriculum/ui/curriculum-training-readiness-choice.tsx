@@ -21,7 +21,9 @@ function CurriculumTrainingReadinessChoice({
           aria-pressed={decision === "keep_practicing"}
           className="min-h-11 rounded-md border px-3"
           type="button"
-          onClick={() => handleSave("keep_practicing")}
+          onClick={() => {
+            handleSave("keep_practicing");
+          }}
         >
           Keep practicing
         </button>
@@ -29,7 +31,9 @@ function CurriculumTrainingReadinessChoice({
           aria-pressed={decision === "recommend_test"}
           className="min-h-11 rounded-md border px-3"
           type="button"
-          onClick={() => handleSave("recommend_test")}
+          onClick={() => {
+            handleSave("recommend_test");
+          }}
         >
           Recommend a Test next time
         </button>

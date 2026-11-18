@@ -67,8 +67,8 @@ class HomePage {
     }, theme);
   }
 
-  public horizontalOverflow() {
-    return this.page.evaluate(() => {
+  public async horizontalOverflow() {
+    return await this.page.evaluate(() => {
       const documentWidth = document.documentElement.scrollWidth;
       const bodyWidth = document.body.scrollWidth;
       const viewportWidth = document.documentElement.clientWidth;
@@ -84,8 +84,8 @@ class HomePage {
     await this.page.keyboard.press("Enter");
   }
 
-  public isSkipLinkTopmost() {
-    return this.skipLink.evaluate((element, centerDivisor) => {
+  public async isSkipLinkTopmost() {
+    return await this.skipLink.evaluate((element, centerDivisor) => {
       const rect = element.getBoundingClientRect();
       const centerX = rect.left + rect.width / centerDivisor;
       const centerY = rect.top + rect.height / centerDivisor;
@@ -129,16 +129,15 @@ class HomePage {
     await this.page.keyboard.press("Enter");
   }
 
-  private async focusControlByKeyboard(control: Locator) {
-    for (let attempt = 0; attempt < MAX_KEYBOARD_TABS_TO_FOCUS_CONTROL; attempt += 1) {
-      if (await control.evaluate((element) => element === document.activeElement)) {
-        return;
-      }
-
-      await this.page.keyboard.press("Tab");
+  private async focusControlByKeyboard(control: Locator, attempt = 0): Promise<void> {
+    if (attempt >= MAX_KEYBOARD_TABS_TO_FOCUS_CONTROL) {
+      throw new Error("Control was not reachable by keyboard tab navigation");
     }
-
-    throw new Error("Control was not reachable by keyboard tab navigation");
+    if (await control.evaluate((element) => element === document.activeElement)) {
+      return;
+    }
+    await this.page.keyboard.press("Tab");
+    await this.focusControlByKeyboard(control, attempt + 1);
   }
 
   public async signIn({ email, password }: { email: string; password: string }) {

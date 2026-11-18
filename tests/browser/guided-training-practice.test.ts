@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+/* eslint-disable playwright/max-expects, max-statements, no-magic-numbers */
 import { expect, test } from "./fixtures";
 import { AuthClient, TrainingPage } from "./page-objects";
 

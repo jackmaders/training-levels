@@ -69,8 +69,8 @@ test("mobile light curriculum drawer fits the viewport without overflow", async 
   // Arrange and open the mobile light drawer.
   const curriculumPage = await openMobileDrawer(page, baseURL, MOBILE_LIGHT);
   // Assert settled panel bounds and page overflow.
-  await expect.poll(() => curriculumPage.mobileDrawerFitsViewport()).toBe(true);
-  await expect.poll(() => curriculumPage.horizontalOverflow()).toBeLessThanOrEqual(0);
+  await expect.poll(async () => await curriculumPage.mobileDrawerFitsViewport()).toBe(true);
+  await expect.poll(async () => await curriculumPage.horizontalOverflow()).toBeLessThanOrEqual(0);
 });
 
 test("mobile dark curriculum drawer fits the viewport without overflow", async ({
@@ -80,8 +80,8 @@ test("mobile dark curriculum drawer fits the viewport without overflow", async (
   // Arrange and open the mobile dark drawer.
   const curriculumPage = await openMobileDrawer(page, baseURL, MOBILE_DARK);
   // Assert settled panel bounds and page overflow.
-  await expect.poll(() => curriculumPage.mobileDrawerFitsViewport()).toBe(true);
-  await expect.poll(() => curriculumPage.horizontalOverflow()).toBeLessThanOrEqual(0);
+  await expect.poll(async () => await curriculumPage.mobileDrawerFitsViewport()).toBe(true);
+  await expect.poll(async () => await curriculumPage.horizontalOverflow()).toBeLessThanOrEqual(0);
 });
 
 async function exerciseResponsiveLayout(

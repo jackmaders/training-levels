@@ -15,25 +15,25 @@ export const practiceHistoryInputSchema = z.object({
 });
 
 export const recordPracticeAttemptInputSchema = z.object({
-  attemptId: z.string().uuid(),
+  attemptId: z.uuid(),
   outcome: z.enum(["success", "not_yet"]),
   stepId: z.string().trim().min(1),
   target: z.string().trim().min(1).max(TARGET_MAX_LENGTH),
 });
 
 export const correctPracticeAttemptInputSchema = z.object({
-  attemptId: z.string().uuid(),
+  attemptId: z.uuid(),
   outcome: z.enum(["success", "not_yet"]),
 });
 
 export const undoPracticeAttemptInputSchema = z.object({
-  attemptId: z.string().uuid(),
+  attemptId: z.uuid(),
 });
 
 export const recordPracticeTotalsInputSchema = z
   .object({
     notYetCount: z.number().int().min(0).max(TOTAL_COUNT_MAX),
-    recordId: z.string().uuid(),
+    recordId: z.uuid(),
     stepId: z.enum(TRAINING_STEP_IDS),
     successCount: z.number().int().min(0).max(TOTAL_COUNT_MAX),
     target: z.string().trim().min(1).max(TARGET_MAX_LENGTH),
@@ -45,7 +45,7 @@ export const recordPracticeTotalsInputSchema = z
 export const correctPracticeTotalsInputSchema = z
   .object({
     notYetCount: z.number().int().min(0).max(TOTAL_COUNT_MAX),
-    recordId: z.string().uuid(),
+    recordId: z.uuid(),
     successCount: z.number().int().min(0).max(TOTAL_COUNT_MAX),
   })
   .refine(({ notYetCount, successCount }) => successCount + notYetCount > 0, {

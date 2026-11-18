@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type SyntheticEvent } from "react";
 
 interface PracticeTotalRecord {
   notYetCount: number;
@@ -52,7 +52,7 @@ function TotalsForm({
   const [notYetCount, setNotYetCount] = useState("0");
   const total = Number(successCount) + Number(notYetCount);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (total > 0) {
       handleSave(Number(successCount), Number(notYetCount));
@@ -89,7 +89,7 @@ function TotalRecord({
   const [notYetCount, setNotYetCount] = useState(String(record.notYetCount));
   const total = Number(successCount) + Number(notYetCount);
 
-  function handleCorrect(event: FormEvent<HTMLFormElement>) {
+  function handleCorrect(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     actions.correctTotals(record.recordId, Number(successCount), Number(notYetCount));
   }
@@ -130,7 +130,9 @@ function TotalsCount({
         min="0"
         type="number"
         value={value}
-        onChange={(event) => onChange(event.currentTarget.value)}
+        onChange={(event) => {
+          onChange(event.currentTarget.value);
+        }}
       />
     </label>
   );

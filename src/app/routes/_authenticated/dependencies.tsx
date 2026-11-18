@@ -9,8 +9,8 @@ import {
 const Route = createFileRoute("/_authenticated/dependencies")({
   loader: async ({ context: { queryClient } }) => {
     await Promise.all([
-      queryClient.ensureQueryData(curriculumSyllabusQueryOptions()),
-      queryClient.ensureQueryData(stepProgressQueryOptions()),
+      queryClient.query(curriculumSyllabusQueryOptions()),
+      queryClient.query(stepProgressQueryOptions()),
     ]);
   },
   component: CurriculumDependenciesPage,

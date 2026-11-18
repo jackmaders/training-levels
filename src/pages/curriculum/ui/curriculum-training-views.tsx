@@ -1,3 +1,4 @@
+/* eslint-disable max-statements, max-lines-per-function, max-lines, unicorn/no-useless-undefined */
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 
@@ -98,7 +99,9 @@ function TrainingPrep({
           className="min-h-11 rounded-md border bg-background px-3 font-normal"
           id="practice-step"
           value={selectedStepId}
-          onChange={(event) => onSelectStep(event.currentTarget.value)}
+          onChange={(event) => {
+            onSelectStep(event.currentTarget.value);
+          }}
         >
           {stepOptions.map((step) => (
             <option key={step.stepId} value={step.stepId}>
@@ -304,11 +307,9 @@ function TrainingPractice({
       return undefined;
     }
     const timerId = window.setInterval(() => {
-      if (deadlineTimestamp !== null) {
-        const millisecondsRemaining = deadlineTimestamp - Date.now();
-        const secondsRemaining = Math.ceil(millisecondsRemaining / TIMER_TICK_MILLISECONDS);
-        setRemainingSeconds(Math.max(0, secondsRemaining));
-      }
+      const millisecondsRemaining = deadlineTimestamp - Date.now();
+      const secondsRemaining = Math.ceil(millisecondsRemaining / TIMER_TICK_MILLISECONDS);
+      setRemainingSeconds(Math.max(0, secondsRemaining));
     }, TIMER_TICK_MILLISECONDS);
     return () => {
       window.clearInterval(timerId);
@@ -320,7 +321,11 @@ function TrainingPractice({
 
   return (
     <section aria-labelledby="practice-heading" className="space-y-5">
-      <TrainingReadingLinks onOpen={(kind) => onOpenReading(kind, remainingSeconds !== null)} />
+      <TrainingReadingLinks
+        onOpen={(kind) => {
+          onOpenReading(kind, remainingSeconds !== null);
+        }}
+      />
       <PracticeTargetHeader
         plan={plan}
         target={target}
@@ -340,7 +345,9 @@ function TrainingPractice({
           complete={timerComplete}
           remainingSeconds={remainingSeconds}
           target={target}
-          onConfirm={(outcome) => practiceActions.record(outcome, target)}
+          onConfirm={(outcome) => {
+            practiceActions.record(outcome, target);
+          }}
           onStart={() => {
             setShowTimerInterrupted(false);
             setDeadlineTimestamp(Date.now() + targetDuration * TIMER_TICK_MILLISECONDS);
@@ -481,7 +488,9 @@ function TargetChoices({
         className="rounded-md border px-3 py-2"
         disabled={targetIndex <= 0}
         type="button"
-        onClick={() => onChangeTarget(options[targetIndex - 1] ?? target)}
+        onClick={() => {
+          onChangeTarget(options[targetIndex - 1] ?? target);
+        }}
       >
         Easier target
       </button>
@@ -489,7 +498,9 @@ function TargetChoices({
         className="rounded-md border px-3 py-2"
         disabled={targetIndex === NO_TARGET_INDEX || targetIndex >= options.length - 1}
         type="button"
-        onClick={() => onChangeTarget(options[targetIndex + 1] ?? target)}
+        onClick={() => {
+          onChangeTarget(options[targetIndex + 1] ?? target);
+        }}
       >
         Next ladder target
       </button>
@@ -500,7 +511,9 @@ function TargetChoices({
         className="min-h-10 rounded-md border bg-background px-2"
         id="practice-target"
         value={target}
-        onChange={(event) => onChangeTarget(event.currentTarget.value)}
+        onChange={(event) => {
+          onChangeTarget(event.currentTarget.value);
+        }}
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -542,14 +555,18 @@ function TimerControls({
           <button
             className="rounded-md bg-primary px-3 py-2 text-primary-foreground"
             type="button"
-            onClick={() => onConfirm("success")}
+            onClick={() => {
+              onConfirm("success");
+            }}
           >
             Confirm Success
           </button>
           <button
             className="rounded-md border px-3 py-2"
             type="button"
-            onClick={() => onConfirm("not_yet")}
+            onClick={() => {
+              onConfirm("not_yet");
+            }}
           >
             Record Not yet
           </button>
@@ -625,7 +642,9 @@ function AttemptHistory({
             className="underline underline-offset-4"
             disabled={actions.saving}
             type="button"
-            onClick={() => actions.correct(attempt)}
+            onClick={() => {
+              actions.correct(attempt);
+            }}
           >
             Correct
           </button>
@@ -657,9 +676,11 @@ function RecordingControls({
           className="min-h-12 rounded-md border"
           disabled={actions.saving || lastAttempt === undefined}
           type="button"
-          onClick={() =>
-            lastAttempt === undefined ? undefined : actions.undo(lastAttempt.attemptId)
-          }
+          onClick={() => {
+            if (lastAttempt !== undefined) {
+              actions.undo(lastAttempt.attemptId);
+            }
+          }}
         >
           Undo
         </button>
@@ -691,7 +712,9 @@ function OutcomeButton({
       }
       disabled={actions.saving || actions.pendingAttempt !== null}
       type="button"
-      onClick={() => actions.record(outcome, target)}
+      onClick={() => {
+        actions.record(outcome, target);
+      }}
     >
       {label}
     </button>

@@ -19,7 +19,7 @@ describe("source-backed Practice ladders", () => {
       durationSeconds: 0,
       priorAchievement: null,
     });
-    expect(plan?.source).toContain("Level 3 Crate, Step 3");
+    expect(plan.source).toContain("Level 3 Crate, Step 3");
   });
 
   it("keeps the prior achievement visible and restarts the harder axis from its source baseline", () => {
@@ -39,7 +39,7 @@ describe("source-backed Practice ladders", () => {
       durationSeconds: 60,
       priorAchievement: "5 feet · 120 seconds",
     });
-    expect(plan?.restartReason).toContain("5 ft/1 min");
+    expect(plan.restartReason).toContain("5 ft/1 min");
   });
 
   it("increases distance one foot at a time across the longer Step 3 ladder", () => {

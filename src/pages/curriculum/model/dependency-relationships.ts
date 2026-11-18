@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 export type DependencyKind = "co-practice" | "helpful background" | "prerequisite" | "reading";
 
 export interface DependencyRelationship {
@@ -365,16 +366,16 @@ function getPrerequisiteChain(pageSlug: string): string[] {
 
   while (pending.length > 0) {
     const current = pending.pop();
-    if (current === undefined) {
-      continue;
-    }
-
-    for (const relationship of MAIN_QUEST_RELATIONSHIPS) {
-      if (relationship.sourcePageSlug === current && relationship.kind === "prerequisite") {
-        if (!chain.has(relationship.targetPageSlug)) {
-          chain.add(relationship.targetPageSlug);
-          pending.push(relationship.targetPageSlug);
-        }
+    if (current !== undefined) {
+      const nextTargets = MAIN_QUEST_RELATIONSHIPS.filter(
+        (relationship) =>
+          relationship.sourcePageSlug === current &&
+          relationship.kind === "prerequisite" &&
+          !chain.has(relationship.targetPageSlug),
+      ).map((relationship) => relationship.targetPageSlug);
+      for (const target of nextTargets) {
+        chain.add(target);
+        pending.push(target);
       }
     }
   }

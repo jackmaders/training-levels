@@ -37,15 +37,15 @@ class TheoryAppendicesPage {
     await waitForHydration(this.page);
   }
 
-  public async focusLinkByKeyboard(link: Locator) {
-    for (let attempt = 0; attempt < MAX_KEYBOARD_TABS_TO_FOCUS_ARTICLE_LINK; attempt += 1) {
-      await this.page.keyboard.press("Tab");
-      if (await link.evaluate((element) => element === document.activeElement)) {
-        return;
-      }
+  public async focusLinkByKeyboard(link: Locator, attempt = 0): Promise<void> {
+    if (attempt >= MAX_KEYBOARD_TABS_TO_FOCUS_ARTICLE_LINK) {
+      throw new Error("Link was not reachable by keyboard tab navigation");
     }
-
-    throw new Error("Link was not reachable by keyboard tab navigation");
+    await this.page.keyboard.press("Tab");
+    if (await link.evaluate((element) => element === document.activeElement)) {
+      return;
+    }
+    await this.focusLinkByKeyboard(link, attempt + 1);
   }
 
   /** Navigates via History API so TanStack Router handles 404s without a document 404 console error. */

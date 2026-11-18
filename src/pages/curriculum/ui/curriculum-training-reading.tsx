@@ -38,13 +38,21 @@ interface TrainingReadingControls {
 function TrainingReadingGate({
   children,
   ...content
-}: TrainingReadingContent & { children: (controls: TrainingReadingControls) => ReactNode }) {
+}: TrainingReadingContent & {
+  children: (controls: TrainingReadingControls) => ReactNode;
+}): ReactNode {
   const [readingKind, setReadingKind] = useState<TrainingReadingKind | null>(null);
   const [timerInterrupted, setTimerInterrupted] = useState(false);
 
   if (readingKind !== null) {
     return (
-      <TrainingReading {...content} kind={readingKind} onReturn={() => setReadingKind(null)} />
+      <TrainingReading
+        {...content}
+        kind={readingKind}
+        onReturn={() => {
+          setReadingKind(null);
+        }}
+      />
     );
   }
 
@@ -66,7 +74,9 @@ function TrainingReadingLinks({ onOpen }: { onOpen: (kind: TrainingReadingKind) 
           className="min-h-11 rounded-md border px-4 py-2"
           key={kind}
           type="button"
-          onClick={() => onOpen(kind)}
+          onClick={() => {
+            onOpen(kind);
+          }}
         >
           {READING_TITLES[kind]}
         </button>

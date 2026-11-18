@@ -20,12 +20,13 @@ describe("curriculum dependency relationships", () => {
     // Act
     const valid = validateDependencyRelationships(CURRICULUM_PAGE_SLUGS);
     const goToMatPrerequisites = getPrerequisiteChain("level-2/go-to-mat");
-    const goToMatRelaxGates = MAIN_QUEST_RELATIONSHIPS.filter(
-      ({ kind, sourcePageSlug, targetPageSlug }) =>
-        kind === "prerequisite" &&
-        ["level-2/go-to-mat", "level-2/relax"].includes(sourcePageSlug) &&
+    const goToMatRelaxGates = MAIN_QUEST_RELATIONSHIPS.filter(({ kind }) => kind === "prerequisite")
+      .filter(({ sourcePageSlug }) =>
+        ["level-2/go-to-mat", "level-2/relax"].includes(sourcePageSlug),
+      )
+      .filter(({ targetPageSlug }) =>
         ["level-2/go-to-mat", "level-2/relax"].includes(targetPageSlug),
-    );
+      );
 
     // Assert
     expect(valid).toBe(true);
