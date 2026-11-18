@@ -32,7 +32,10 @@ function useDependenciesPageState() {
   const [selectedPageSlug, setSelectedPageSlug] = useState(INITIAL_BEHAVIOR);
   const { data: syllabus } = useSuspenseQuery(curriculumSyllabusQueryOptions());
   const { data: completedStepIds } = useSuspenseQuery(stepProgressQueryOptions());
-  const overviewQuery = useQuery(trainingOverviewQueryOptions());
+  const overviewQuery = useQuery({
+    ...trainingOverviewQueryOptions(),
+    staleTime: 1000,
+  });
   const now = useHydratedNow();
   const { behaviors, sections, selected } = selectSyllabusBehaviors(syllabus, selectedPageSlug);
   const { data: detail } = useSuspenseQuery(curriculumPageQueryOptions(selected.pageSlug));

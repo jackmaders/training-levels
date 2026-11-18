@@ -23,10 +23,14 @@ function useBehaviorArticleState({
   syllabus: CurriculumSyllabus;
 }) {
   const { openAnchors, setAnchorOpen } = useStepAnchors(activeAnchor);
-  const { data: generalization = EMPTY_PAGE_GENERALIZATION } = useQuery(
-    pageGeneralizationQueryOptions(page.pageSlug),
-  );
-  const overviewQuery = useQuery(trainingOverviewQueryOptions());
+  const { data: generalization = EMPTY_PAGE_GENERALIZATION } = useQuery({
+    ...pageGeneralizationQueryOptions(page.pageSlug),
+    staleTime: 1000,
+  });
+  const overviewQuery = useQuery({
+    ...trainingOverviewQueryOptions(),
+    staleTime: 1000,
+  });
   const now = useHydratedNow();
   const currentSection = syllabus.sections.find(
     (section) => section.sectionSlug === page.sectionSlug,

@@ -1,5 +1,6 @@
 export * from "./about-page";
 export * from "./auth-client";
+export * from "./components/curriculum-training-links";
 export * from "./components/training-reading";
 export * from "./curriculum-level-page";
 export * from "./dependencies-page";

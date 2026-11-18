@@ -1012,6 +1012,44 @@ describe("curriculum training page", () => {
     expect(screen.getByText(/Practice · Level 2 Zen · Step 1/u)).toBeDefined();
   });
 
+  it("renders the Cold Test offer in Prep when selectedMode is test even if recommendation mode is practice", async () => {
+    expect.hasAssertions();
+
+    const user = userEvent.setup();
+    const stepId = "level-2/zen:step-1";
+    const queryClient = createTrainingQueryClient({ stepId });
+    queryClient.setQueryData(
+      curriculumPageQueryOptions("level-2/zen").queryKey,
+      createBehaviorPageFixture({
+        levelNumber: 2,
+        pageSlug: "level-2/zen",
+        steps: [createBehaviorStepFixture({ stepId, stepNumber: 1 })],
+        title: "Zen",
+      }),
+    );
+
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedMode="test"
+        selectedStepId={stepId}
+        selectedTarget={undefined}
+        onSelectionChange={vi.fn<() => void>()}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    expect(screen.getByRole("heading", { name: "Test this Step cold" })).toBeDefined();
+    const startTestButton = screen.getByRole("button", { name: "Start Test" });
+    expect(startTestButton).toHaveProperty("disabled", true);
+
+    await user.click(
+      screen.getByRole("checkbox", {
+        name: "Train this Level 2 Behavior for this Training only (keeps Level 1 as your current Level goal)",
+      }),
+    );
+    expect(startTestButton).toHaveProperty("disabled", false);
+  });
+
   it("renders unavailable message when resolved stepId is not in main quest options", () => {
     expect.hasAssertions();
 

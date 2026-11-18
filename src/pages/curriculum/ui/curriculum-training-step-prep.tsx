@@ -92,6 +92,21 @@ function StepRecommendationCard({
   );
 }
 
+function resolvePrepTestOfferMode({
+  activeStepId,
+  preferredMode,
+  recommendation,
+}: {
+  activeStepId: string;
+  preferredMode: TrainingRecommendationMode | undefined;
+  recommendation: TrainingRecommendation;
+}): TrainingRecommendationMode | undefined {
+  if (preferredMode === "test") {
+    return "test";
+  }
+  return recommendation.stepId === activeStepId ? recommendation.mode : undefined;
+}
+
 function TrainingStepPrepView(props: TrainingStepPrepViewProps) {
   const [laterLevelOverrideConfirmed, setLaterLevelOverrideConfirmed] = useState(false);
   const inspection = resolveStepSelectionInspection(props);
@@ -123,11 +138,11 @@ function TrainingStepPrepView(props: TrainingStepPrepViewProps) {
             blockedByOverride={laterLevelBlocked}
             decision={props.decision}
             history={props.history}
-            recommendedMode={
-              props.recommendation.stepId === props.activeStep.stepId
-                ? props.recommendation.mode
-                : undefined
-            }
+            recommendedMode={resolvePrepTestOfferMode({
+              activeStepId: props.activeStep.stepId,
+              preferredMode: props.preferredMode,
+              recommendation: props.recommendation,
+            })}
             stepId={props.activeStep.stepId}
             totals={props.totals}
             onStartTest={props.onStartTest}
