@@ -104,6 +104,42 @@ describe("practice totals and readiness decisions", () => {
     expect(parsedTotals.success).toBe(false);
     expect(parsedDecision.success).toBe(true);
   });
+
+  it("accepts totals and readiness choices for guided Level 2 Steps", () => {
+    expect.assertions(2);
+    // Arrange
+    const totals = {
+      notYetCount: 1,
+      recordId: "018f47ad-9d72-7a31-a50b-a88888888888",
+      stepId: "level-2/come:step-3",
+      successCount: 2,
+      target: "Call her from 10 feet away, without your real Come cue.",
+    };
+
+    // Act
+    const parsedTotals = recordPracticeTotalsInputSchema.safeParse(totals);
+    const parsedDecision = savePracticeStepDecisionInputSchema.safeParse({
+      decision: "recommend_test",
+      stepId: "level-2/handling:step-1",
+    });
+
+    // Assert
+    expect(parsedTotals.success).toBe(true);
+    expect(parsedDecision.success).toBe(true);
+  });
+
+  it("rejects readiness choices for Steps without guided Practice", () => {
+    expect.assertions(1);
+
+    // Act
+    const parsedDecision = savePracticeStepDecisionInputSchema.safeParse({
+      decision: "recommend_test",
+      stepId: "level-9/unknown:step-1",
+    });
+
+    // Assert
+    expect(parsedDecision.success).toBe(false);
+  });
 });
 
 describe("step Test inputs", () => {

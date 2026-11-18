@@ -1,3 +1,5 @@
+import { getPracticeStepOptions } from "./practice-guidance";
+
 type AttemptResult = "success" | "not_yet";
 
 interface LadderAttempt {
@@ -71,7 +73,7 @@ const NINETY_SECONDS = 90;
 const ONE_HUNDRED_TWENTY_SECONDS = 120;
 const TARGET_INDEX_INCREMENT = 1;
 const PRACTICE_STEP_OPTIONS = [
-  { label: "Level 1 Zen · Step 1", pageSlug: "level-1/zen", stepId: "level-1/zen:step-1" },
+  ...getPracticeStepOptions(),
   { label: "Level 3 Crate · Step 2", pageSlug: "level-3/crate", stepId: CRATE_STEP_2_ID },
   { label: "Level 3 Crate · Step 3", pageSlug: "level-3/crate", stepId: CRATE_STEP_3_ID },
 ] as const;
@@ -126,6 +128,10 @@ function getPracticePlan(stepId: string, attempts: readonly LadderAttempt[]): Pr
   }
 
   return createPlan({ ...getLadderPosition(rule, attempts), rule, stepId });
+}
+
+function hasPracticeLadder(stepId: string): boolean {
+  return LADDER_RULES[stepId] !== undefined;
 }
 
 function getLadderPosition(rule: LadderRule, attempts: readonly LadderAttempt[]): LadderPosition {
@@ -263,5 +269,5 @@ function formatTarget(distanceFeet: number, durationSeconds: number): string {
   return `${String(distanceFeet)} feet · ${String(durationSeconds)} seconds`;
 }
 
-export { getPracticePlan, PRACTICE_STEP_OPTIONS, recordLadderOutcome };
+export { getPracticePlan, hasPracticeLadder, PRACTICE_STEP_OPTIONS, recordLadderOutcome };
 export type { AttemptResult, LadderAttempt, PracticePlan };

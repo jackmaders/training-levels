@@ -21,8 +21,14 @@ import {
   savePracticeStepDecisionFn,
   undoPracticeAttemptFn,
 } from "../api/training.functions";
-import { getPracticePlan, PRACTICE_STEP_OPTIONS } from "../model/practice-ladders";
-import { getPracticeProgression } from "../model/practice-progression";
+import { getPracticeGuidance, type PracticeGuidance } from "../model/practice-guidance";
+import {
+  getPracticePlan,
+  hasPracticeLadder,
+  PRACTICE_STEP_OPTIONS,
+  type PracticePlan,
+} from "../model/practice-ladders";
+import { getPracticeProgression, type PracticeProgression } from "../model/practice-progression";
 import { TrainingReadingGate, TrainingReadingLinks } from "./curriculum-training-reading";
 import {
   CurriculumTrainingStepTestOffer,
@@ -67,28 +73,32 @@ function CurriculumTrainingPage({
   const viewActions: PracticeActions = {
     ...actions,
     record: (outcome, currentTarget) => {
-      onSelectionChange(selectedStepId, undefined);
+      onSelectionChange(selectedStepId);
       actions.record(outcome, currentTarget);
     },
   };
-  const plan =
-    selectedStepId === PRACTICE_STEP_OPTIONS[0].stepId
-      ? null
-      : getPracticePlan(
-          selectedStepId,
-          history.filter((attempt) => attempt.undoneAt === null),
-        );
+  const plan = hasPracticeLadder(selectedStepId)
+    ? getPracticePlan(
+        selectedStepId,
+        history.filter((attempt) => attempt.undoneAt === null),
+      )
+    : null;
   const progression = getPracticeProgression(selectedStepId, {
     consecutiveSuccesses: countTrailingSuccesses(history),
     lastOutcome: history.toReversed().find((attempt) => attempt.undoneAt === null)?.outcome,
   });
-  const target =
-    plan?.targetOptions.some((option) => option.label === selectedTarget) === true
-      ? (selectedTarget ?? STEP_TARGET)
-      : (plan?.target ?? STEP_TARGET);
   if (curriculumPage === null || curriculumPage.kind !== "behavior") {
     return <main className="mx-auto max-w-3xl p-6">Training instructions are unavailable.</main>;
   }
+  const currentStep = curriculumPage.steps.find((step) => step.stepId === selectedStepId);
+  const guidance = getPracticeGuidance(
+    selectedStepId,
+    currentStep?.heading ?? selectedStep.label,
+    history
+      .filter((attempt) => attempt.undoneAt === null)
+      .map((attempt) => ({ outcome: attempt.outcome, target: attempt.target })),
+  );
+  const target = selectPracticeTarget({ guidance, plan, progression, selectedTarget });
 
   return (
     <main className="mx-auto max-w-3xl space-y-8 px-4 pt-8 pb-36 sm:px-6">
@@ -110,6 +120,7 @@ function CurriculumTrainingPage({
                 <TrainingPrep
                   decision={decisionRecord?.decision ?? null}
                   equipment={curriculumPage.equipment}
+                  guidance={guidance}
                   history={history}
                   onSelectStep={(stepId) => onSelectionChange(stepId, undefined)}
                   onStart={() => setView("practice")}
@@ -139,6 +150,7 @@ function CurriculumTrainingPage({
                 onChangeTarget={(nextTarget) => onSelectionChange(selectedStepId, nextTarget)}
                 onOpenReading={openReading}
                 finishStep={selectedStep}
+                guidance={guidance}
                 plan={plan}
                 progression={progression}
                 timerInterrupted={timerInterrupted}
@@ -161,6 +173,31 @@ function isTestView(view: TrainingView): view is "test" | "test-override" {
 
 function getHeadingMode(view: TrainingView): "Practice" | "Test" {
   return isTestView(view) ? "Test" : "Practice";
+}
+
+function selectPracticeTarget({
+  guidance,
+  plan,
+  progression,
+  selectedTarget,
+}: {
+  guidance: PracticeGuidance | null;
+  plan: PracticePlan | null;
+  progression: PracticeProgression | null;
+  selectedTarget: string | undefined;
+}): string {
+  const options =
+    plan?.targetOptions.map((option) => option.label) ?? guidance?.targetOptions ?? [];
+  if (selectedTarget !== undefined && options.includes(selectedTarget)) {
+    return selectedTarget;
+  }
+  if (plan !== null) {
+    return plan.target;
+  }
+  if (guidance !== null && guidance.targetOptions.length > 0) {
+    return guidance.target;
+  }
+  return progression?.nextTarget ?? guidance?.target ?? STEP_TARGET;
 }
 
 function countTrailingSuccesses(history: readonly PracticeRecord[]): number {

@@ -13,12 +13,12 @@ describe("source-backed Practice ladders", () => {
 
     // Assert
     expect(plan).toMatchObject({
-      durationSeconds: 0,
+      appDefaultPracticeLimit: 5,
+      appDefaultRepetitions: 1,
       distanceFeet: 5,
+      durationSeconds: 0,
       priorAchievement: null,
       source: expect.stringContaining("Level 3 Crate, Step 3"),
-      appDefaultRepetitions: 1,
-      appDefaultPracticeLimit: 5,
     });
   });
 
@@ -35,8 +35,8 @@ describe("source-backed Practice ladders", () => {
 
     // Assert
     expect(plan).toMatchObject({
-      durationSeconds: 60,
       distanceFeet: 5,
+      durationSeconds: 60,
       priorAchievement: "5 feet · 120 seconds",
       restartReason: expect.stringContaining("5 ft/1 min"),
     });
