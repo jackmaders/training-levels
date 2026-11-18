@@ -1,5 +1,3 @@
-import { Link } from "@tanstack/react-router";
-
 import type {
   BehaviorCurriculumPage,
   BehaviorStepSummary,
@@ -10,15 +8,21 @@ import type {
 import { Progress, ProgressLabel, ProgressValue } from "@/shared/ui/shadcn/progress";
 
 import { getBehaviorProgress, stripStepPrefixFromNodes } from "../model/curriculum-levels";
+import type { CurriculumBehaviorTrainingState } from "../model/curriculum-training-state";
 import { CurriculumContentBlocks, InlineNodes } from "./curriculum-content-blocks";
 import { CurriculumLevelReadiness } from "./curriculum-level-readiness";
+import { CurriculumBehaviorTrainingSummary } from "./curriculum-training-status-summary";
 
 function BehaviorHeader({
+  behaviorState,
   completedStepIds,
+  currentLevelNumber,
   page,
   section,
 }: {
+  behaviorState: CurriculumBehaviorTrainingState | undefined;
   completedStepIds: ReadonlySet<string>;
+  currentLevelNumber: number;
   page: BehaviorCurriculumPage;
   section: SyllabusSection | undefined;
 }) {
@@ -35,15 +39,10 @@ function BehaviorHeader({
         </ProgressValue>
       </Progress>
       <CurriculumLevelReadiness completedStepIds={completedStepIds} section={section} />
-      {page.pageSlug === "level-1/zen" ? (
-        <Link
-          className="inline-flex rounded-md bg-primary px-4 py-2 text-primary-foreground"
-          search={{ stepId: "level-1/zen:step-1" }}
-          to="/training"
-        >
-          Practice Step 1
-        </Link>
-      ) : null}
+      <CurriculumBehaviorTrainingSummary
+        behaviorState={behaviorState}
+        currentLevelNumber={currentLevelNumber}
+      />
     </header>
   );
 }

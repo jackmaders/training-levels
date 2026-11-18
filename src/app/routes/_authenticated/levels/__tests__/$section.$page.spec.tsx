@@ -9,6 +9,7 @@ import {
   curriculumSyllabusQueryOptions,
   pageGeneralizationQueryOptions,
   stepProgressQueryOptions,
+  trainingOverviewQueryOptions,
 } from "@/pages/curriculum";
 import { NotFoundPage } from "@/pages/not-found";
 import type { CurriculumPage } from "@/shared/curriculum-data";
@@ -98,7 +99,7 @@ describe("level page route loader", () => {
     });
 
     // Assert
-    expect(queryClient.query).toHaveBeenCalledTimes(4);
+    expect(queryClient.query).toHaveBeenCalledTimes(5);
     expect(queryClient.query).toHaveBeenCalledWith(
       expect.objectContaining({
         queryKey: curriculumSyllabusQueryOptions().queryKey,
@@ -117,6 +118,27 @@ describe("level page route loader", () => {
     expect(queryClient.query).toHaveBeenCalledWith(
       expect.objectContaining({
         queryKey: pageGeneralizationQueryOptions("level-1/zen").queryKey,
+      }),
+    );
+  });
+
+  it("pre-fetches training overview in level page route loader", async () => {
+    expect.assertions(1);
+
+    // Arrange
+    const loader = getRouteOption(LevelPageRoute, "loader") as LevelPageLoader;
+    const queryClient = createMockQueryClient(TEST_BEHAVIOR_PAGE);
+
+    // Act
+    await loader({
+      context: { queryClient },
+      params: { page: "zen", section: "level-1" },
+    });
+
+    // Assert
+    expect(queryClient.query).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: trainingOverviewQueryOptions().queryKey,
       }),
     );
   });

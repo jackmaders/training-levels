@@ -171,12 +171,7 @@ class CurriculumLevelPage {
 
   public async toggleStepCheckboxByKeyboard(stepHeading: string) {
     await this.focusControlByKeyboard(this.getStepCheckbox(stepHeading));
-    const responsePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/_serverFn/") && response.request().method() === "POST",
-    );
-    await this.page.keyboard.press("Space");
-    await responsePromise;
+    await this.toggleStep(stepHeading, "keyboard");
   }
 
   public async toggleSection(title: string) {
@@ -204,12 +199,7 @@ class CurriculumLevelPage {
   }
 
   public async toggleStepCheckbox(stepHeading: string) {
-    const responsePromise = this.page.waitForResponse(
-      (response) =>
-        response.url().includes("/_serverFn/") && response.request().method() === "POST",
-    );
-    await this.getStepCheckbox(stepHeading).click();
-    await responsePromise;
+    await this.toggleStep(stepHeading, "click");
   }
 
   public async waitForProgressVisible(text: string) {
@@ -268,10 +258,7 @@ class CurriculumLevelPage {
   }
 
   public getStepCheckbox(stepHeading: string): Locator {
-    return this.article.getByRole("checkbox", {
-      exact: true,
-      name: `Toggle ${stepHeading}`,
-    });
+    return this.article.getByRole("checkbox", { exact: true, name: `Toggle ${stepHeading}` });
   }
 
   public getWhereWeAreGoingItem(stepNumber: number): Locator {
@@ -288,12 +275,22 @@ class CurriculumLevelPage {
     return this.article.getByText(pattern);
   }
 
-  private async getSidebarContainer(): Promise<Locator> {
-    if (await this.mobileDrawer.isVisible()) {
-      return this.mobileDrawer;
-    }
+  private async toggleStep(stepHeading: string, mode: "click" | "keyboard") {
+    const responsePromise = this.page.waitForResponse(
+      (res) => res.url().includes("/_serverFn/") && res.request().method() === "POST",
+    );
+    const getResponsePromise = this.page.waitForResponse(
+      (res) => res.url().includes("/_serverFn/") && res.request().method() === "GET",
+    );
+    await (mode === "keyboard"
+      ? this.page.keyboard.press("Space")
+      : this.getStepCheckbox(stepHeading).click());
+    await responsePromise;
+    await getResponsePromise;
+  }
 
-    return this.desktopSidebar;
+  private async getSidebarContainer(): Promise<Locator> {
+    return (await this.mobileDrawer.isVisible()) ? this.mobileDrawer : this.desktopSidebar;
   }
 }
 

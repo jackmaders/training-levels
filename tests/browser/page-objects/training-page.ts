@@ -74,6 +74,9 @@ class TrainingPage {
   public get recommendTestButton(): Locator {
     return this.page.getByRole("button", { name: "Recommend a Test next time" });
   }
+  public get keepPracticingButton(): Locator {
+    return this.page.getByRole("button", { name: "Keep practicing" });
+  }
   public get timerStartButton(): Locator {
     return this.page.getByRole("button", { name: "Start timer" });
   }
@@ -179,6 +182,9 @@ class TrainingPage {
       return;
     }
     await this.successButton.click();
+    await this.page
+      .getByRole("button", { disabled: false, exact: true, name: "Undo" })
+      .waitFor({ state: "visible" });
     await this.recordSuccesses(count - 1);
   }
 
@@ -254,6 +260,11 @@ class TrainingPage {
   public async recommendTestNextTime() {
     await this.recommendTestButton.click();
     await this.page.getByText("Saved: Recommend a Test next time.").waitFor({ state: "visible" });
+  }
+
+  public async keepPracticing() {
+    await this.keepPracticingButton.click();
+    await this.page.getByText("Saved: Keep practicing.").waitFor({ state: "visible" });
   }
 
   public totalsRegion() {

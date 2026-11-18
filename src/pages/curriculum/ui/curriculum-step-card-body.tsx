@@ -3,16 +3,19 @@ import { CollapsibleContent } from "@/shared/ui/shadcn/collapsible";
 
 import type { SaveComeafterInput } from "../api/generalization-schema";
 import type { ComeafterRecordState } from "../api/generalization-service";
+import type { CurriculumStepTrainingState } from "../model/curriculum-training-state";
 import { CurriculumComeafterTracker } from "./curriculum-comeafter-tracker";
 import { CurriculumContentBlocks } from "./curriculum-content-blocks";
+import { StepTrainingLinks } from "./curriculum-training-status-summary";
 
 interface StepCardBodyProps {
   comeafterRecord: ComeafterRecordState | null;
   onSaveComeafter: (input: SaveComeafterInput) => Promise<unknown>;
   step: BehaviorStep;
+  stepState?: CurriculumStepTrainingState | undefined;
 }
 
-function StepCardBody({ comeafterRecord, onSaveComeafter, step }: StepCardBodyProps) {
+function StepCardBody({ comeafterRecord, onSaveComeafter, step, stepState }: StepCardBodyProps) {
   const { comeafters, instructions, tryItCold } = step;
 
   return (
@@ -21,6 +24,7 @@ function StepCardBody({ comeafterRecord, onSaveComeafter, step }: StepCardBodyPr
       {tryItCold !== null && tryItCold.length > 0 ? (
         <CurriculumContentBlocks blocks={tryItCold} />
       ) : null}
+      <StepTrainingLinks stepId={step.stepId} stepNumber={step.stepNumber} stepState={stepState} />
       {comeafters !== null && comeafters.length > 0 ? (
         <StepComeafters
           blocks={comeafters}

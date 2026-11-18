@@ -22,10 +22,15 @@ import {
 } from "../../api/generalization-query-options";
 import type { PageGeneralizationState } from "../../api/generalization-service";
 import { getPageGeneralizationFn, saveComeafterRecordFn } from "../../api/generalization.functions";
+import { trainingOverviewQueryOptions } from "../../api/recommendation-query-options";
+import type { TrainingOverview } from "../../api/recommendation-service";
+import { getTrainingOverviewFn } from "../../api/recommendation.functions";
+import { EMPTY_TRAINING_OVERVIEW } from "../../model/curriculum-training-state";
 import { CurriculumBehaviorArticle } from "../curriculum-behavior-article";
 
 vi.mock(import("../../api/curriculum.functions"));
 vi.mock(import("../../api/generalization.functions"));
+vi.mock(import("../../api/recommendation.functions"));
 
 const LEVEL_ROUTE_PATHS = ["/", "/levels/$section/$page", "/training"];
 
@@ -38,14 +43,17 @@ function renderBehaviorArticle({
   activeAnchor,
   completedStepIds = [],
   generalization,
+  overview,
   page = TEST_BEHAVIOR_PAGE,
 }: {
   activeAnchor?: string | undefined;
   completedStepIds?: readonly string[];
   generalization?: PageGeneralizationState;
+  overview?: TrainingOverview;
   page?: typeof TEST_BEHAVIOR_PAGE;
 } = {}) {
   vi.mocked(getPageGeneralizationFn).mockResolvedValue(generalization ?? EMPTY_PAGE_GENERALIZATION);
+  vi.mocked(getTrainingOverviewFn).mockResolvedValue(overview ?? EMPTY_TRAINING_OVERVIEW);
   const queryClient = new QueryClient({
     defaultOptions: {
       mutations: { retry: false },
@@ -57,6 +65,10 @@ function renderBehaviorArticle({
   queryClient.setQueryData(
     pageGeneralizationQueryOptions(page.pageSlug).queryKey,
     generalization ?? EMPTY_PAGE_GENERALIZATION,
+  );
+  queryClient.setQueryData(
+    trainingOverviewQueryOptions().queryKey,
+    overview ?? EMPTY_TRAINING_OVERVIEW,
   );
   return renderWithProviders(
     <CurriculumBehaviorArticle
@@ -502,5 +514,88 @@ describe("curriculum behavior article provenance and comeafter tracking", () => 
       },
     });
     expect(screen.getByText("0 of 5 steps")).toBeDefined();
+  });
+
+  it("renders behavior training summary and step launch links for non-Zen behavior", () => {
+    expect.assertions(5);
+
+    // Arrange
+    const comePage = createBehaviorPageFixture({
+      href: "/levels/level-1/come",
+      pageSlug: "level-1/come",
+      steps: [
+        createBehaviorStepFixture({
+          heading: "Step 1: Recall near owner",
+          stepId: "level-1/come:step-1",
+          stepNumber: 1,
+        }),
+      ],
+      title: "Come",
+    });
+    const overview: TrainingOverview = {
+      ...EMPTY_TRAINING_OVERVIEW,
+      practiceAttempts: [
+        {
+          attemptId: "a-1",
+          createdAt: new Date("2026-06-15T10:00:00.000Z"),
+          outcome: "not_yet",
+          stepId: "level-1/come:step-1",
+          target: "1s",
+          undoneAt: null,
+        },
+      ],
+    };
+
+    // Act
+    renderBehaviorArticle({
+      activeAnchor: "step-1",
+      overview,
+      page: comePage,
+    });
+
+    // Assert
+    expect(screen.getAllByText("In practice")).toHaveLength(2);
+    expect(
+      screen.getByText(
+        "Unmet Comebefores: Zen. Launching opens Prep with a manual override option.",
+      ),
+    ).toBeDefined();
+    expect(screen.getByRole("link", { name: "Practice Step 1" }).getAttribute("href")).toBe(
+      "/training?stepId=level-1%2Fcome%3Astep-1",
+    );
+    expect(screen.getByRole("link", { name: "Open Step 1 in Practice" }).getAttribute("href")).toBe(
+      "/training?mode=practice&stepId=level-1%2Fcome%3Astep-1",
+    );
+    expect(screen.getByRole("link", { name: "Open Step 1 in Test" }).getAttribute("href")).toBe(
+      "/training?mode=test&stepId=level-1%2Fcome%3Astep-1",
+    );
+  });
+
+  it("omits behavior summary and test link for step 5 when page is absent from syllabus", () => {
+    expect.assertions(3);
+
+    // Arrange
+    const outsidePage = createBehaviorPageFixture({
+      href: "/levels/level-4/zen",
+      pageSlug: "level-4/zen",
+      steps: [
+        createBehaviorStepFixture({
+          heading: "Step 5: Release",
+          stepId: "level-4/zen:step-5",
+          stepNumber: 5,
+        }),
+      ],
+      title: "Level 4 Zen",
+    });
+
+    // Act
+    renderBehaviorArticle({ activeAnchor: "step-5", page: outsidePage });
+
+    // Assert
+    expect(screen.queryByRole("link", { name: "Open Step 5 in Test" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Open Step 5 in Practice" }).getAttribute("href")).toBe(
+      "/training?mode=practice&stepId=level-4%2Fzen%3Astep-5",
+    );
+    expect(screen.getByRole("heading", { level: 1, name: "Level 4 Zen" })).toBeDefined();
   });
 });

@@ -5,6 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/shadcn/alert";
 
 import type { PageGeneralizationState } from "../api/generalization-service";
 import { useToggleStep } from "../api/use-toggle-step";
+import type { CurriculumStepTrainingState } from "../model/curriculum-training-state";
 import { resolveStepProvenance } from "../model/step-provenance";
 import { CurriculumContentBlocks } from "./curriculum-content-blocks";
 import { CurriculumStepCard } from "./curriculum-step-card";
@@ -16,6 +17,7 @@ interface CurriculumBehaviorStepsProps {
   onStepOpenChange: (anchor: string, open: boolean) => void;
   openAnchors: ReadonlySet<string>;
   page: BehaviorCurriculumPage;
+  stepStatesById?: ReadonlyMap<string, CurriculumStepTrainingState> | undefined;
 }
 
 function CurriculumBehaviorSteps({
@@ -24,6 +26,7 @@ function CurriculumBehaviorSteps({
   onStepOpenChange,
   openAnchors,
   page,
+  stepStatesById,
 }: CurriculumBehaviorStepsProps) {
   const { error, mutate: toggleStep } = useToggleStep();
   const { mutateAsync: saveComeafter } = useSaveComeafterAction(page.pageSlug);
@@ -51,6 +54,7 @@ function CurriculumBehaviorSteps({
                 latestTestOutcome: generalization.latestStepTests[step.stepId] ?? null,
               })}
               step={step}
+              stepState={stepStatesById?.get(step.stepId)}
               onOpenChange={(open) => {
                 onStepOpenChange(step.anchor, open);
               }}

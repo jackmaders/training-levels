@@ -1,12 +1,14 @@
 import { QueryClient } from "@tanstack/react-query";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vite-plus/test";
 
+import type { SyllabusPageEntry } from "@/shared/curriculum-data";
 import {
   TEST_BEHAVIOR_PAGE,
   TEST_SYLLABUS,
   createBehaviorPageFixture,
+  createBehaviorStepFixture,
   createSyllabusFixture,
 } from "@test/vitest/fixtures/curriculum";
 import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
@@ -16,7 +18,12 @@ import {
   curriculumSyllabusQueryOptions,
   stepProgressQueryOptions,
 } from "../../api/curriculum-query-options";
+import { trainingOverviewQueryOptions } from "../../api/recommendation-query-options";
+import type { TrainingOverview } from "../../api/recommendation-service";
+import { EMPTY_TRAINING_OVERVIEW } from "../../model/curriculum-training-state";
+import { observeGraphCanvas } from "../curriculum-dependencies-graph-helpers";
 import { CurriculumDependenciesPage } from "../curriculum-dependencies-page";
+import { BehaviorCardButton } from "../curriculum-dependencies-shared";
 
 vi.mock(import("../../api/curriculum.functions"), async (importOriginal) => {
   const actual: object = await importOriginal();
@@ -29,6 +36,20 @@ vi.mock(import("../../api/curriculum.functions"), async (importOriginal) => {
       .fn<() => Promise<typeof TEST_SYLLABUS>>()
       .mockResolvedValue(TEST_SYLLABUS),
     getStepProgressFn: vi.fn<() => Promise<never[]>>().mockResolvedValue([]),
+  } as never;
+});
+
+vi.mock(import("../../api/recommendation.functions"), async (importOriginal) => {
+  const actual: object = await importOriginal();
+  return {
+    ...actual,
+    getTrainingOverviewFn: vi.fn<() => Promise<TrainingOverview>>().mockResolvedValue({
+      curriculumProgress: [],
+      practiceAttempts: [],
+      practiceTotals: [],
+      stepDecisions: [],
+      stepTests: [],
+    }),
   } as never;
 });
 
@@ -252,5 +273,387 @@ describe("curriculum dependencies page", () => {
         routePaths: ["/"],
       }),
     ).toThrow("No curriculum behaviors found.");
+  });
+
+  it("shows current goal and synchronized training badges in graph and dependency list", () => {
+    expect.assertions(5);
+
+    // Arrange
+    const yesterday = new Date("2020-01-01T10:00:00.000Z");
+    const matPage = createBehaviorPageFixture({
+      pageSlug: "level-2/go-to-mat",
+      steps: [
+        createBehaviorStepFixture({
+          heading: "Step 1: Go to mat",
+          stepId: "level-2/go-to-mat:step-1",
+          stepNumber: 1,
+        }),
+      ],
+      title: "Go to Mat",
+    });
+    const syllabus = createSyllabusFixture({
+      sections: [
+        {
+          href: "/levels/level-1",
+          levelNumber: 1,
+          pages: [
+            {
+              href: "/levels/level-1/zen",
+              kind: "behavior",
+              levelNumber: 1,
+              order: 1,
+              pageSlug: "level-1/zen",
+              sectionSlug: "level-1",
+              stepIds: ["level-1/zen:step-1"],
+              title: "Zen",
+            },
+            {
+              href: "/levels/level-1/down",
+              kind: "behavior",
+              levelNumber: 1,
+              order: 2,
+              pageSlug: "level-1/down",
+              sectionSlug: "level-1",
+              stepIds: ["level-1/down:step-1"],
+              title: "Down",
+            },
+          ],
+          sectionSlug: "level-1",
+          title: "Level 1",
+        },
+        {
+          href: "/levels/level-2",
+          levelNumber: 2,
+          pages: [
+            {
+              href: "/levels/level-2/go-to-mat",
+              kind: "behavior",
+              levelNumber: 2,
+              order: 1,
+              pageSlug: "level-2/go-to-mat",
+              sectionSlug: "level-2",
+              stepIds: ["level-2/go-to-mat:step-1"],
+              title: "Go to Mat",
+            },
+          ],
+          sectionSlug: "level-2",
+          title: "Level 2",
+        },
+      ],
+    });
+    const overview: TrainingOverview = {
+      ...EMPTY_TRAINING_OVERVIEW,
+      stepDecisions: [
+        {
+          decidedAt: yesterday,
+          decision: "recommend_test",
+          stepId: "level-1/zen:step-1",
+        },
+      ],
+    };
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+    });
+    queryClient.setQueryData(curriculumSyllabusQueryOptions().queryKey, syllabus);
+    queryClient.setQueryData(stepProgressQueryOptions().queryKey, []);
+    queryClient.setQueryData(trainingOverviewQueryOptions().queryKey, overview);
+    queryClient.setQueryData(curriculumPageQueryOptions("level-2/go-to-mat").queryKey, matPage);
+
+    // Act
+    renderWithProviders(<CurriculumDependenciesPage />, {
+      queryClient,
+      routePaths: ["/", "/training"],
+    });
+
+    const graph = screen.getByRole("region", { name: "Curriculum dependency graph" });
+    const list = screen.getByRole("region", { name: "Dependency list" });
+    const graphZen = within(graph).getByRole("button", { name: /^Zen\b/u });
+    const listZen = within(list).getByRole("button", { name: /^Zen\b/u });
+
+    // Assert
+    expect(screen.getByText("Current goal: Level 1")).toBeDefined();
+    expect(graphZen.dataset["recommendedNext"]).toBe("true");
+    expect(listZen.dataset["recommendedNext"]).toBe("true");
+    expect(within(graphZen).getByText("Test ready")).toBeDefined();
+    expect(within(listZen).getByText("Recommended next")).toBeDefined();
+  });
+
+  it("highlights prerequisite chain and eligible next options and renders selected warnings and links", async () => {
+    expect.assertions(5);
+
+    // Arrange
+    const user = userEvent.setup();
+    const yesterday = new Date("2020-01-01T10:00:00.000Z");
+    const zenStep1 = createBehaviorStepFixture({
+      heading: "Step 1: Wait for eye contact",
+      stepId: "level-1/zen:step-1",
+      stepNumber: 1,
+    });
+    const matPage = createBehaviorPageFixture({
+      pageSlug: "level-2/go-to-mat",
+      steps: [
+        createBehaviorStepFixture({
+          heading: "Step 1: Go to mat",
+          stepId: "level-2/go-to-mat:step-1",
+          stepNumber: 1,
+        }),
+      ],
+      title: "Go to Mat",
+    });
+    const syllabus = createSyllabusFixture({
+      sections: [
+        {
+          href: "/levels/level-1",
+          levelNumber: 1,
+          pages: [
+            {
+              href: "/levels/level-1/zen",
+              kind: "behavior",
+              levelNumber: 1,
+              order: 1,
+              pageSlug: "level-1/zen",
+              sectionSlug: "level-1",
+              stepIds: ["level-1/zen:step-1"],
+              title: "Zen",
+            },
+            {
+              href: "/levels/level-1/down",
+              kind: "behavior",
+              levelNumber: 1,
+              order: 2,
+              pageSlug: "level-1/down",
+              sectionSlug: "level-1",
+              stepIds: ["level-1/down:step-1"],
+              title: "Down",
+            },
+          ],
+          sectionSlug: "level-1",
+          title: "Level 1",
+        },
+        {
+          href: "/levels/level-2",
+          levelNumber: 2,
+          pages: [
+            {
+              href: "/levels/level-2/go-to-mat",
+              kind: "behavior",
+              levelNumber: 2,
+              order: 1,
+              pageSlug: "level-2/go-to-mat",
+              sectionSlug: "level-2",
+              stepIds: ["level-2/go-to-mat:step-1"],
+              title: "Go to Mat",
+            },
+          ],
+          sectionSlug: "level-2",
+          title: "Level 2",
+        },
+      ],
+    });
+    const overview: TrainingOverview = {
+      ...EMPTY_TRAINING_OVERVIEW,
+      stepDecisions: [
+        {
+          decidedAt: yesterday,
+          decision: "recommend_test",
+          stepId: "level-1/zen:step-1",
+        },
+      ],
+    };
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+    });
+    queryClient.setQueryData(curriculumSyllabusQueryOptions().queryKey, syllabus);
+    queryClient.setQueryData(stepProgressQueryOptions().queryKey, []);
+    queryClient.setQueryData(trainingOverviewQueryOptions().queryKey, overview);
+    queryClient.setQueryData(curriculumPageQueryOptions("level-2/go-to-mat").queryKey, matPage);
+    queryClient.setQueryData(
+      curriculumPageQueryOptions("level-1/zen").queryKey,
+      createBehaviorPageFixture({ steps: [zenStep1] }),
+    );
+
+    // Act
+    renderWithProviders(<CurriculumDependenciesPage />, {
+      queryClient,
+      routePaths: ["/", "/training"],
+    });
+
+    const graph = screen.getByRole("region", { name: "Curriculum dependency graph" });
+    const list = screen.getByRole("region", { name: "Dependency list" });
+    const selectedPanel = screen.getByRole("region", { name: "Selected behavior" });
+    const graphDown = within(graph).getByRole("button", { name: /^Down\b/u });
+    const listDown = within(list).getByRole("button", { name: /^Down\b/u });
+
+    // Assert prerequisite chain + eligible highlights and selected panel warnings
+    expect(graphDown.dataset["prerequisiteChain"]).toBe("true");
+    expect(graphDown.dataset["eligibleNext"]).toBe("true");
+    expect(within(listDown).getByText("Eligible next option")).toBeDefined();
+    expect(
+      within(selectedPanel).getByText(
+        "Unmet Comebefores: Down. Launching opens Prep with a manual override option.",
+      ),
+    ).toBeDefined();
+
+    // Act: select Zen from graph and verify Test Step 1 primary link
+    await user.click(within(graph).getByRole("button", { name: /^Zen\b/u }));
+    expect(
+      within(selectedPanel).getByRole("link", { name: "Test Step 1" }).getAttribute("href"),
+    ).toBe("/training?mode=test&stepId=level-1%2Fzen%3Astep-1");
+  });
+
+  it("renders per-step practice and test links and handles null graph canvas", () => {
+    expect.assertions(5);
+
+    // Arrange
+    const matPage = createBehaviorPageFixture({
+      pageSlug: "level-2/go-to-mat",
+      steps: [
+        createBehaviorStepFixture({
+          heading: "Step 1: Go to mat",
+          stepId: "level-2/go-to-mat:step-1",
+          stepNumber: 1,
+        }),
+      ],
+      title: "Go to Mat",
+    });
+    const syllabus = createSyllabusFixture({
+      sections: [
+        {
+          href: "/levels/level-1",
+          levelNumber: 1,
+          pages: [
+            {
+              href: "/levels/level-1/down",
+              kind: "behavior",
+              levelNumber: 1,
+              order: 1,
+              pageSlug: "level-1/down",
+              sectionSlug: "level-1",
+              stepIds: ["level-1/down:step-1"],
+              title: "Down",
+            },
+          ],
+          sectionSlug: "level-1",
+          title: "Level 1",
+        },
+        {
+          href: "/levels/level-2",
+          levelNumber: 2,
+          pages: [
+            {
+              href: "/levels/level-2/go-to-mat",
+              kind: "behavior",
+              levelNumber: 2,
+              order: 1,
+              pageSlug: "level-2/go-to-mat",
+              sectionSlug: "level-2",
+              stepIds: ["level-2/go-to-mat:step-1"],
+              title: "Go to Mat",
+            },
+          ],
+          sectionSlug: "level-2",
+          title: "Level 2",
+        },
+      ],
+    });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+    });
+    queryClient.setQueryData(curriculumSyllabusQueryOptions().queryKey, syllabus);
+    queryClient.setQueryData(stepProgressQueryOptions().queryKey, []);
+    queryClient.setQueryData(trainingOverviewQueryOptions().queryKey, EMPTY_TRAINING_OVERVIEW);
+    queryClient.setQueryData(curriculumPageQueryOptions("level-2/go-to-mat").queryKey, matPage);
+
+    // Act
+    renderWithProviders(<CurriculumDependenciesPage />, {
+      queryClient,
+      routePaths: ["/", "/training"],
+    });
+    const selectedPanel = screen.getByRole("region", { name: "Selected behavior" });
+
+    // Assert
+    expect(
+      within(selectedPanel).getByText(
+        "Later-Level selection (Current goal: Level 1). Launching into Prep does not change your Level goal.",
+      ),
+    ).toBeDefined();
+    expect(
+      within(selectedPanel).getByRole("link", { name: "Practice Step 1" }).getAttribute("href"),
+    ).toBe("/training?stepId=level-2%2Fgo-to-mat%3Astep-1");
+    expect(
+      within(selectedPanel)
+        .getByRole("link", { name: "Open Step 1 in Practice" })
+        .getAttribute("href"),
+    ).toBe("/training?mode=practice&stepId=level-2%2Fgo-to-mat%3Astep-1");
+    expect(
+      within(selectedPanel).getByRole("link", { name: "Open Step 1 in Test" }).getAttribute("href"),
+    ).toBe("/training?mode=test&stepId=level-2%2Fgo-to-mat%3Astep-1");
+    expect(
+      observeGraphCanvas({
+        canvas: null,
+        nodeRefs: new Map(),
+        onMeasure: vi.fn<() => void>(),
+      }),
+    ).toBeUndefined();
+  });
+
+  it("renders prerequisite chain badge on BehaviorCardButton when behaviorState is absent", () => {
+    expect.assertions(2);
+
+    const missingState: { value?: undefined } = {};
+    const comePage: SyllabusPageEntry = {
+      href: "/levels/level-1/come",
+      kind: "behavior",
+      order: 2,
+      pageSlug: "level-1/come",
+      sectionSlug: "level-1",
+      title: "Come",
+    };
+    renderWithProviders(
+      <BehaviorCardButton
+        behaviorState={missingState.value}
+        behaviors={[comePage]}
+        chain={new Set(["level-1/come"])}
+        completed={new Set()}
+        isSelected={false}
+        page={comePage}
+        onSelect={vi.fn<() => void>()}
+      />,
+      { routePaths: ["/"] },
+    );
+
+    const comeButton = screen.getByRole("button", { name: /^Come\b/u });
+    expect(comeButton.dataset["prerequisiteChain"]).toBe("true");
+    expect(within(comeButton).getByText("In selected prerequisite chain")).toBeDefined();
+  });
+
+  it("falls back to page stepIds completion count when behaviorState is absent", () => {
+    expect.assertions(1);
+
+    const missingState: { value?: undefined } = {};
+    const sitPage: SyllabusPageEntry = {
+      href: "/levels/level-1/sit",
+      kind: "behavior",
+      order: 3,
+      pageSlug: "level-1/sit",
+      sectionSlug: "level-1",
+      stepIds: ["level-1/sit:step-1", "level-1/sit:step-2"],
+      title: "Sit",
+    };
+    renderWithProviders(
+      <BehaviorCardButton
+        behaviorState={missingState.value}
+        behaviors={[sitPage]}
+        chain={new Set()}
+        completed={new Set(["level-1/sit:step-1"])}
+        isSelected={false}
+        page={sitPage}
+        onSelect={vi.fn<() => void>()}
+      />,
+      { routePaths: ["/"] },
+    );
+
+    const sitButton = screen.getByRole("button", { name: /^Sit\b/u });
+    expect(within(sitButton).getByText("1 of 2 Steps complete")).toBeDefined();
   });
 });

@@ -12,6 +12,7 @@ import {
   createSyllabusFixture,
 } from "@test/vitest/fixtures/curriculum";
 
+import { EMPTY_TRAINING_OVERVIEW } from "../../model/curriculum-training-state";
 import {
   curriculumKeys,
   curriculumPageQueryOptions,
@@ -33,9 +34,12 @@ import {
   pageGeneralizationQueryOptions,
 } from "../generalization-query-options";
 import { getPageGeneralizationFn } from "../generalization.functions";
+import { trainingOverviewQueryOptions } from "../recommendation-query-options";
+import { getTrainingOverviewFn } from "../recommendation.functions";
 
 vi.mock(import("../curriculum.functions"));
 vi.mock(import("../generalization.functions"));
+vi.mock(import("../recommendation.functions"));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -263,7 +267,7 @@ describe("curriculum article loader", () => {
 });
 
 describe("level page loader", () => {
-  it("loads syllabus, level page, step progress, and generalization data for valid params", async () => {
+  it("loads syllabus, level page, step progress, training overview, and generalization data for valid params", async () => {
     expect.assertions(5);
 
     // Arrange
@@ -271,6 +275,7 @@ describe("level page loader", () => {
     vi.mocked(getCurriculumSyllabusFn).mockResolvedValueOnce(TEST_SYLLABUS);
     vi.mocked(getCurriculumPageFn).mockResolvedValueOnce(TEST_BEHAVIOR_PAGE);
     vi.mocked(getStepProgressFn).mockResolvedValueOnce(["level-1/zen:step-1"]);
+    vi.mocked(getTrainingOverviewFn).mockResolvedValueOnce(EMPTY_TRAINING_OVERVIEW);
     vi.mocked(getPageGeneralizationFn).mockResolvedValueOnce(EMPTY_PAGE_GENERALIZATION);
 
     // Act
@@ -291,13 +296,37 @@ describe("level page loader", () => {
     expect(queryClient.getQueryData(stepProgressQueryOptions().queryKey)).toStrictEqual([
       "level-1/zen:step-1",
     ]);
+    expect(queryClient.getQueryData(trainingOverviewQueryOptions().queryKey)).toStrictEqual(
+      EMPTY_TRAINING_OVERVIEW,
+    );
+  });
+
+  it("populates generalization query data when loading a level behavior page", async () => {
+    expect.assertions(1);
+
+    // Arrange
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    vi.mocked(getCurriculumSyllabusFn).mockResolvedValueOnce(TEST_SYLLABUS);
+    vi.mocked(getCurriculumPageFn).mockResolvedValueOnce(TEST_BEHAVIOR_PAGE);
+    vi.mocked(getStepProgressFn).mockResolvedValueOnce([]);
+    vi.mocked(getTrainingOverviewFn).mockResolvedValueOnce(EMPTY_TRAINING_OVERVIEW);
+    vi.mocked(getPageGeneralizationFn).mockResolvedValueOnce(EMPTY_PAGE_GENERALIZATION);
+
+    // Act
+    await loadLevelPage({
+      page: "zen",
+      queryClient,
+      section: "level-1",
+    });
+
+    // Assert
     expect(
       queryClient.getQueryData(pageGeneralizationQueryOptions("level-1/zen").queryKey),
     ).toStrictEqual(EMPTY_PAGE_GENERALIZATION);
   });
 
   it("throws notFound without calling server functions when route params are invalid", async () => {
-    expect.assertions(4);
+    expect.assertions(5);
 
     // Arrange
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -313,6 +342,7 @@ describe("level page loader", () => {
     expect(isNotFound(caught)).toBe(true);
     expect(getCurriculumSyllabusFn).not.toHaveBeenCalled();
     expect(getCurriculumPageFn).not.toHaveBeenCalled();
+    expect(getTrainingOverviewFn).not.toHaveBeenCalled();
     expect(getPageGeneralizationFn).not.toHaveBeenCalled();
   });
 
@@ -324,6 +354,7 @@ describe("level page loader", () => {
     vi.mocked(getCurriculumSyllabusFn).mockResolvedValueOnce(TEST_SYLLABUS);
     vi.mocked(getCurriculumPageFn).mockResolvedValueOnce(null);
     vi.mocked(getStepProgressFn).mockResolvedValueOnce([]);
+    vi.mocked(getTrainingOverviewFn).mockResolvedValueOnce(EMPTY_TRAINING_OVERVIEW);
 
     // Act
     const caught = await loadLevelPage({

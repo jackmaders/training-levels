@@ -17,6 +17,7 @@ import {
   getStepProgressFn,
 } from "./curriculum.functions";
 import { pageGeneralizationQueryOptions } from "./generalization-query-options";
+import { trainingOverviewQueryOptions } from "./recommendation-query-options";
 
 type ArticleSectionSlug = Extract<SectionSlug, "theory" | "appendices">;
 
@@ -101,6 +102,7 @@ async function loadLevelPage({
     queryClient.query(curriculumSyllabusQueryOptions()),
     queryClient.query(curriculumPageQueryOptions(target.pageSlug)),
     queryClient.query(stepProgressQueryOptions()),
+    queryClient.query(trainingOverviewQueryOptions()),
   ]);
 
   if (curriculumPage === null) {
