@@ -57,6 +57,61 @@ class TrainingPage {
   public get breakHeading(): Locator {
     return this.page.getByRole("heading", { name: "Take a break" });
   }
+  public get prep(): Locator {
+    return this.page.getByRole("region", { name: "Prep" });
+  }
+  public get startTest(): Locator {
+    return this.page.getByRole("button", { name: "Start Test" });
+  }
+  public get coldnessOverride(): Locator {
+    return this.page.getByRole("checkbox", {
+      name: "I confirm I can test this Behavior cold without warming it up now.",
+    });
+  }
+  public get testActivity(): Locator {
+    return this.page.getByRole("region", { name: "Test the full Step criterion cold" });
+  }
+  public get passTestButton(): Locator {
+    return this.page.getByRole("button", { name: "Test passed" });
+  }
+  public get failTestButton(): Locator {
+    return this.page.getByRole("button", { exact: true, name: "Not yet" });
+  }
+
+  public async gotoTraining() {
+    await this.page.goto("/training");
+    await waitForHydration(this.page);
+  }
+
+  public async confirmColdness() {
+    await this.coldnessOverride.check();
+  }
+
+  public async startTestActivity() {
+    await this.startTest.click();
+    await this.passTestButton.waitFor({ state: "visible" });
+  }
+
+  public async recordTest(outcome: "passed" | "not_yet") {
+    const button = outcome === "passed" ? this.passTestButton : this.failTestButton;
+    await button.click();
+  }
+
+  public async finishTest() {
+    await this.page.getByRole("link", { name: "Finish Test" }).click();
+  }
+
+  public async recordSuccesses(count: number) {
+    if (count === 0) {
+      return;
+    }
+    await this.successButton.click();
+    await this.recordSuccesses(count - 1);
+  }
+
+  public async finishPractice() {
+    await this.finishLink.click();
+  }
 
   public async gotoBehavior() {
     await this.page.goto("/levels/level-1/zen");

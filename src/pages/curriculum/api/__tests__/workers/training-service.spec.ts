@@ -2,10 +2,11 @@ import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vite-plus/test";
 
-import { dogs } from "@/shared/db";
+import { dogs, stepCompletions } from "@/shared/db";
 import { getDb } from "@/shared/db/index.server";
 import { user } from "@/shared/db/schema";
 
+import { getStepProgress, toggleStep } from "../../curriculum-service";
 import {
   correctPracticeTotals,
   getPracticeStepDecision,
@@ -13,6 +14,7 @@ import {
   recordPracticeTotals,
   savePracticeStepDecision,
 } from "../../practice-progress-service";
+import { getStepTestHistory, recordStepTest } from "../../step-test-service";
 import {
   correctPracticeAttempt,
   getPracticeHistory,
@@ -231,5 +233,81 @@ describe("training-service (workers D1)", () => {
 
     // Assert
     expect(decision).toMatchObject({ decision: "recommend_test", stepId: "level-1/zen:step-1" });
+  });
+
+  it("persists cold Test results under the Dog owner and retains failed retests after a pass", async () => {
+    expect.assertions(5);
+    // Arrange
+    const db = getDb(env.DB);
+    await db.insert(user).values([
+      { email: "test-owner@example.com", id: "test-owner", name: "Test Owner" },
+      { email: "other-owner@example.com", id: "other-owner", name: "Other Owner" },
+    ]);
+    await db.insert(dogs).values({ id: "test-dog", userId: "test-owner" });
+    const passedTest = {
+      coldOverride: false,
+      outcome: "success",
+      stepId: "level-1/zen:step-1",
+      testId: "018f47ad-9d72-7a31-a50b-b11111111111",
+    } as const;
+    await recordStepTest(passedTest, { db, userId: "test-owner" });
+
+    // Act
+    const failedTest = await recordStepTest(
+      {
+        coldOverride: true,
+        outcome: "not_yet",
+        stepId: passedTest.stepId,
+        testId: "018f47ad-9d72-7a31-a50b-b22222222222",
+      },
+      { db, userId: "test-owner" },
+    );
+    const ownerHistory = await getStepTestHistory(passedTest.stepId, {
+      db,
+      userId: "test-owner",
+    });
+    const otherOwnerHistory = await getStepTestHistory(passedTest.stepId, {
+      db,
+      userId: "other-owner",
+    });
+    const completedSteps = await getStepProgress({ db, userId: "test-owner" });
+
+    // Assert
+    expect(failedTest).toMatchObject({ coldOverride: true, outcome: "not_yet" });
+    expect(ownerHistory.map(({ outcome }) => outcome)).toStrictEqual(["success", "not_yet"]);
+    expect(ownerHistory[1]).toMatchObject({ coldOverride: true, outcome: "not_yet" });
+    expect(otherOwnerHistory).toStrictEqual([]);
+    expect(completedSteps).toContain(passedTest.stepId);
+  });
+
+  it("keeps a legacy Step completion without inventing a Test record", async () => {
+    expect.assertions(3);
+    // Arrange
+    const db = getDb(env.DB);
+    await db
+      .insert(user)
+      .values({ email: "legacy-test@example.com", id: "legacy-test-owner", name: "Legacy Owner" });
+    await db.insert(dogs).values({ id: "legacy-test-dog", userId: "legacy-test-owner" });
+    await db.insert(stepCompletions).values({
+      dogId: "legacy-test-dog",
+      id: "legacy-test-completion",
+      stepId: "level-1/zen:step-1",
+    });
+
+    // Act
+    const completion = await toggleStep(
+      { completed: true, stepId: "level-1/zen:step-1" },
+      { db, userId: "legacy-test-owner" },
+    );
+    const history = await getStepTestHistory("level-1/zen:step-1", {
+      db,
+      userId: "legacy-test-owner",
+    });
+    const completions = await getStepProgress({ db, userId: "legacy-test-owner" });
+
+    // Assert
+    expect(completion.completed).toBe(true);
+    expect(history).toStrictEqual([]);
+    expect(completions).toStrictEqual(["level-1/zen:step-1"]);
   });
 });

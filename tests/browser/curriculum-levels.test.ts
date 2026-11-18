@@ -10,8 +10,8 @@ const STEP_TWO_NUMBER = 2;
 const ZEN_STEP_COUNT = 5;
 
 const STEP_ONE_SUMMARY = "The dog moves off a treat held in your hand. You're sitting down.";
-const STEP_ONE_HEADING = `Step 1: ${STEP_ONE_SUMMARY}`;
 const STEP_TWO_SUMMARY = "The dog stays away from the treat in your closed fist for 5 seconds.";
+const STEP_TWO_HEADING = `Step 2: ${STEP_TWO_SUMMARY}`;
 
 async function signUpTestUser(page: Page, baseURL: string | undefined) {
   const response = await new AuthClient(page).signUp({ baseURL });
@@ -193,7 +193,7 @@ test("updates progress on step check and persists across reload", async ({ baseU
   const curriculumPage = await signUpAndVisitLevels(page, baseURL);
 
   // Act
-  await curriculumPage.toggleStepCheckbox(STEP_ONE_HEADING);
+  await curriculumPage.toggleStepCheckbox(STEP_TWO_HEADING);
 
   // Assert
   await expect(curriculumPage.getProgressText("1 of 5 steps")).toBeVisible();
@@ -214,17 +214,17 @@ test("restores zero progress across reload when unchecking a completed step", as
 }) => {
   // Arrange
   const curriculumPage = await signUpAndVisitLevels(page, baseURL);
-  await curriculumPage.toggleStepCheckbox(STEP_ONE_HEADING);
+  await curriculumPage.toggleStepCheckbox(STEP_TWO_HEADING);
   await curriculumPage.waitForProgressVisible("1 of 5 steps");
 
   // Act
-  await curriculumPage.toggleStepCheckbox(STEP_ONE_HEADING);
+  await curriculumPage.toggleStepCheckbox(STEP_TWO_HEADING);
   await curriculumPage.reload();
 
   // Assert
   await expect(curriculumPage.getProgressText("0 of 5 steps")).toBeVisible();
   await expect(curriculumPage.getSidebarSectionButton("Level 1")).toContainText("0/25");
-  await expect(curriculumPage.getStepCheckbox(STEP_ONE_HEADING)).not.toBeChecked();
+  await expect(curriculumPage.getStepCheckbox(STEP_TWO_HEADING)).not.toBeChecked();
 });
 
 test("navigates between behavior pages via footer links", async ({ baseURL, page }) => {

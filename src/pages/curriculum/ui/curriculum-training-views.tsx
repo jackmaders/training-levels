@@ -24,6 +24,7 @@ type Outcome = "success" | "not_yet";
 type PracticeDecision = "keep_practicing" | "recommend_test";
 interface PracticeRecord {
   attemptId: string;
+  createdAt: Date;
   outcome: Outcome;
   target: string;
   undoneAt: Date | null;
@@ -41,11 +42,19 @@ interface PracticeActions {
   undo: (attemptId: string) => void;
 }
 
-function TrainingHeading({ stepLabel }: { stepLabel: string }) {
+function TrainingHeading({
+  mode = "Practice",
+  stepLabel,
+}: {
+  mode?: "Practice" | "Test";
+  stepLabel: string;
+}) {
   return (
     <header className="space-y-2">
-      <p className="text-sm text-muted-foreground">Practice · {stepLabel}</p>
-      <h1 className="text-3xl font-bold tracking-tight">Guided Practice</h1>
+      <p className="text-sm text-muted-foreground">
+        {mode} · {stepLabel}
+      </p>
+      <h1 className="text-3xl font-bold tracking-tight">Guided {mode}</h1>
     </header>
   );
 }
@@ -60,6 +69,7 @@ function TrainingPrep({
   selectedStepId,
   stepOptions,
   target,
+  testOffer = null,
 }: {
   equipment: BehaviorCurriculumPage["equipment"];
   decision: PracticeDecision | null;
@@ -70,6 +80,7 @@ function TrainingPrep({
   selectedStepId: string;
   stepOptions: readonly PracticeStepOption[];
   target: string;
+  testOffer?: ReactNode;
 }) {
   const currentHistory = history.filter((attempt) => attempt.undoneAt === null);
 
@@ -115,6 +126,7 @@ function TrainingPrep({
       >
         {currentHistory.length === 0 ? "Start Practice" : "Resume Practice"}
       </button>
+      {testOffer}
     </section>
   );
 }
@@ -601,4 +613,4 @@ function FinishTrainingLink({
 }
 
 export { STEP_TARGET, TrainingBreak, TrainingHeading, TrainingPractice, TrainingPrep };
-export type { Outcome, PracticeActions, PracticeRecord };
+export type { Outcome, PracticeActions, PracticeDecision, PracticeRecord };

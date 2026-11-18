@@ -25,6 +25,10 @@ import { getPracticePlan, PRACTICE_STEP_OPTIONS } from "../model/practice-ladder
 import { getPracticeProgression } from "../model/practice-progression";
 import { TrainingReadingGate, TrainingReadingLinks } from "./curriculum-training-reading";
 import {
+  CurriculumTrainingStepTestOffer,
+  CurriculumTrainingTestGate,
+} from "./curriculum-training-step-test";
+import {
   STEP_TARGET,
   TrainingBreak,
   TrainingHeading,
@@ -35,6 +39,8 @@ import {
   type PracticeRecord,
 } from "./curriculum-training-views";
 
+type TrainingView = "prep" | "practice" | "break" | "test" | "test-override";
+
 function CurriculumTrainingPage({
   onSelectionChange,
   selectedStepId: requestedStepId,
@@ -44,7 +50,7 @@ function CurriculumTrainingPage({
   selectedStepId: string | undefined;
   selectedTarget: string | undefined;
 }) {
-  const [view, setView] = useState<"prep" | "practice" | "break">("prep");
+  const [view, setView] = useState<TrainingView>("prep");
   const selectedStep =
     PRACTICE_STEP_OPTIONS.find((step) => step.stepId === requestedStepId) ??
     PRACTICE_STEP_OPTIONS[0];
@@ -86,51 +92,75 @@ function CurriculumTrainingPage({
 
   return (
     <main className="mx-auto max-w-3xl space-y-8 px-4 pt-8 pb-36 sm:px-6">
-      <TrainingHeading stepLabel={selectedStep.label} />
+      <TrainingHeading mode={getHeadingMode(view)} stepLabel={selectedStep.label} />
       <TrainingReadingGate
         page={curriculumPage}
         progressionSource={plan?.source ?? null}
         returnLabel={view === "practice" ? "Back to Practice" : "Back to Prep"}
         stepId={selectedStepId}
       >
-        {({ openReading, timerInterrupted }) =>
-          view === "prep" ? (
-            <>
-              <TrainingReadingLinks onOpen={openReading} />
-              <TrainingPrep
+        {({ openReading, timerInterrupted }) => (
+          <CurriculumTrainingTestGate
+            coldOverride={view === "test-override"}
+            active={isTestView(view)}
+          >
+            {view === "prep" ? (
+              <>
+                <TrainingReadingLinks onOpen={openReading} />
+                <TrainingPrep
+                  decision={decisionRecord?.decision ?? null}
+                  equipment={curriculumPage.equipment}
+                  history={history}
+                  onSelectStep={(stepId) => onSelectionChange(stepId, undefined)}
+                  onStart={() => setView("practice")}
+                  plan={plan}
+                  selectedStepId={selectedStepId}
+                  stepOptions={PRACTICE_STEP_OPTIONS}
+                  target={target}
+                  testOffer={
+                    <CurriculumTrainingStepTestOffer
+                      decision={decisionRecord?.decision ?? null}
+                      history={history}
+                      onStartTest={(coldOverride) =>
+                        setView(coldOverride ? "test-override" : "test")
+                      }
+                      stepId={selectedStepId}
+                      totals={totals}
+                    />
+                  }
+                />
+              </>
+            ) : view === "practice" ? (
+              <TrainingPractice
+                actions={viewActions}
                 decision={decisionRecord?.decision ?? null}
-                equipment={curriculumPage.equipment}
                 history={history}
-                onSelectStep={(stepId) => onSelectionChange(stepId, undefined)}
-                onStart={() => setView("practice")}
+                onBreak={() => setView("break")}
+                onChangeTarget={(nextTarget) => onSelectionChange(selectedStepId, nextTarget)}
+                onOpenReading={openReading}
+                finishStep={selectedStep}
                 plan={plan}
-                selectedStepId={selectedStepId}
-                stepOptions={PRACTICE_STEP_OPTIONS}
+                progression={progression}
+                timerInterrupted={timerInterrupted}
+                totals={totals}
                 target={target}
               />
-            </>
-          ) : view === "practice" ? (
-            <TrainingPractice
-              actions={viewActions}
-              decision={decisionRecord?.decision ?? null}
-              history={history}
-              onBreak={() => setView("break")}
-              onChangeTarget={(nextTarget) => onSelectionChange(selectedStepId, nextTarget)}
-              onOpenReading={openReading}
-              finishStep={selectedStep}
-              plan={plan}
-              progression={progression}
-              timerInterrupted={timerInterrupted}
-              totals={totals}
-              target={target}
-            />
-          ) : (
-            <TrainingBreak onContinue={() => setView("practice")} finishStep={selectedStep} />
-          )
-        }
+            ) : (
+              <TrainingBreak onContinue={() => setView("practice")} finishStep={selectedStep} />
+            )}
+          </CurriculumTrainingTestGate>
+        )}
       </TrainingReadingGate>
     </main>
   );
+}
+
+function isTestView(view: TrainingView): view is "test" | "test-override" {
+  return view === "test" || view === "test-override";
+}
+
+function getHeadingMode(view: TrainingView): "Practice" | "Test" {
+  return isTestView(view) ? "Test" : "Practice";
 }
 
 function countTrailingSuccesses(history: readonly PracticeRecord[]): number {

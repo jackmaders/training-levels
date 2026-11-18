@@ -3,6 +3,7 @@ import { queryOptions } from "@tanstack/react-query";
 import {
   getPracticeHistoryFn,
   getPracticeStepDecisionFn,
+  getStepTestHistoryFn,
   getPracticeTotalsFn,
 } from "./training.functions";
 
@@ -29,9 +30,17 @@ function practiceStepDecisionQueryOptions(stepId = PRACTICE_STEP_ID) {
   });
 }
 
+function stepTestHistoryQueryOptions(stepId = PRACTICE_STEP_ID) {
+  return queryOptions({
+    queryFn: () => getStepTestHistoryFn({ data: { stepId } }),
+    queryKey: ["training", "step-test-history", stepId],
+  });
+}
+
 export {
   PRACTICE_STEP_ID,
   practiceHistoryQueryOptions,
   practiceStepDecisionQueryOptions,
   practiceTotalsQueryOptions,
+  stepTestHistoryQueryOptions,
 };
