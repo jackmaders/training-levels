@@ -21,6 +21,7 @@ export function Header({ className, ...props }: ComponentProps<"header">) {
     { children: "About", to: "/about" },
     ...(canReadCurriculum
       ? [
+          { children: "Start Training", to: "/training" },
           { children: "Levels", to: "/levels" },
           { children: "Foundations", to: "/dependencies" },
           { children: "Theory", to: "/theory" },

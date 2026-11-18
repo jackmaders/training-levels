@@ -279,4 +279,26 @@ describe("curriculum training step test", () => {
       "/levels/level-2/come",
     );
   });
+
+  it("forwards recommendedMode and blockedByOverride to CurriculumTrainingTestOffer", () => {
+    expect.hasAssertions();
+
+    const stepId = "level-1/zen:step-1";
+    const queryClient = createStepTestQueryClient({ stepId });
+
+    renderWithProviders(
+      <CurriculumTrainingStepTestOffer
+        blockedByOverride
+        decision={null}
+        history={[]}
+        onStartTest={vi.fn<() => void>()}
+        recommendedMode="test"
+        stepId={stepId}
+        totals={[]}
+      />,
+      { queryClient, routePaths: ["/"] },
+    );
+
+    expect(screen.getByRole("button", { name: "Start Test" })).toHaveProperty("disabled", true);
+  });
 });

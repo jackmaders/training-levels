@@ -28,6 +28,8 @@ function createDefaultRouter({
     "/about",
     "/levels",
     "/levels/$section/$page",
+    "/dependencies",
+    "/training",
     "/theory",
     "/theory/$page",
     "/appendices",

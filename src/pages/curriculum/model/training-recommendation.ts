@@ -5,7 +5,6 @@ import {
 } from "@/shared/curriculum-data";
 
 import type { TrainingOverview } from "../api/recommendation-service";
-import { formatStepSummary } from "./curriculum-levels";
 import { getPrerequisiteChain } from "./dependency-relationships";
 import { canTestToday } from "./test-eligibility";
 import {
@@ -23,32 +22,16 @@ const FINAL_LEVEL_NUMBER: LevelNumber = 4;
 const NON_TESTABLE_STEP_SUFFIX = ":step-5";
 const TRICKS_PAGE_PREFIX = "level-2/tricks:";
 
-interface InspectManualStepSelectionInput {
-  completedStepIds: ReadonlySet<string>;
-  currentLevelNumber: LevelNumber;
-  pageSlug: string;
-  syllabus: CurriculumSyllabus;
-}
-
-interface UnmetPrerequisite {
-  pageSlug: string;
-  title: string;
-}
-
-interface ManualStepSelectionInspection {
-  hasWarning: boolean;
-  isLaterLevel: boolean;
-  selectedLevelNumber: LevelNumber | null;
-  unmetPrerequisites: readonly UnmetPrerequisite[];
-}
-
 interface RecommendNextTrainingActivityInput {
-  now?: Date;
+  excludedStepIds?: ReadonlySet<string> | readonly string[];
+  now?: Date | null;
   overview: TrainingOverview;
+  preferredMode?: TrainingRecommendationMode | undefined;
   syllabus: CurriculumSyllabus;
 }
 
 type TrainingRecommendationMode = "practice" | "test";
+type PracticeFallbackMode = "all_blocked" | "all_complete" | "none";
 
 interface WaitingTestNotice {
   behaviorTitle: string;
@@ -60,18 +43,18 @@ interface WaitingTestNotice {
 
 interface TrainingRecommendation extends WaitingTestNotice {
   currentLevelNumber: LevelNumber;
+  fallbackMode: PracticeFallbackMode;
   levelNumber: LevelNumber;
   mode: TrainingRecommendationMode;
   waitingTestNotice: WaitingTestNotice | null;
 }
-
-type PracticeFallbackMode = "all_blocked" | "all_complete" | "none";
 
 interface PracticeContext {
   activityIndex: ActivityIndex;
   allSteps: readonly BehaviorStepCandidate[];
   completedStepIds: ReadonlySet<string>;
   currentLevelNumber: LevelNumber;
+  excludedSet: ReadonlySet<string>;
   incompleteSteps: readonly BehaviorStepCandidate[];
   stepIdsByPage: ReadonlyMap<string, readonly string[]>;
 }
@@ -94,44 +77,6 @@ function isStepTestable(stepId: string): boolean {
   );
 }
 
-function getTrainingFallbackGuidance(
-  step: { heading?: string; label?: string } | undefined,
-  fallbackLabel: string,
-): string {
-  const headingText = step?.heading === undefined ? "" : formatStepSummary(step.heading);
-  if (headingText !== "") {
-    return headingText;
-  }
-  const labelText = step?.label?.trim() ?? "";
-  return labelText === "" ? fallbackLabel : labelText;
-}
-
-function inspectManualStepSelection({
-  completedStepIds,
-  currentLevelNumber,
-  pageSlug,
-  syllabus,
-}: InspectManualStepSelectionInput): ManualStepSelectionInspection {
-  const behaviors = collectLevelBehaviors(syllabus);
-  const selectedBehavior = behaviors.find((behavior) => behavior.pageSlug === pageSlug);
-  const selectedLevelNumber = selectedBehavior === undefined ? null : selectedBehavior.levelNumber;
-  const prerequisiteSlugs = new Set(getPrerequisiteChain(pageSlug));
-  const unmetPrerequisites = behaviors
-    .filter(
-      (behavior) =>
-        prerequisiteSlugs.has(behavior.pageSlug) &&
-        behavior.stepIds.some((stepId) => !completedStepIds.has(stepId)),
-    )
-    .map((behavior) => ({ pageSlug: behavior.pageSlug, title: behavior.title }));
-  const isLaterLevel = selectedLevelNumber !== null && selectedLevelNumber > currentLevelNumber;
-  return {
-    hasWarning: unmetPrerequisites.length > 0 || isLaterLevel,
-    isLaterLevel,
-    selectedLevelNumber,
-    unmetPrerequisites,
-  };
-}
-
 function toWaitingNotice(step: BehaviorStepCandidate, reason: string): WaitingTestNotice {
   return {
     behaviorTitle: step.behaviorTitle,
@@ -142,24 +87,36 @@ function toWaitingNotice(step: BehaviorStepCandidate, reason: string): WaitingTe
   };
 }
 
-function findPendingTestRecommendation({
-  activityIndex,
-  currentLevelNumber,
-  incompleteSteps,
-  now,
-}: PracticeContext & { now: Date }): {
-  recommendation: TrainingRecommendation | null;
-  waitingTestNotice: WaitingTestNotice | null;
-} {
-  const readyCandidates = incompleteSteps
-    .filter((step) => isStepTestable(step.stepId))
+function findReadyTestCandidates(
+  incompleteSteps: readonly BehaviorStepCandidate[],
+  excludedSet: ReadonlySet<string>,
+  activityIndex: ActivityIndex,
+) {
+  return incompleteSteps
+    .filter((step) => isStepTestable(step.stepId) && !excludedSet.has(step.stepId))
     .flatMap((step) => {
       const source = getTestReadinessSource(step.stepId, step.criterion, activityIndex);
       return source === null ? [] : [{ source, step }];
     });
-  const testableNow = readyCandidates.find(({ step }) =>
-    canTestToday(getStepActivityDates(activityIndex, step.stepId), now),
-  );
+}
+
+function findPendingTestRecommendation({
+  activityIndex,
+  currentLevelNumber,
+  excludedSet,
+  incompleteSteps,
+  now,
+}: PracticeContext & { now: Date | null }): {
+  recommendation: TrainingRecommendation | null;
+  waitingTestNotice: WaitingTestNotice | null;
+} {
+  const readyCandidates = findReadyTestCandidates(incompleteSteps, excludedSet, activityIndex);
+  const testableNow =
+    now === null
+      ? undefined
+      : readyCandidates.find(({ step }) =>
+          canTestToday(getStepActivityDates(activityIndex, step.stepId), now),
+        );
   if (testableNow !== undefined) {
     const reason =
       testableNow.source === "decision"
@@ -169,6 +126,7 @@ function findPendingTestRecommendation({
       recommendation: {
         ...toWaitingNotice(testableNow.step, reason),
         currentLevelNumber,
+        fallbackMode: "none",
         levelNumber: testableNow.step.levelNumber,
         mode: "test",
         waitingTestNotice: null,
@@ -210,6 +168,7 @@ function resolvePracticePool({
   allSteps,
   completedStepIds,
   currentLevelNumber,
+  excludedSet,
   incompleteSteps,
   stepIdsByPage,
 }: PracticeContext): {
@@ -218,9 +177,15 @@ function resolvePracticePool({
 } {
   const levelIncomplete = incompleteSteps.filter((step) => step.levelNumber === currentLevelNumber);
   if (levelIncomplete.length === 0) {
-    return { fallbackMode: "all_complete", pool: allSteps };
+    const remainingAll = allSteps.filter((step) => !excludedSet.has(step.stepId));
+    return {
+      fallbackMode: "all_complete",
+      pool: remainingAll.length > 0 ? remainingAll : allSteps,
+    };
   }
-  const unblocked = levelIncomplete.filter((step) =>
+  const remainingLevel = levelIncomplete.filter((step) => !excludedSet.has(step.stepId));
+  const candidatePool = remainingLevel.length > 0 ? remainingLevel : levelIncomplete;
+  const unblocked = candidatePool.filter((step) =>
     getPrerequisiteChain(step.pageSlug).every((prereqSlug) => {
       const prereqSteps = stepIdsByPage.get(prereqSlug);
       return prereqSteps === undefined || prereqSteps.every((id) => completedStepIds.has(id));
@@ -228,7 +193,7 @@ function resolvePracticePool({
   );
   return unblocked.length > 0
     ? { fallbackMode: "none", pool: unblocked }
-    : { fallbackMode: "all_blocked", pool: levelIncomplete };
+    : { fallbackMode: "all_blocked", pool: candidatePool };
 }
 
 function buildPracticeRecommendation({
@@ -251,6 +216,7 @@ function buildPracticeRecommendation({
       buildPracticeReason(fallbackMode, selected.step.levelNumber, selected.latestActivityAt),
     ),
     currentLevelNumber: context.currentLevelNumber,
+    fallbackMode,
     levelNumber: selected.step.levelNumber,
     mode: "practice",
     waitingTestNotice,
@@ -258,8 +224,10 @@ function buildPracticeRecommendation({
 }
 
 function recommendNextTrainingActivity({
+  excludedStepIds = [],
   now = new Date(),
   overview,
+  preferredMode,
   syllabus,
 }: RecommendNextTrainingActivityInput): TrainingRecommendation {
   const completedStepIds = new Set(overview.curriculumProgress.map((item) => item.stepId));
@@ -270,11 +238,12 @@ function recommendNextTrainingActivity({
     allSteps,
     completedStepIds,
     currentLevelNumber: getCurrentLevelNumber(syllabus, completedStepIds),
+    excludedSet: new Set(excludedStepIds),
     incompleteSteps: allSteps.filter((step) => !completedStepIds.has(step.stepId)),
     stepIdsByPage: new Map(behaviors.map((behavior) => [behavior.pageSlug, behavior.stepIds])),
   };
   const pendingTest = findPendingTestRecommendation({ ...context, now });
-  if (pendingTest.recommendation !== null) {
+  if (preferredMode !== "practice" && pendingTest.recommendation !== null) {
     return pendingTest.recommendation;
   }
   return buildPracticeRecommendation({
@@ -284,16 +253,20 @@ function recommendNextTrainingActivity({
 }
 
 export {
-  getCurrentLevelNumber,
   getTrainingFallbackGuidance,
   inspectManualStepSelection,
-  isStepTestable,
-  recommendNextTrainingActivity,
   type InspectManualStepSelectionInput,
   type ManualStepSelectionInspection,
+  type UnmetPrerequisite,
+} from "./training-manual-selection";
+
+export {
+  getCurrentLevelNumber,
+  isStepTestable,
+  recommendNextTrainingActivity,
+  type PracticeFallbackMode,
   type RecommendNextTrainingActivityInput,
   type TrainingRecommendation,
   type TrainingRecommendationMode,
-  type UnmetPrerequisite,
   type WaitingTestNotice,
 };

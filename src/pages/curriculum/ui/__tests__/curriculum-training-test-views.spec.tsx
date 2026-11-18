@@ -291,4 +291,36 @@ describe("curriculum training test views", () => {
       "/levels/level-1/zen",
     );
   });
+
+  it("offers Start Test when recommendedMode is test and disables when blockedByOverride", () => {
+    expect.hasAssertions();
+
+    const { rerender } = renderWithProviders(
+      <CurriculumTrainingTestOffer
+        decision={null}
+        onStartTest={vi.fn<(coldOverride: boolean) => void>()}
+        practiceDates={[]}
+        recommendedMode="test"
+        step={STEP_WITH_COLD}
+        testHistory={[]}
+      />,
+      { routePaths: ["/"] },
+    );
+
+    expect(screen.getByRole("button", { name: "Start Test" })).toHaveProperty("disabled", false);
+
+    rerender(
+      <CurriculumTrainingTestOffer
+        blockedByOverride
+        decision={null}
+        onStartTest={vi.fn<(coldOverride: boolean) => void>()}
+        practiceDates={[]}
+        recommendedMode="test"
+        step={STEP_WITH_COLD}
+        testHistory={[]}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Start Test" })).toHaveProperty("disabled", true);
+  });
 });

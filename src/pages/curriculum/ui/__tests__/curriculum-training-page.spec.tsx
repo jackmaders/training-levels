@@ -1,17 +1,25 @@
 import { QueryClient } from "@tanstack/react-query";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { renderToString } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
+import type { CurriculumSyllabus } from "@/shared/curriculum-data";
 import {
   TEST_BEHAVIOR_PAGE,
+  TEST_SYLLABUS,
   createBehaviorPageFixture,
   createBehaviorStepFixture,
   createProsePageFixture,
 } from "@test/vitest/fixtures/curriculum";
-import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
+import { createTestingWrapper, renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
 
-import { curriculumPageQueryOptions } from "../../api/curriculum-query-options";
+import {
+  curriculumPageQueryOptions,
+  curriculumSyllabusQueryOptions,
+} from "../../api/curriculum-query-options";
+import { trainingOverviewQueryOptions } from "../../api/recommendation-query-options";
+import type { TrainingOverview } from "../../api/recommendation-service";
 import {
   PRACTICE_STEP_ID,
   practiceHistoryQueryOptions,
@@ -33,7 +41,6 @@ import {
 } from "../../api/training.functions";
 import { PRACTICE_STEP_OPTIONS } from "../../model/practice-ladders";
 import { CurriculumTrainingPage } from "../curriculum-training-page";
-import { STEP_TARGET } from "../curriculum-training-views";
 
 vi.mock(import("../../api/training.functions"));
 
@@ -45,11 +52,24 @@ beforeEach(() => {
   vi.mocked(getStepTestHistoryFn).mockResolvedValue([]);
 });
 
+function createEmptyOverview(overrides: Partial<TrainingOverview> = {}): TrainingOverview {
+  return {
+    curriculumProgress: [],
+    practiceAttempts: [],
+    practiceTotals: [],
+    stepDecisions: [],
+    stepTests: [],
+    ...overrides,
+  };
+}
+
 function createTrainingQueryClient({
   decisionRecord = null,
   history = [],
+  overview = createEmptyOverview(),
   page = TEST_BEHAVIOR_PAGE,
   stepId = PRACTICE_STEP_ID,
+  syllabus = TEST_SYLLABUS,
   totals = [],
 }: {
   decisionRecord?: {
@@ -65,8 +85,10 @@ function createTrainingQueryClient({
     target: string;
     undoneAt: Date | null;
   }[];
+  overview?: TrainingOverview;
   page?: typeof TEST_BEHAVIOR_PAGE | null;
   stepId?: string;
+  syllabus?: CurriculumSyllabus;
   totals?: {
     createdAt: Date;
     notYetCount: number;
@@ -82,6 +104,8 @@ function createTrainingQueryClient({
   const queryClient = new QueryClient({
     defaultOptions: { mutations: { retry: false }, queries: { retry: false, staleTime: Infinity } },
   });
+  queryClient.setQueryData(trainingOverviewQueryOptions().queryKey, overview);
+  queryClient.setQueryData(curriculumSyllabusQueryOptions().queryKey, syllabus);
   queryClient.setQueryData(curriculumPageQueryOptions("level-1/zen").queryKey, page);
   queryClient.setQueryData(practiceHistoryQueryOptions(stepId).queryKey, history);
   queryClient.setQueryData(practiceTotalsQueryOptions(stepId).queryKey, totals);
@@ -241,7 +265,7 @@ describe("curriculum training page", () => {
     await user.selectOptions(screen.getByLabelText("Behavior and Step"), secondOption.stepId);
 
     // Assert
-    expect(onSelectionChange).toHaveBeenCalledWith(secondOption.stepId, undefined);
+    expect(onSelectionChange).toHaveBeenCalledWith(secondOption.stepId);
   });
 
   it("handles undo and correct in practice view", async () => {
@@ -295,7 +319,7 @@ describe("curriculum training page", () => {
     );
 
     // Act
-    await user.click(screen.getByRole("button", { name: /Practice/u }));
+    await user.click(screen.getByRole("button", { name: /^(?:Start|Resume) Practice$/u }));
     await user.click(screen.getByRole("button", { name: "Undo" }));
 
     // Assert
@@ -366,7 +390,7 @@ describe("curriculum training page", () => {
     );
 
     // Act: enter practice
-    await user.click(screen.getByRole("button", { name: /Practice/u }));
+    await user.click(screen.getByRole("button", { name: /^(?:Start|Resume) Practice$/u }));
 
     // Act: take a break and continue
     await user.click(screen.getByRole("button", { name: "Take a break" }));
@@ -440,7 +464,7 @@ describe("curriculum training page", () => {
     );
 
     // Act: enter practice
-    await user.click(screen.getByRole("button", { name: /Practice/u }));
+    await user.click(screen.getByRole("button", { name: /^(?:Start|Resume) Practice$/u }));
 
     // Act: correct not_yet attempt
     await user.click(screen.getByRole("button", { name: "Correct" }));
@@ -536,7 +560,7 @@ describe("curriculum training page", () => {
       { queryClient, routePaths: ["/", "/levels/$section/$page"] },
     );
 
-    await user.click(screen.getByRole("button", { name: /Practice/u }));
+    await user.click(screen.getByRole("button", { name: /^(?:Start|Resume) Practice$/u }));
     await user.click(screen.getByRole("button", { name: "Correct totals" }));
     await waitFor(() => {
       expect(correctPracticeTotalsFn).toHaveBeenCalledOnce();
@@ -806,6 +830,303 @@ describe("curriculum training page", () => {
     );
 
     // Assert
-    expect(screen.getByLabelText("Current practice target").textContent).toBe(STEP_TARGET);
+    expect(screen.getByLabelText("Current practice target").textContent).toBe(
+      "Level 1 Sit · Step 1",
+    );
+  });
+
+  it("defers cold test eligibility on SSR and updates mode and exclusions", async () => {
+    expect.hasAssertions();
+
+    const user = userEvent.setup();
+    const onModeChange = vi.fn<() => void>();
+    const onSelectionChange = vi.fn<() => void>();
+    const readyOverview = createEmptyOverview({
+      stepDecisions: [
+        {
+          decidedAt: new Date("2020-01-01T00:00:00.000Z"),
+          decision: "recommend_test",
+          stepId: PRACTICE_STEP_ID,
+        },
+      ],
+    });
+    const singleBehaviorSyllabus: CurriculumSyllabus = {
+      sections: [
+        {
+          href: "/curriculum/level-1",
+          levelNumber: 1,
+          pages: [
+            {
+              href: "/curriculum/level-1/zen",
+              kind: "behavior",
+              levelNumber: 1,
+              order: 1,
+              pageSlug: "level-1/zen",
+              sectionSlug: "level-1",
+              stepIds: [PRACTICE_STEP_ID],
+              title: "Zen",
+            },
+          ],
+          sectionSlug: "level-1",
+          title: "Level 1",
+        },
+      ],
+      totalBehaviors: 1,
+      totalPages: 1,
+      totalSteps: 1,
+    };
+
+    const ssrClient = createTrainingQueryClient({
+      overview: readyOverview,
+      syllabus: singleBehaviorSyllabus,
+    });
+    const { wrapper: SsrWrapper } = createTestingWrapper({
+      queryClient: ssrClient,
+      routePaths: ["/", "/levels/$section/$page"],
+    });
+    const view = renderToString(
+      <SsrWrapper>
+        <CurriculumTrainingPage
+          selectedStepId={undefined}
+          selectedTarget={undefined}
+          onSelectionChange={onSelectionChange}
+        />
+      </SsrWrapper>,
+    );
+    expect(view).toContain("Recommended next: Practice");
+
+    const client = createTrainingQueryClient({
+      overview: readyOverview,
+      syllabus: singleBehaviorSyllabus,
+    });
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={undefined}
+        selectedTarget={undefined}
+        onModeChange={onModeChange}
+        onSelectionChange={onSelectionChange}
+      />,
+      { queryClient: client, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    expect(screen.getByText(/Recommended next: Cold Test/u)).toBeDefined();
+
+    await user.click(screen.getByRole("button", { name: "Practice" }));
+    expect(onModeChange).toHaveBeenCalledWith("practice");
+
+    await user.click(screen.getByRole("button", { name: "Practice" }));
+    expect(onModeChange).toHaveBeenCalledWith();
+
+    await user.click(screen.getByRole("button", { name: "Suggest another activity" }));
+    await user.click(screen.getByRole("button", { name: "Suggest another activity" }));
+    await user.click(screen.getByRole("button", { name: "Reset suggestions" }));
+    expect(onSelectionChange).toHaveBeenCalledWith();
+  });
+
+  it("opens waiting test step from waitingTestNotice callout", async () => {
+    expect.hasAssertions();
+
+    const user = userEvent.setup();
+    const onSelectionChange = vi.fn<() => void>();
+    const waitingOverview = createEmptyOverview({
+      practiceAttempts: [
+        {
+          attemptId: "a-today",
+          createdAt: new Date(),
+          outcome: "success",
+          stepId: PRACTICE_STEP_ID,
+          target: "10 seconds",
+          undoneAt: null,
+        },
+      ],
+      stepDecisions: [
+        {
+          decidedAt: new Date("2020-01-01T00:00:00.000Z"),
+          decision: "recommend_test",
+          stepId: PRACTICE_STEP_ID,
+        },
+      ],
+    });
+    const client = createTrainingQueryClient({
+      overview: waitingOverview,
+      stepId: "level-1/zen:step-2",
+    });
+
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={undefined}
+        selectedTarget={undefined}
+        onSelectionChange={onSelectionChange}
+      />,
+      { queryClient: client, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    await user.click(screen.getByRole("button", { name: "Open waiting Test" }));
+    expect(onSelectionChange).toHaveBeenCalledWith(PRACTICE_STEP_ID);
+  });
+
+  it("blocks later-level training until temporary override checkbox is confirmed and keeps active step locked mid-session", async () => {
+    expect.hasAssertions();
+
+    const user = userEvent.setup();
+    const stepId = "level-2/zen:step-1";
+    const queryClient = createTrainingQueryClient({ stepId });
+    queryClient.setQueryData(
+      curriculumPageQueryOptions("level-2/zen").queryKey,
+      createBehaviorPageFixture({
+        levelNumber: 2,
+        pageSlug: "level-2/zen",
+        steps: [createBehaviorStepFixture({ stepId, stepNumber: 1 })],
+        title: "Zen",
+      }),
+    );
+
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={stepId}
+        selectedTarget={undefined}
+        onSelectionChange={vi.fn<() => void>()}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    const startButton = screen.getByRole("button", { name: "Start Practice" });
+    expect(startButton).toHaveProperty("disabled", true);
+
+    await user.click(
+      screen.getByRole("checkbox", {
+        name: "Train this Level 2 Behavior for this Training only (keeps Level 1 as your current Level goal)",
+      }),
+    );
+    expect(startButton).toHaveProperty("disabled", false);
+
+    await user.click(startButton);
+    expect(screen.getByRole("heading", { name: "Current target" })).toBeDefined();
+
+    queryClient.setQueryData(
+      trainingOverviewQueryOptions().queryKey,
+      createEmptyOverview({
+        curriculumProgress: [{ completedAt: new Date("2026-01-01T00:00:00Z"), stepId }],
+      }),
+    );
+    expect(screen.getByText(/Practice · Level 2 Zen · Step 1/u)).toBeDefined();
+  });
+
+  it("renders unavailable message when resolved stepId is not in main quest options", () => {
+    expect.hasAssertions();
+
+    const customSyllabus: CurriculumSyllabus = {
+      sections: [
+        {
+          href: "/curriculum/level-1",
+          levelNumber: 1,
+          pages: [
+            {
+              href: "/curriculum/level-1/zen",
+              kind: "behavior",
+              levelNumber: 1,
+              order: 1,
+              pageSlug: "level-1/zen",
+              sectionSlug: "level-1",
+              stepIds: ["unknown-step-id"],
+              title: "Zen",
+            },
+          ],
+          sectionSlug: "level-1",
+          title: "Level 1",
+        },
+      ],
+      totalBehaviors: 1,
+      totalPages: 1,
+      totalSteps: 1,
+    };
+    const queryClient = createTrainingQueryClient({ syllabus: customSyllabus });
+
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={undefined}
+        selectedTarget={undefined}
+        onSelectionChange={vi.fn<() => void>()}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    expect(screen.getByText("Training instructions are unavailable.")).toBeDefined();
+  });
+
+  it("honors valid selectedTarget, curriculumProgress completions, and target ladder changes", async () => {
+    expect.hasAssertions();
+
+    const user = userEvent.setup();
+    const onSelectionChange = vi.fn<() => void>();
+    const stepId = "level-1/zen:step-2";
+    const queryClient = createTrainingQueryClient({
+      overview: createEmptyOverview({
+        curriculumProgress: [
+          { completedAt: new Date("2026-01-01T00:00:00.000Z"), stepId: PRACTICE_STEP_ID },
+        ],
+      }),
+      stepId,
+    });
+
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={undefined}
+        selectedTarget="Dog stays away from the treat in your closed fist for 2 seconds."
+        onSelectionChange={onSelectionChange}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    expect(screen.getByLabelText("Current practice target").textContent).toBe(
+      "Dog stays away from the treat in your closed fist for 2 seconds.",
+    );
+
+    await user.click(screen.getByRole("button", { name: /^(?:Start|Resume) Practice$/u }));
+    await user.click(screen.getByRole("button", { name: "Next ladder target" }));
+    expect(onSelectionChange).toHaveBeenCalledWith(
+      stepId,
+      "Dog stays away from the treat in your closed fist for 3 seconds.",
+    );
+  });
+
+  it("switches to test-override view when starting a cold test after same-day practice", async () => {
+    expect.hasAssertions();
+
+    const user = userEvent.setup();
+    const queryClient = createTrainingQueryClient({
+      decisionRecord: {
+        decidedAt: new Date(),
+        decision: "recommend_test",
+        stepId: PRACTICE_STEP_ID,
+      },
+      history: [
+        {
+          attemptId: "a-today",
+          createdAt: new Date(),
+          outcome: "success",
+          stepId: PRACTICE_STEP_ID,
+          target: "Target",
+          undoneAt: null,
+        },
+      ],
+    });
+
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={PRACTICE_STEP_ID}
+        selectedTarget={undefined}
+        onSelectionChange={vi.fn<() => void>()}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    await user.click(
+      screen.getByRole("checkbox", {
+        name: "I confirm I can test this Behavior cold without warming it up now.",
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: "Start Test" }));
+    expect(screen.getByText("You confirmed this Test is cold today.")).toBeDefined();
   });
 });

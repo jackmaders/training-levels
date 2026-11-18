@@ -5,6 +5,7 @@ import { createTestingWrapper } from "@test/vitest/wrappers/testing-wrapper";
 
 import { stepProgressQueryOptions } from "../../api/curriculum-query-options";
 import { generalizationKeys } from "../../api/generalization-query-options";
+import { trainingOverviewQueryOptions } from "../../api/recommendation-query-options";
 import { stepTestHistoryQueryOptions } from "../../api/training-query-options";
 import { recordStepTestFn } from "../../api/training.functions";
 import { useStepTestActions } from "../use-step-test-actions";
@@ -53,6 +54,9 @@ describe("use step test actions", () => {
     });
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: generalizationKeys.all,
+    });
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: trainingOverviewQueryOptions().queryKey,
     });
     expect(result.current.errorMessage).toBeNull();
   });

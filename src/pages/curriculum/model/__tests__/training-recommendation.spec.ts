@@ -316,6 +316,7 @@ describe("next training activity recommendation", () => {
     expect(recommendation).toStrictEqual({
       behaviorTitle: "Zen",
       currentLevelNumber: 1,
+      fallbackMode: "none",
       levelNumber: 1,
       mode: "practice",
       pageSlug: "level-1/zen",
@@ -471,7 +472,7 @@ describe("next training activity recommendation", () => {
   });
 
   it("evaluates ladder readiness across Level 3 Crate steps", () => {
-    expect.assertions(3);
+    expect.assertions(5);
     const priorLevels = toCompletions(getLevelStepIds([1, LEVEL_TWO]), dayOne);
 
     const crateEmptyTarget = recommendNextTrainingActivity({
@@ -483,6 +484,18 @@ describe("next training activity recommendation", () => {
       syllabus: FULL_SYLLABUS,
     });
     expect(crateEmptyTarget.mode).toBe("practice");
+
+    const crateEarlierTarget = recommendNextTrainingActivity({
+      now: dayFour,
+      overview: emptyOverview({
+        curriculumProgress: priorLevels,
+        practiceAttempts: [
+          makeAttempt("level-3/crate:step-2", dayOne, { target: "2 feet · 15 seconds" }),
+        ],
+      }),
+      syllabus: FULL_SYLLABUS,
+    });
+    expect(crateEarlierTarget.mode).toBe("practice");
 
     const cratePenultimateTarget = recommendNextTrainingActivity({
       now: dayFour,
@@ -510,6 +523,21 @@ describe("next training activity recommendation", () => {
       mode: "test",
       stepId: "level-3/crate:step-2",
     });
+
+    const crateFinalMissed = recommendNextTrainingActivity({
+      now: dayFour,
+      overview: emptyOverview({
+        curriculumProgress: priorLevels,
+        practiceAttempts: [
+          makeAttempt("level-3/crate:step-2", dayOne, {
+            outcome: "not_yet",
+            target: "5 feet · 60 seconds",
+          }),
+        ],
+      }),
+      syllabus: FULL_SYLLABUS,
+    });
+    expect(crateFinalMissed.mode).toBe("practice");
   });
 
   it("evaluates progression readiness and not_yet resets across Level 3 Retrieve and non-progression steps", () => {
@@ -523,9 +551,15 @@ describe("next training activity recommendation", () => {
         practiceAttempts: [
           makeAttempt("level-3/zen:step-1", dayOne),
           makeAttempt("level-3/retrieve:step-1", dayOne, { outcome: "not_yet" }),
-          makeAttempt("level-3/retrieve:step-1", dayTwo),
-          makeAttempt("level-3/retrieve:step-1", dayTwoSecond),
-          makeAttempt("level-3/retrieve:step-1", dayThree),
+          makeAttempt("level-3/retrieve:step-1", dayTwo, {
+            target: "Put her mouth calmly around the pen or pencil on Yes.",
+          }),
+          makeAttempt("level-3/retrieve:step-1", dayTwoSecond, {
+            target: "Put her mouth calmly around the spoon on Yes.",
+          }),
+          makeAttempt("level-3/retrieve:step-1", dayThree, {
+            target: "Put her mouth calmly around a third safe object on Yes without tugging.",
+          }),
         ],
       }),
       syllabus: FULL_SYLLABUS,
@@ -683,6 +717,7 @@ describe("next training activity recommendation", () => {
     expect(allBlocked).toStrictEqual({
       behaviorTitle: "Come",
       currentLevelNumber: 1,
+      fallbackMode: "all_blocked",
       levelNumber: 1,
       mode: "practice",
       pageSlug: "level-1/come",
@@ -751,5 +786,213 @@ describe("next training activity recommendation", () => {
         syllabus: emptySyllabus,
       }),
     ).toThrow("No Main Quest Behavior steps are available to recommend.");
+  });
+
+  it("returns practice when a testable step has blank criterion without guidance", () => {
+    expect.assertions(1);
+
+    const blankCriterionSyllabus: CurriculumSyllabus = {
+      sections: [
+        {
+          href: "/curriculum/level-1",
+          levelNumber: 1,
+          pages: [
+            {
+              href: "/curriculum/level-1/come",
+              kind: "behavior",
+              levelNumber: 1,
+              order: 1,
+              pageSlug: "level-1/come",
+              sectionSlug: "level-1",
+              stepIds: ["level-1/come:step-1"],
+              stepSummaries: [
+                {
+                  label: "   ",
+                  stepId: "level-1/come:step-1",
+                  stepNumber: 1,
+                },
+              ],
+              title: "Come",
+            },
+          ],
+          sectionSlug: "level-1",
+          title: "Level 1",
+        },
+      ],
+      totalBehaviors: 1,
+      totalPages: 1,
+      totalSteps: 1,
+    };
+
+    const overview = emptyOverview({
+      practiceAttempts: [makeAttempt("level-1/come:step-1", dayOne)],
+    });
+    expect(
+      recommendNextTrainingActivity({
+        now: dayTwo,
+        overview,
+        syllabus: blankCriterionSyllabus,
+      }).mode,
+    ).toBe("practice");
+  });
+
+  it("defers same-day cold Test eligibility when now is null (SSR snapshot)", () => {
+    expect.assertions(2);
+
+    const ssrRecommendation = recommendNextTrainingActivity({
+      now: null,
+      overview: emptyOverview({
+        stepDecisions: [
+          { decidedAt: dayOne, decision: "recommend_test", stepId: "level-1/zen:step-1" },
+        ],
+      }),
+      syllabus: FULL_SYLLABUS,
+    });
+
+    expect(ssrRecommendation.mode).toBe("practice");
+    expect(ssrRecommendation.waitingTestNotice?.stepId).toBe("level-1/zen:step-1");
+  });
+
+  it("respects excludedStepIds and preferredMode across test and level pools", () => {
+    expect.assertions(4);
+
+    const readyOverview = emptyOverview({
+      stepDecisions: [
+        { decidedAt: dayOne, decision: "recommend_test", stepId: "level-1/zen:step-1" },
+      ],
+    });
+
+    const preferredPractice = recommendNextTrainingActivity({
+      now: dayTwo,
+      overview: readyOverview,
+      preferredMode: "practice",
+      syllabus: FULL_SYLLABUS,
+    });
+    expect(preferredPractice.mode).toBe("practice");
+
+    const skippedTestAndStepOne = recommendNextTrainingActivity({
+      excludedStepIds: ["level-1/zen:step-1"],
+      now: dayTwo,
+      overview: readyOverview,
+      syllabus: FULL_SYLLABUS,
+    });
+    expect(skippedTestAndStepOne.mode).toBe("practice");
+    expect(skippedTestAndStepOne.stepId).not.toBe("level-1/zen:step-1");
+
+    const singleLevelSyllabus: CurriculumSyllabus = {
+      sections: [
+        {
+          href: "/curriculum/level-1",
+          levelNumber: 1,
+          pages: [
+            {
+              href: "/curriculum/level-1/zen",
+              kind: "behavior",
+              levelNumber: 1,
+              order: 1,
+              pageSlug: "level-1/zen",
+              sectionSlug: "level-1",
+              stepIds: ["level-1/zen:step-1"],
+              title: "Zen",
+            },
+          ],
+          sectionSlug: "level-1",
+          title: "Level 1",
+        },
+      ],
+      totalBehaviors: 1,
+      totalPages: 1,
+      totalSteps: 1,
+    };
+
+    expect(
+      recommendNextTrainingActivity({
+        excludedStepIds: ["level-1/zen:step-1"],
+        now: dayTwo,
+        overview: emptyOverview(),
+        syllabus: singleLevelSyllabus,
+      }).stepId,
+    ).toBe("level-1/zen:step-1");
+  });
+
+  it("respects excludedStepIds in all_complete pools", () => {
+    expect.assertions(2);
+
+    const singleLevelSyllabus: CurriculumSyllabus = {
+      sections: [
+        {
+          href: "/curriculum/level-1",
+          levelNumber: 1,
+          pages: [
+            {
+              href: "/curriculum/level-1/zen",
+              kind: "behavior",
+              levelNumber: 1,
+              order: 1,
+              pageSlug: "level-1/zen",
+              sectionSlug: "level-1",
+              stepIds: ["level-1/zen:step-1"],
+              title: "Zen",
+            },
+          ],
+          sectionSlug: "level-1",
+          title: "Level 1",
+        },
+      ],
+      totalBehaviors: 1,
+      totalPages: 1,
+      totalSteps: 1,
+    };
+
+    const completeOverview = emptyOverview({
+      curriculumProgress: [{ completedAt: dayOne, stepId: "level-1/zen:step-1" }],
+    });
+    expect(
+      recommendNextTrainingActivity({
+        excludedStepIds: ["level-1/zen:step-1"],
+        now: dayTwo,
+        overview: completeOverview,
+        syllabus: singleLevelSyllabus,
+      }).fallbackMode,
+    ).toBe("all_complete");
+
+    const twoStepCompleteSyllabus: CurriculumSyllabus = {
+      sections: [
+        {
+          href: "/curriculum/level-1",
+          levelNumber: 1,
+          pages: [
+            {
+              href: "/curriculum/level-1/zen",
+              kind: "behavior",
+              levelNumber: 1,
+              order: 1,
+              pageSlug: "level-1/zen",
+              sectionSlug: "level-1",
+              stepIds: ["level-1/zen:step-1", "level-1/zen:step-2"],
+              title: "Zen",
+            },
+          ],
+          sectionSlug: "level-1",
+          title: "Level 1",
+        },
+      ],
+      totalBehaviors: 1,
+      totalPages: 1,
+      totalSteps: 2,
+    };
+    expect(
+      recommendNextTrainingActivity({
+        excludedStepIds: ["level-1/zen:step-1"],
+        now: dayTwo,
+        overview: emptyOverview({
+          curriculumProgress: [
+            { completedAt: dayOne, stepId: "level-1/zen:step-1" },
+            { completedAt: dayOne, stepId: "level-1/zen:step-2" },
+          ],
+        }),
+        syllabus: twoStepCompleteSyllabus,
+      }).stepId,
+    ).toBe("level-1/zen:step-2");
   });
 });

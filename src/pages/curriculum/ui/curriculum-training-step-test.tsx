@@ -5,6 +5,7 @@ import type { BehaviorStep } from "@/shared/curriculum-data";
 
 import { curriculumPageQueryOptions } from "../api/curriculum-query-options";
 import { stepTestHistoryQueryOptions } from "../api/training-query-options";
+import type { TrainingRecommendationMode } from "../model/training-recommendation";
 import {
   CurriculumTrainingTestOffer,
   TrainingTest,
@@ -34,15 +35,19 @@ function useTestedStep(stepId: string): BehaviorStep | undefined {
 }
 
 function StepTestOfferContent({
+  blockedByOverride,
   decision,
   history,
   onStartTest,
+  recommendedMode,
   step,
   totals,
 }: {
+  blockedByOverride?: boolean | undefined;
   decision: PracticeDecision | null;
   history: readonly PracticeRecord[];
   onStartTest: (coldOverride: boolean) => void;
+  recommendedMode?: TrainingRecommendationMode | undefined;
   step: BehaviorStep;
   totals: readonly { createdAt: Date }[];
 }) {
@@ -54,9 +59,11 @@ function StepTestOfferContent({
 
   return (
     <CurriculumTrainingTestOffer
+      blockedByOverride={blockedByOverride}
       decision={decision}
       onStartTest={onStartTest}
       practiceDates={practiceDates}
+      recommendedMode={recommendedMode}
       step={step}
       testHistory={testHistory}
     />
@@ -64,15 +71,19 @@ function StepTestOfferContent({
 }
 
 function CurriculumTrainingStepTestOffer({
+  blockedByOverride,
   decision,
   history,
   onStartTest,
+  recommendedMode,
   stepId,
   totals,
 }: {
+  blockedByOverride?: boolean | undefined;
   decision: PracticeDecision | null;
   history: readonly PracticeRecord[];
   onStartTest: (coldOverride: boolean) => void;
+  recommendedMode?: TrainingRecommendationMode | undefined;
   stepId: string;
   totals: readonly { createdAt: Date }[];
 }) {
@@ -83,9 +94,11 @@ function CurriculumTrainingStepTestOffer({
 
   return (
     <StepTestOfferContent
+      blockedByOverride={blockedByOverride}
       decision={decision}
       history={history}
       onStartTest={onStartTest}
+      recommendedMode={recommendedMode}
       step={step}
       totals={totals}
     />

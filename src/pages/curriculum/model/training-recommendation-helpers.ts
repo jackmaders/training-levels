@@ -16,7 +16,6 @@ import type {
 import { getLevelSections } from "./curriculum-levels";
 import { getPracticeGuidance } from "./practice-guidance";
 import { getPracticePlan, hasPracticeLadder } from "./practice-ladders";
-import { getPracticeProgression } from "./practice-progression";
 
 const LAST_INDEX = -1;
 const SORT_AFTER = 1;
@@ -153,31 +152,11 @@ function buildActivityIndex(overview: TrainingOverview): ActivityIndex {
   };
 }
 
-function isProgressionReady(stepId: string, attempts: readonly TrainingOverviewAttempt[]): boolean {
-  const latestAttempt = attempts.at(LAST_INDEX);
-  if (latestAttempt === undefined) {
-    return false;
-  }
-  let consecutiveSuccesses = 0;
-  for (const attempt of attempts) {
-    consecutiveSuccesses = attempt.outcome === "success" ? consecutiveSuccesses + 1 : 0;
-  }
-  const progression = getPracticeProgression(stepId, {
-    consecutiveSuccesses,
-    lastOutcome: latestAttempt.outcome,
-  });
-  return progression?.readyForTest ?? false;
-}
-
 function isPracticeReadyForTest(
   stepId: string,
   criterion: string,
   attempts: readonly TrainingOverviewAttempt[],
 ): boolean {
-  const guidance = getPracticeGuidance(stepId, criterion, attempts);
-  if (guidance !== null) {
-    return guidance.readyForTest;
-  }
   if (hasPracticeLadder(stepId)) {
     const plan = getPracticePlan(stepId, attempts);
     const lastTargetAttempt = attempts.filter((attempt) => attempt.target !== "").at(LAST_INDEX);
@@ -187,7 +166,7 @@ function isPracticeReadyForTest(
       lastTargetAttempt.target === plan.target
     );
   }
-  return isProgressionReady(stepId, attempts);
+  return getPracticeGuidance(stepId, criterion, attempts)?.readyForTest ?? false;
 }
 
 function isAttemptReadinessActive({
