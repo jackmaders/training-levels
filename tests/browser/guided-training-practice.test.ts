@@ -87,7 +87,7 @@ test("guides a Level 2 duration Step from Prep through a recorded Practice", asy
   const trainingPage = await signUpAndVisit(page, baseURL);
 
   // Act
-  await trainingPage.enterPractice("Level 2 Zen · Step 2");
+  await trainingPage.enterPractice("Level 2 Zen · Step 2", { confirmLaterLevel: true });
 
   // Assert
   await expect(trainingPage.target).toContainText("1 second");
@@ -116,6 +116,7 @@ test("uses the Crate Step 2 ladder, restarts after a miss, and offers break choi
   const trainingPage = await signUpAndVisit(page, baseURL);
   await trainingPage.startFromPrep();
   await trainingPage.selectStep("Level 3 Crate · Step 2");
+  await trainingPage.confirmLaterLevelOverride();
   await expect(trainingPage.target).toHaveText("2 feet · 0 seconds");
 
   // Act
@@ -151,6 +152,7 @@ test("timer completion waits for the handler to confirm success", async ({ baseU
   const trainingPage = await signUpAndVisit(page, baseURL);
   await trainingPage.startFromPrep();
   await trainingPage.selectStep("Level 3 Crate · Step 2");
+  await trainingPage.confirmLaterLevelOverride();
   await trainingPage.startButton.click();
   await trainingPage.chooseNextTarget();
 
@@ -164,6 +166,7 @@ test("timer completion waits for the handler to confirm success", async ({ baseU
   await expect(trainingPage.target).toHaveText("2 feet · 15 seconds");
 
   // Act
+  await trainingPage.confirmLaterLevelOverride();
   await trainingPage.startButton.click();
   await expect(trainingPage.timerStartButton).toBeVisible();
   await trainingPage.startTimer();
@@ -195,7 +198,7 @@ test("runs a Level 4 minute-duration timer from Practice and advances on confirm
   const trainingPage = await signUpAndVisit(page, baseURL);
 
   // Act
-  await trainingPage.enterPractice("Level 4 Crate · Step 1");
+  await trainingPage.enterPractice("Level 4 Crate · Step 1", { confirmLaterLevel: true });
 
   // Assert
   await expectLevelFourCrateInitialPrompt(trainingPage);
@@ -234,7 +237,7 @@ test("supports mixed-method Level 3 Retrieve across shaping and hold duration st
 }) => {
   // Arrange
   const trainingPage = await signUpAndVisit(page, baseURL);
-  await trainingPage.enterPractice("Level 3 Retrieve · Step 1");
+  await trainingPage.enterPractice("Level 3 Retrieve · Step 1", { confirmLaterLevel: true });
 
   // Act & Assert
   await expectRetrieveStepOneProgression(trainingPage);
@@ -244,6 +247,7 @@ test("supports mixed-method Level 3 Retrieve across shaping and hold duration st
   await expect(page).toHaveURL(/\/levels\/level-3\/retrieve$/u);
   await trainingPage.gotoTraining();
   await trainingPage.selectStep("Level 3 Retrieve · Step 2");
+  await trainingPage.confirmLaterLevelOverride();
   await trainingPage.startButton.click();
 
   // Assert

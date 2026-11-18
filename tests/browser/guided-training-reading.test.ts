@@ -20,6 +20,7 @@ async function signUpAndOpenPrep(page: Page, baseURL: string | undefined) {
 
 async function startCrateTimedHold(page: Page, trainingPage: TrainingPage) {
   await trainingPage.selectStep("Level 3 Crate · Step 2");
+  await trainingPage.confirmLaterLevelOverride();
   await trainingPage.startButton.click();
   await trainingPage.chooseNextTarget();
   await trainingPage.startTimer();

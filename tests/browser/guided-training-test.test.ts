@@ -23,7 +23,7 @@ async function prepareSameDayTest(trainingPage: TrainingPage) {
   await trainingPage.recordSuccesses(PRACTICE_SUCCESS_COUNT);
   await trainingPage.recommendTestNextTime();
   await trainingPage.finishPractice();
-  await trainingPage.gotoTraining();
+  await trainingPage.gotoTraining("level-1/zen:step-1");
   await expect(trainingPage.startTest).toBeDisabled();
   await trainingPage.confirmColdness();
   await trainingPage.startTestActivity();
@@ -40,12 +40,12 @@ async function recommendPracticeAfterFailure(trainingPage: TrainingPage) {
 }
 
 async function failSameDayRetest(trainingPage: TrainingPage) {
-  await trainingPage.gotoTraining();
+  await trainingPage.gotoTraining("level-1/zen:step-1");
   await trainingPage.confirmColdness();
   await trainingPage.startTestActivity();
   await recommendPracticeAfterFailure(trainingPage);
   await trainingPage.finishTest();
-  await trainingPage.gotoTraining();
+  await trainingPage.gotoTraining("level-1/zen:step-1");
   await expect(trainingPage.prep).toContainText(
     /Latest Test: Not yet — Needs practice[\s\S]*Passed[\s\S]*Not yet/u,
   );
@@ -62,7 +62,7 @@ test("cold Test uses the full criterion and allows a confirmed same-day override
   await page.clock.install({ time: new Date() });
   await page.clock.fastForward("24:00:00");
   await trainingPage.finishTest();
-  await trainingPage.gotoTraining();
+  await trainingPage.gotoTraining("level-1/zen:step-1");
 
   await expect(trainingPage.startTest).toBeEnabled();
 });

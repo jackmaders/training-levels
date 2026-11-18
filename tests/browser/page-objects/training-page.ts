@@ -9,6 +9,29 @@ class TrainingPage {
     this.page = page;
   }
 
+  public get startTrainingHeaderLink(): Locator {
+    return this.page.getByRole("banner").getByRole("link", { exact: true, name: "Start Training" });
+  }
+  public get recommendationPanel(): Locator {
+    return this.page.getByRole("region", { name: "Recommended next activity" });
+  }
+  public get suggestAnotherButton(): Locator {
+    return this.recommendationPanel.getByRole("button", { name: "Suggest another activity" });
+  }
+  public get resetSuggestionsButton(): Locator {
+    return this.recommendationPanel.getByRole("button", { name: "Reset suggestions" });
+  }
+  public get openWaitingTestButton(): Locator {
+    return this.recommendationPanel.getByRole("button", { name: "Open waiting Test" });
+  }
+  public get laterLevelOverrideCheckbox(): Locator {
+    return this.recommendationPanel.getByRole("checkbox", {
+      name: /^Train this Level \d+ Behavior for this Training only/u,
+    });
+  }
+  public get unmetComebeforesList(): Locator {
+    return this.recommendationPanel.getByRole("list");
+  }
   public get startPractice(): Locator {
     return this.page.getByRole("link", { name: "Practice Step 1" });
   }
@@ -87,9 +110,50 @@ class TrainingPage {
     return this.page.getByRole("button", { exact: true, name: "Not yet" });
   }
 
-  public async gotoTraining() {
-    await this.page.goto("/training");
+  public async gotoTraining(stepId?: string) {
+    const path =
+      stepId === undefined ? "/training" : `/training?stepId=${encodeURIComponent(stepId)}`;
+    await this.page.goto(path);
     await waitForHydration(this.page);
+  }
+
+  public async openFromHeader() {
+    const menu = this.page.getByRole("button", { name: "Open menu" });
+    if (await menu.isVisible()) {
+      await menu.click();
+      await this.page.getByRole("dialog").getByRole("link", { name: "Start Training" }).click();
+      return;
+    }
+    await this.startTrainingHeaderLink.click();
+  }
+
+  public async confirmLaterLevelOverride() {
+    await this.laterLevelOverrideCheckbox.check();
+  }
+
+  public async suggestAnotherActivity() {
+    await this.suggestAnotherButton.click();
+  }
+
+  public async suggestAnotherTimes(count: number) {
+    if (count === 0) {
+      return;
+    }
+    const previousStepId = await this.stepSelect.inputValue();
+    await this.suggestAnotherActivity();
+    await this.page.waitForFunction((prev) => {
+      const element = document.querySelector("#practice-step");
+      return element !== null && "value" in element && element.value !== prev;
+    }, previousStepId);
+    await this.suggestAnotherTimes(count - 1);
+  }
+
+  public async resetSuggestions() {
+    await this.resetSuggestionsButton.click();
+  }
+
+  public async openWaitingTest() {
+    await this.openWaitingTestButton.click();
   }
 
   public async confirmColdness() {
@@ -156,10 +220,13 @@ class TrainingPage {
     await this.continueButton.click();
   }
 
-  public async enterPractice(stepLabel?: string) {
+  public async enterPractice(stepLabel?: string, options?: { confirmLaterLevel?: boolean }) {
     await this.startFromPrep();
     if (stepLabel !== undefined) {
       await this.selectStep(stepLabel);
+    }
+    if (options?.confirmLaterLevel === true) {
+      await this.confirmLaterLevelOverride();
     }
     await this.startButton.click();
     await this.successButton.waitFor({ state: "visible" });
