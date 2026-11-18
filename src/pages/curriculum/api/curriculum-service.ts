@@ -6,7 +6,7 @@ import {
   getCurriculumSyllabus,
   isValidStepId,
 } from "@/shared/curriculum-data/index.server";
-import { dogs, stepCompletions } from "@/shared/db";
+import { dogs, stepCompletions, stepTests } from "@/shared/db";
 import { getDb, type Database, type DbContext } from "@/shared/db/index.server";
 import { ApplicationError } from "@/shared/errors";
 
@@ -60,10 +60,47 @@ export async function toggleStep(
   }
 
   if (input.completed) {
+    await requirePassingStepTest(input.stepId, db, userId);
     return await markStepCompleted({ db, stepId: input.stepId, userId });
   }
 
   return await unmarkStepCompleted({ db, stepId: input.stepId, userId });
+}
+
+async function requirePassingStepTest(stepId: string, db: Database, userId: string): Promise<void> {
+  if (stepId !== "level-1/zen:step-1") {
+    return;
+  }
+
+  const dogId = await findPrimaryDogId(db, userId);
+  if (dogId === null) {
+    throw new ApplicationError("CURRICULUM_STEP_TEST_REQUIRED", { details: { stepId } });
+  }
+  if (await hasStepCompletion(stepId, dogId, db)) {
+    return;
+  }
+  const [passingTest] = await db
+    .select({ testId: stepTests.testId })
+    .from(stepTests)
+    .where(
+      and(
+        eq(stepTests.dogId, dogId),
+        eq(stepTests.stepId, stepId),
+        eq(stepTests.outcome, "success"),
+      ),
+    )
+    .limit(1);
+  if (passingTest === undefined) {
+    throw new ApplicationError("CURRICULUM_STEP_TEST_REQUIRED", { details: { stepId } });
+  }
+}
+
+async function hasStepCompletion(stepId: string, dogId: string, db: Database): Promise<boolean> {
+  const [completion] = await db
+    .select({ stepId: stepCompletions.stepId })
+    .from(stepCompletions)
+    .where(and(eq(stepCompletions.dogId, dogId), eq(stepCompletions.stepId, stepId)));
+  return completion !== undefined;
 }
 
 interface StepMutationParams {

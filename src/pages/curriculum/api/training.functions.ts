@@ -9,10 +9,12 @@ import {
   recordPracticeTotals,
   savePracticeStepDecision,
 } from "./practice-progress-service";
+import { getStepTestHistory, recordStepTest } from "./step-test-service";
 import {
   correctPracticeAttemptInputSchema,
   correctPracticeTotalsInputSchema,
   practiceHistoryInputSchema,
+  recordStepTestInputSchema,
   savePracticeStepDecisionInputSchema,
   recordPracticeAttemptInputSchema,
   recordPracticeTotalsInputSchema,
@@ -89,3 +91,15 @@ export const savePracticeStepDecisionFn = createServerFn({ method: "POST" })
   .handler(
     async ({ context, data }) => await savePracticeStepDecision(data, { userId: context.user.id }),
   );
+
+export const getStepTestHistoryFn = createServerFn({ method: "GET" })
+  .middleware([permissionMiddleware("curriculum:read")])
+  .validator(practiceHistoryInputSchema)
+  .handler(
+    async ({ context, data }) => await getStepTestHistory(data.stepId, { userId: context.user.id }),
+  );
+
+export const recordStepTestFn = createServerFn({ method: "POST" })
+  .middleware([permissionMiddleware("progress:update")])
+  .validator(recordStepTestInputSchema)
+  .handler(async ({ context, data }) => await recordStepTest(data, { userId: context.user.id }));

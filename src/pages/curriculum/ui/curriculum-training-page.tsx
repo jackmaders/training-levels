@@ -13,6 +13,7 @@ import {
   practiceHistoryQueryOptions,
   practiceStepDecisionQueryOptions,
   practiceTotalsQueryOptions,
+  stepTestHistoryQueryOptions,
 } from "../api/training-query-options";
 import {
   correctPracticeAttemptFn,
@@ -25,51 +26,67 @@ import {
 import { getPracticeProgression } from "../model/practice-progression";
 import {
   STEP_TARGET,
-  TrainingHeading,
-  TrainingPractice,
-  TrainingPrep,
   type Outcome,
   type PracticeActions,
   type PracticeRecord,
-} from "./curriculum-training-views";
+} from "./curriculum-training-practice-view";
+import { CurriculumTrainingScreen } from "./curriculum-training-screen";
+import { useStepTestActions } from "./use-step-test-actions";
 
 function CurriculumTrainingPage() {
-  const { data: history } = useSuspenseQuery(practiceHistoryQueryOptions());
-  const { data: totals } = useSuspenseQuery(practiceTotalsQueryOptions());
-  const { data: decisionRecord } = useSuspenseQuery(practiceStepDecisionQueryOptions());
-  const { data: curriculumPage } = useSuspenseQuery(curriculumPageQueryOptions("level-1/zen"));
-  const [view, setView] = useState<"prep" | "practice">("prep");
+  const { decisionRecord, curriculumPage, history, testHistory, totals } = useTrainingQueries();
+  const [view, setView] = useState<"prep" | "practice" | "test">("prep");
+  const [coldOverride, setColdOverride] = useState(false);
   const actions = usePracticeActions();
+  const testActions = useStepTestActions();
   const progression = getPracticeProgression(PRACTICE_STEP_ID, {
     consecutiveSuccesses: countTrailingSuccesses(history),
     lastOutcome: history.toReversed().find((attempt) => attempt.undoneAt === null)?.outcome,
   });
 
-  if (curriculumPage === null || curriculumPage.kind !== "behavior" || progression === null) {
+  const step =
+    curriculumPage?.kind === "behavior"
+      ? curriculumPage.steps.find((candidate) => candidate.stepId === PRACTICE_STEP_ID)
+      : undefined;
+  if (
+    curriculumPage === null ||
+    curriculumPage.kind !== "behavior" ||
+    step === undefined ||
+    progression === null
+  ) {
     return <main className="mx-auto max-w-3xl p-6">Training instructions are unavailable.</main>;
   }
 
   return (
-    <main className="mx-auto max-w-3xl space-y-8 px-4 pt-8 pb-36 sm:px-6">
-      <TrainingHeading />
-      {view === "prep" ? (
-        <TrainingPrep
-          decision={decisionRecord?.decision ?? null}
-          equipment={curriculumPage.equipment}
-          history={history}
-          onStart={() => setView("practice")}
-        />
-      ) : (
-        <TrainingPractice
-          actions={actions}
-          decision={decisionRecord?.decision ?? null}
-          history={history}
-          progression={progression}
-          totals={totals}
-        />
-      )}
-    </main>
+    <CurriculumTrainingScreen
+      coldOverride={coldOverride}
+      decision={decisionRecord?.decision ?? null}
+      equipment={curriculumPage.equipment}
+      history={history}
+      onStartPractice={() => setView("practice")}
+      onStartTest={(override) => {
+        setColdOverride(override);
+        setView("test");
+      }}
+      practiceActions={actions}
+      progression={progression}
+      step={step}
+      testActions={testActions}
+      testHistory={testHistory}
+      totals={totals}
+      view={view}
+    />
   );
+}
+
+function useTrainingQueries() {
+  return {
+    curriculumPage: useSuspenseQuery(curriculumPageQueryOptions("level-1/zen")).data,
+    decisionRecord: useSuspenseQuery(practiceStepDecisionQueryOptions()).data,
+    history: useSuspenseQuery(practiceHistoryQueryOptions()).data,
+    testHistory: useSuspenseQuery(stepTestHistoryQueryOptions()).data,
+    totals: useSuspenseQuery(practiceTotalsQueryOptions()).data,
+  };
 }
 
 function countTrailingSuccesses(history: readonly PracticeRecord[]): number {

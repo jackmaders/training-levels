@@ -3,32 +3,50 @@ import type { Locator, Page } from "@playwright/test";
 import { waitForHydration } from "./hydration";
 
 class TrainingPage {
-  public readonly startPractice: Locator;
-  public readonly startButton: Locator;
-  public readonly successButton: Locator;
-  public readonly notYetButton: Locator;
-  public readonly undoButton: Locator;
-  public readonly finishLink: Locator;
-  public readonly history: Locator;
-  public readonly counts: Locator;
+  public readonly startPractice!: Locator;
+  public readonly startTest!: Locator;
+  public readonly coldnessOverride!: Locator;
+  public readonly passTestButton!: Locator;
+  public readonly failTestButton!: Locator;
+  public readonly testHistory!: Locator;
+  public readonly testActivity!: Locator;
+  public readonly prep!: Locator;
+  public readonly startButton!: Locator;
+  public readonly successButton!: Locator;
+  public readonly notYetButton!: Locator;
+  public readonly undoButton!: Locator;
+  public readonly finishLink!: Locator;
+  public readonly history!: Locator;
+  public readonly counts!: Locator;
 
   private readonly page: Page;
 
   public constructor(page: Page) {
     this.page = page;
-    this.startPractice = page.getByRole("link", { name: "Practice Step 1" });
-    this.startButton = page.getByRole("button", { name: /^(?:Start|Resume) Practice$/u });
-    this.successButton = page.getByRole("button", { exact: true, name: "Success" });
-    this.notYetButton = page.getByRole("button", { exact: true, name: "Not yet" });
-    this.undoButton = page.getByRole("button", { name: "Undo" });
-    this.finishLink = page.getByRole("link", { name: "Finish Practice" });
-    this.history = page.getByRole("list", { name: "Practice history" });
-    this.counts = page.getByText(/\d+ Success · \d+ Not yet/u);
+    Object.assign(this, createTrainingPageLocators(page));
   }
 
   public async gotoBehavior() {
     await this.page.goto("/levels/level-1/zen");
     await waitForHydration(this.page);
+  }
+
+  public async gotoTraining() {
+    await this.page.goto("/training");
+    await waitForHydration(this.page);
+  }
+
+  public async startTestActivity() {
+    await this.startTest.click();
+    await this.passTestButton.waitFor({ state: "visible" });
+  }
+
+  public async confirmColdness() {
+    await this.coldnessOverride.check();
+  }
+
+  public async finishTest() {
+    await this.page.getByRole("link", { name: "Finish Test" }).click();
   }
 
   public async startFromPrep() {
@@ -40,6 +58,27 @@ class TrainingPage {
     await this.startFromPrep();
     await this.startButton.click();
     await this.successButton.waitFor({ state: "visible" });
+  }
+
+  public async recordSuccess() {
+    await this.successButton.click();
+  }
+
+  public async recordSuccesses(count: number) {
+    if (count === 0) {
+      return;
+    }
+    await this.recordSuccess();
+    await this.recordSuccesses(count - 1);
+  }
+
+  public async recordTest(outcome: "passed" | "not_yet") {
+    const button = outcome === "passed" ? this.passTestButton : this.failTestButton;
+    await button.click();
+  }
+
+  public async finishPractice() {
+    await this.finishLink.click();
   }
 
   public async reload() {
@@ -68,6 +107,28 @@ class TrainingPage {
   public totalsRegion() {
     return this.page.getByRole("region", { name: "Enter totals" });
   }
+}
+
+function createTrainingPageLocators(page: Page) {
+  return {
+    coldnessOverride: page.getByRole("checkbox", {
+      name: "I confirm I can test this Behavior cold without warming it up now.",
+    }),
+    counts: page.getByText(/\d+ Success · \d+ Not yet/u),
+    failTestButton: page.getByRole("button", { exact: true, name: "Not yet" }),
+    finishLink: page.getByRole("link", { name: "Finish Practice" }),
+    history: page.getByRole("list", { name: "Practice history" }),
+    notYetButton: page.getByRole("button", { exact: true, name: "Not yet" }),
+    passTestButton: page.getByRole("button", { name: "Test passed" }),
+    prep: page.getByRole("region", { name: "Prep" }),
+    startButton: page.getByRole("button", { name: /^(?:Start|Resume) Practice$/u }),
+    startPractice: page.getByRole("link", { name: "Practice Step 1" }),
+    startTest: page.getByRole("button", { name: "Start Test" }),
+    successButton: page.getByRole("button", { exact: true, name: "Success" }),
+    testActivity: page.getByRole("region", { name: "Test the full Step criterion cold" }),
+    testHistory: page.getByRole("list", { name: "Test history" }),
+    undoButton: page.getByRole("button", { name: "Undo" }),
+  };
 }
 
 export { TrainingPage };

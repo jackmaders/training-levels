@@ -4,8 +4,8 @@ import { expect, test } from "./fixtures";
 import { AuthClient, CurriculumLevelPage, HomePage, ProfilePage } from "./page-objects";
 
 const MOBILE_VIEWPORT = { height: 844, width: 390 };
-const STEP_ONE_HEADING =
-  "Step 1: The dog moves off a treat held in your hand. You're sitting down.";
+const STEP_TWO_HEADING =
+  "Step 2: The dog stays away from the treat in your closed fist for 5 seconds.";
 
 test("keyboard users can toggle a curriculum step and keep progress after reload", async ({
   baseURL,
@@ -17,14 +17,14 @@ test("keyboard users can toggle a curriculum step and keep progress after reload
   await curriculumPage.gotoLevels();
 
   // Act
-  await curriculumPage.toggleStepCheckboxByKeyboard(STEP_ONE_HEADING);
-  await expect(curriculumPage.getStepCheckbox(STEP_ONE_HEADING)).toBeChecked();
+  await curriculumPage.toggleStepCheckboxByKeyboard(STEP_TWO_HEADING);
+  await expect(curriculumPage.getStepCheckbox(STEP_TWO_HEADING)).toBeChecked();
   await expect(curriculumPage.progressBar).toHaveAttribute("aria-valuenow", "20");
 
   await curriculumPage.reload();
 
   // Assert
-  await expect(curriculumPage.getStepCheckbox(STEP_ONE_HEADING)).toBeChecked();
+  await expect(curriculumPage.getStepCheckbox(STEP_TWO_HEADING)).toBeChecked();
   await expect(curriculumPage.progressBar).toHaveAttribute("aria-valuenow", "20");
 });
 

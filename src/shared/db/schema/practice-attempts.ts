@@ -94,11 +94,32 @@ const practiceStepDecisions = sqliteTable(
   (table) => [uniqueIndex("practice_step_decisions_dog_step_unique").on(table.dogId, table.stepId)],
 );
 
+const stepTests = sqliteTable(
+  "step_tests",
+  {
+    coldOverride: integer("cold_override", { mode: "boolean" }).notNull().default(false),
+    dogId: text("dog_id")
+      .notNull()
+      .references(() => dogs.id, { onDelete: "cascade" }),
+    outcome: text("outcome", { enum: ["success", "not_yet"] }).notNull(),
+    stepId: text("step_id").notNull(),
+    testId: text("test_id").primaryKey(),
+    testedAt: integer("tested_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (table) => [
+    index("step_tests_dog_step_tested_idx").on(table.dogId, table.stepId, table.testedAt),
+    uniqueIndex("step_tests_dog_test_unique").on(table.dogId, table.testId),
+  ],
+);
+
 type PracticeAttempt = typeof practiceAttempts.$inferSelect;
 type PracticeAttemptCorrection = typeof practiceAttemptCorrections.$inferSelect;
 type PracticeTotal = typeof practiceTotals.$inferSelect;
 type PracticeTotalCorrection = typeof practiceTotalCorrections.$inferSelect;
 type PracticeStepDecision = typeof practiceStepDecisions.$inferSelect;
+type StepTest = typeof stepTests.$inferSelect;
 
 export {
   practiceAttempts,
@@ -106,9 +127,11 @@ export {
   practiceTotals,
   practiceTotalCorrections,
   practiceStepDecisions,
+  stepTests,
   type PracticeAttempt,
   type PracticeAttemptCorrection,
   type PracticeTotal,
   type PracticeTotalCorrection,
   type PracticeStepDecision,
+  type StepTest,
 };

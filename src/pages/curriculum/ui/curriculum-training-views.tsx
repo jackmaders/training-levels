@@ -1,42 +1,24 @@
-import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
-import type { BehaviorCurriculumPage } from "@/shared/curriculum-data";
+import type { BehaviorCurriculumPage, BehaviorStep } from "@/shared/curriculum-data";
 
-import type { PracticeProgression } from "../model/practice-progression";
 import { CurriculumContentBlocks } from "./curriculum-content-blocks";
-import { CurriculumTrainingReadinessChoice } from "./curriculum-training-readiness-choice";
-import { CurriculumTrainingTotals, type PracticeTotalRecord } from "./curriculum-training-totals";
+import {
+  PracticeCounts,
+  STEP_TARGET,
+  type PracticeDecision,
+  type PracticeRecord,
+} from "./curriculum-training-practice-view";
+import { CurriculumTrainingTestOffer, type StepTestRecord } from "./curriculum-training-test-views";
+import type { PracticeTotalRecord } from "./curriculum-training-totals";
 
-const STEP_TARGET = "Dog moves off a treat held in your hand while you are sitting.";
-const LAST_ITEM_OFFSET = 1;
+const LAST_TEST_OFFSET = 1;
 
-type Outcome = "success" | "not_yet";
-type PracticeDecision = "keep_practicing" | "recommend_test";
-interface PracticeRecord {
-  attemptId: string;
-  outcome: Outcome;
-  target: string;
-  undoneAt: Date | null;
-}
-interface PracticeActions {
-  correctTotals: (recordId: string, successCount: number, notYetCount: number) => void;
-  correct: (attempt: PracticeRecord) => void;
-  errorMessage: string | null;
-  handleRetry: () => void;
-  pendingAttempt: { attemptId: string; outcome: Outcome } | null;
-  record: (outcome: Outcome) => void;
-  recordTotals: (successCount: number, notYetCount: number) => void;
-  saveDecision: (decision: PracticeDecision) => void;
-  saving: boolean;
-  undo: (attemptId: string) => void;
-}
-
-function TrainingHeading() {
+function TrainingHeading({ mode }: { mode: "Practice" | "Test" }) {
   return (
     <header className="space-y-2">
-      <p className="text-sm text-muted-foreground">Practice · Level 1: Zen · Step 1</p>
-      <h1 className="text-3xl font-bold tracking-tight">Practice hand Zen</h1>
+      <p className="text-sm text-muted-foreground">{mode} · Level 1: Zen · Step 1</p>
+      <h1 className="text-3xl font-bold tracking-tight">{mode} hand Zen</h1>
     </header>
   );
 }
@@ -46,19 +28,54 @@ function TrainingPrep({
   equipment,
   history,
   onStart,
+  onStartTest,
+  step,
+  testHistory,
+  totals,
 }: {
   equipment: BehaviorCurriculumPage["equipment"];
   decision: PracticeDecision | null;
   history: readonly PracticeRecord[];
   onStart: () => void;
+  onStartTest: (coldOverride: boolean) => void;
+  step: BehaviorStep;
+  testHistory: readonly StepTestRecord[];
+  totals: readonly PracticeTotalRecord[];
 }) {
   const currentHistory = history.filter((attempt) => attempt.undoneAt === null);
+  const practiceDates = [
+    ...currentHistory.map((attempt) => attempt.createdAt),
+    ...totals.map((record) => record.createdAt),
+  ];
 
   return (
     <section aria-labelledby="prep-heading" className="space-y-5 rounded-lg border p-5">
       <h2 className="text-xl font-semibold" id="prep-heading">
         Prep
       </h2>
+      <PracticePrepDetails equipment={equipment} />
+      <TrainingPrepStatus decision={decision} history={currentHistory} testHistory={testHistory} />
+      <button
+        className="rounded-md bg-primary px-4 py-2 text-primary-foreground"
+        type="button"
+        onClick={onStart}
+      >
+        {currentHistory.length === 0 ? "Start Practice" : "Resume Practice"}
+      </button>
+      <CurriculumTrainingTestOffer
+        decision={decision}
+        onStartTest={onStartTest}
+        practiceDates={practiceDates}
+        step={step}
+        testHistory={testHistory}
+      />
+    </section>
+  );
+}
+
+function PracticePrepDetails({ equipment }: { equipment: BehaviorCurriculumPage["equipment"] }) {
+  return (
+    <>
       <PrepDetail heading="Equipment">
         <CurriculumContentBlocks blocks={equipment} />
       </PrepDetail>
@@ -76,16 +93,31 @@ function TrainingPrep({
           Your Dog moves her nose or body away from the treat hand. Mark and reward, then record it.
         </p>
       </PrepDetail>
-      <AttemptCounts history={currentHistory} />
+    </>
+  );
+}
+
+function TrainingPrepStatus({
+  decision,
+  history,
+  testHistory,
+}: {
+  decision: PracticeDecision | null;
+  history: readonly PracticeRecord[];
+  testHistory: readonly StepTestRecord[];
+}) {
+  const lastTest = testHistory.at(-LAST_TEST_OFFSET);
+  return (
+    <>
+      <PracticeCounts history={history} />
       <SavedDecisionNotice decision={decision} />
-      <button
-        className="rounded-md bg-primary px-4 py-2 text-primary-foreground"
-        type="button"
-        onClick={onStart}
-      >
-        {currentHistory.length === 0 ? "Start Practice" : "Resume Practice"}
-      </button>
-    </section>
+      {lastTest === undefined ? null : (
+        <p aria-live="polite" className="rounded-md border p-3 text-sm">
+          Latest Test:{" "}
+          {lastTest.outcome === "success" ? "Passed — Step complete" : "Not yet — Needs practice"}.
+        </p>
+      )}
+    </>
   );
 }
 
@@ -113,169 +145,4 @@ function PrepDetail({ children, heading }: { children: ReactNode; heading: strin
   );
 }
 
-function TrainingPractice({
-  actions,
-  decision,
-  history,
-  progression,
-  totals,
-}: {
-  actions: PracticeActions;
-  decision: PracticeDecision | null;
-  history: readonly PracticeRecord[];
-  progression: PracticeProgression;
-  totals: readonly PracticeTotalRecord[];
-}) {
-  const currentHistory = history.filter((attempt) => attempt.undoneAt === null);
-  const lastAttempt = currentHistory.at(-LAST_ITEM_OFFSET);
-  function handleSaveDecision(nextDecision: PracticeDecision) {
-    actions.saveDecision(nextDecision);
-  }
-
-  return (
-    <section aria-labelledby="practice-heading" className="space-y-5">
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold" id="practice-heading">
-          Current target
-        </h2>
-        <p>{progression.nextTarget}</p>
-        <p className="text-sm text-muted-foreground">
-          Method: {progression.method.replaceAll("_", " ")}. Source: {progression.source}.
-        </p>
-        <p className="text-sm text-muted-foreground">App default: {progression.appDefault}</p>
-      </div>
-      <p className="rounded-md border p-3 text-sm">
-        Readiness check: {progression.readinessQuestion}
-      </p>
-      {progression.readyForTest ? (
-        <CurriculumTrainingReadinessChoice decision={decision} handleSave={handleSaveDecision} />
-      ) : null}
-      <AttemptCounts history={currentHistory} />
-      <SaveError actions={actions} />
-      <AttemptHistory actions={actions} history={currentHistory} />
-      <CurriculumTrainingTotals actions={actions} totals={totals} />
-      <RecordingControls actions={actions} lastAttempt={lastAttempt} />
-    </section>
-  );
-}
-
-function AttemptCounts({ history }: { history: readonly PracticeRecord[] }) {
-  const success = history.filter((attempt) => attempt.outcome === "success").length;
-  const notYet = history.filter((attempt) => attempt.outcome === "not_yet").length;
-  return (
-    <p aria-live="polite" className="text-sm text-muted-foreground">
-      {String(success)} Success · {String(notYet)} Not yet
-    </p>
-  );
-}
-
-function SaveError({ actions }: { actions: PracticeActions }) {
-  if (actions.errorMessage === null) {
-    return null;
-  }
-
-  return (
-    <div
-      aria-live="assertive"
-      className="space-y-2 rounded-md border border-destructive p-3 text-sm text-destructive"
-    >
-      <p>Could not save this attempt. Your counts have not changed. {actions.errorMessage}</p>
-      {actions.pendingAttempt === null ? null : (
-        <button
-          className="underline underline-offset-4"
-          disabled={actions.saving}
-          type="button"
-          onClick={actions.handleRetry}
-        >
-          Retry save
-        </button>
-      )}
-    </div>
-  );
-}
-
-function AttemptHistory({
-  actions,
-  history,
-}: {
-  actions: PracticeActions;
-  history: readonly PracticeRecord[];
-}) {
-  return (
-    <ol aria-label="Practice history" className="space-y-2">
-      {history.map((attempt) => (
-        <li
-          className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
-          key={attempt.attemptId}
-        >
-          <span>
-            {attempt.outcome === "success" ? "Success" : "Not yet"} · {attempt.target}
-          </span>
-          <button
-            className="underline underline-offset-4"
-            disabled={actions.saving}
-            type="button"
-            onClick={() => actions.correct(attempt)}
-          >
-            Correct
-          </button>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-function RecordingControls({
-  actions,
-  lastAttempt,
-}: {
-  actions: PracticeActions;
-  lastAttempt: PracticeRecord | undefined;
-}) {
-  return (
-    <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-4 backdrop-blur">
-      <div className="mx-auto grid max-w-3xl grid-cols-2 gap-3">
-        <OutcomeButton actions={actions} outcome="success" />
-        <OutcomeButton actions={actions} outcome="not_yet" />
-        <button
-          className="min-h-12 rounded-md border"
-          disabled={actions.saving || lastAttempt === undefined}
-          type="button"
-          onClick={() =>
-            lastAttempt === undefined ? undefined : actions.undo(lastAttempt.attemptId)
-          }
-        >
-          Undo
-        </button>
-        <Link
-          className="flex min-h-12 items-center justify-center rounded-md border"
-          to="/levels/$section/$page"
-          params={{ page: "zen", section: "level-1" }}
-        >
-          Finish Practice
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function OutcomeButton({ actions, outcome }: { actions: PracticeActions; outcome: Outcome }) {
-  const label = outcome === "success" ? "Success" : "Not yet";
-  return (
-    <button
-      className={
-        outcome === "success"
-          ? "min-h-16 rounded-md bg-primary text-lg font-semibold text-primary-foreground"
-          : "min-h-16 rounded-md border text-lg font-semibold"
-      }
-      disabled={actions.saving || actions.pendingAttempt !== null}
-      type="button"
-      onClick={() => actions.record(outcome)}
-    >
-      {label}
-    </button>
-  );
-}
-
-export { STEP_TARGET, TrainingHeading, TrainingPractice, TrainingPrep };
-export type { Outcome, PracticeActions, PracticeRecord };
+export { TrainingHeading, TrainingPrep };

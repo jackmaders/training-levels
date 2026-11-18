@@ -2,6 +2,7 @@ import { HttpStatusCodes, type HttpStatusCode } from "../lib/http-status-codes";
 
 const ErrorCodes = {
   CURRICULUM_STEP_NOT_FOUND: "CURRICULUM_STEP_NOT_FOUND",
+  CURRICULUM_STEP_TEST_REQUIRED: "CURRICULUM_STEP_TEST_REQUIRED",
   INTERNAL_SERVER_ERROR: "INTERNAL_SERVER_ERROR",
   USER_FORBIDDEN: "USER_FORBIDDEN",
   USER_UNAUTHENTICATED: "USER_UNAUTHENTICATED",
@@ -13,6 +14,10 @@ const ErrorConfig: Record<ErrorCode, { message: string; statusCode?: HttpStatusC
   CURRICULUM_STEP_NOT_FOUND: {
     message: "Curriculum step not found.",
     statusCode: HttpStatusCodes.NOT_FOUND,
+  },
+  CURRICULUM_STEP_TEST_REQUIRED: {
+    message: "Complete a passing Test before marking this Step complete.",
+    statusCode: HttpStatusCodes.CONFLICT,
   },
   INTERNAL_SERVER_ERROR: { message: "Something went wrong." },
   USER_FORBIDDEN: { message: "Permission denied.", statusCode: HttpStatusCodes.FORBIDDEN },

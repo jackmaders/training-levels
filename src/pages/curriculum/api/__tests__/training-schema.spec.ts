@@ -3,6 +3,7 @@ import { describe, expect, it } from "vite-plus/test";
 import {
   recordPracticeTotalsInputSchema,
   recordPracticeAttemptInputSchema,
+  recordStepTestInputSchema,
   savePracticeStepDecisionInputSchema,
 } from "../training-schema";
 
@@ -102,5 +103,23 @@ describe("practice totals and readiness decisions", () => {
     // Assert
     expect(parsedTotals.success).toBe(false);
     expect(parsedDecision.success).toBe(true);
+  });
+});
+
+describe("step Test inputs", () => {
+  it("requires a valid Test identity, outcome, Step, and coldness confirmation", () => {
+    expect.assertions(2);
+    const input = {
+      coldOverride: true,
+      outcome: "not_yet",
+      stepId: "level-1/zen:step-1",
+      testId: "018f47ad-9d72-7a31-a50b-b11111111111",
+    };
+
+    const valid = recordStepTestInputSchema.safeParse(input);
+    const invalid = recordStepTestInputSchema.safeParse({ ...input, outcome: "maybe" });
+
+    expect(valid.success).toBe(true);
+    expect(invalid.success).toBe(false);
   });
 });

@@ -58,8 +58,16 @@ export const savePracticeStepDecisionInputSchema = z.object({
   stepId: z.enum(TRAINING_STEP_IDS),
 });
 
+export const recordStepTestInputSchema = z.object({
+  coldOverride: z.boolean(),
+  outcome: z.enum(["success", "not_yet"]),
+  stepId: z.enum(TRAINING_STEP_IDS),
+  testId: z.string().uuid(),
+});
+
 export type CorrectPracticeAttemptInput = z.infer<typeof correctPracticeAttemptInputSchema>;
 export type RecordPracticeAttemptInput = z.infer<typeof recordPracticeAttemptInputSchema>;
 export type RecordPracticeTotalsInput = z.infer<typeof recordPracticeTotalsInputSchema>;
 export type CorrectPracticeTotalsInput = z.infer<typeof correctPracticeTotalsInputSchema>;
 export type SavePracticeStepDecisionInput = z.infer<typeof savePracticeStepDecisionInputSchema>;
+export type RecordStepTestInput = z.infer<typeof recordStepTestInputSchema>;

@@ -22,11 +22,13 @@ export {
   practiceAttempts,
   practiceAttemptCorrections,
   practiceStepDecisions,
+  stepTests,
   practiceTotalCorrections,
   practiceTotals,
   type PracticeAttempt,
   type PracticeAttemptCorrection,
   type PracticeStepDecision,
+  type StepTest,
   type PracticeTotalCorrection,
   type PracticeTotal,
 } from "./practice-attempts";
