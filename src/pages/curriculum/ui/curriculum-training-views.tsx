@@ -407,8 +407,11 @@ function getPracticeChoices(
   guidance: PracticeGuidance | null,
   progression: PracticeProgression | null,
 ): { readyForTest: boolean; targetOptions: readonly string[] } {
+  const hasCompletedGuidanceRungs =
+    guidance !== null && guidance.targetOptions.length > 0 && guidance.readyForTest;
   return {
-    readyForTest: progression?.readyForTest ?? guidance?.readyForTest ?? false,
+    readyForTest:
+      hasCompletedGuidanceRungs || (progression?.readyForTest ?? guidance?.readyForTest ?? false),
     targetOptions:
       plan?.targetOptions.map((option) => option.label) ?? guidance?.targetOptions ?? [],
   };

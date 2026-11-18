@@ -54,6 +54,19 @@ function makeAttempt(
   };
 }
 
+function makeConsecutiveSuccessAttempts(
+  stepId: string,
+  startAt: Date,
+  count: number,
+): TrainingOverviewAttempt[] {
+  const startMs = startAt.getTime();
+  const attempts: TrainingOverviewAttempt[] = [];
+  for (let index = 0; index < count; index += 1) {
+    attempts.push(makeAttempt(stepId, new Date(startMs + index * ONE_SECOND_MS)));
+  }
+  return attempts;
+}
+
 function makeDecision(
   stepId: string,
   decidedAt: Date,
@@ -592,6 +605,80 @@ describe("next training activity recommendation", () => {
       syllabus: FULL_SYLLABUS,
     });
     expect(retrieveResetAfterNotYet.mode).toBe("practice");
+  });
+
+  it("aligns Level 3 Retrieve Step 2 test readiness across guidance rungs and progression successes", () => {
+    expect.assertions(4);
+    const priorLevels = toCompletions(getLevelStepIds([1, LEVEL_TWO]), dayOne);
+
+    const readyFromFinalGuidanceRung = recommendNextTrainingActivity({
+      now: dayFour,
+      overview: emptyOverview({
+        curriculumProgress: priorLevels,
+        practiceAttempts: [
+          makeAttempt("level-3/retrieve:step-2", dayOne, {
+            target: "Complete 2 to 3 calm shared grabs on Get It without tugging.",
+          }),
+          makeAttempt("level-3/retrieve:step-2", dayTwo, {
+            target: "Hold the object together for 1 second, then 2 seconds on Get It.",
+          }),
+          makeAttempt("level-3/retrieve:step-2", dayTwoSecond, {
+            target: "Hold the object together for 3 seconds, then 4 seconds on Get It.",
+          }),
+          makeAttempt("level-3/retrieve:step-2", dayThree, {
+            target: "Hold the object together for 5 seconds on Get It.",
+          }),
+        ],
+      }),
+      syllabus: FULL_SYLLABUS,
+    });
+    expect(readyFromFinalGuidanceRung).toMatchObject({
+      mode: "test",
+      stepId: "level-3/retrieve:step-2",
+    });
+
+    const fiveSuccessesAfterNotYet = recommendNextTrainingActivity({
+      now: dayFour,
+      overview: emptyOverview({
+        curriculumProgress: priorLevels,
+        practiceAttempts: [
+          makeAttempt("level-3/retrieve:step-2", dayOne, { outcome: "not_yet" }),
+          ...makeConsecutiveSuccessAttempts("level-3/retrieve:step-2", dayTwo, 5),
+        ],
+      }),
+      syllabus: FULL_SYLLABUS,
+    });
+    expect(fiveSuccessesAfterNotYet.mode).toBe("practice");
+
+    const sixSuccessesAfterNotYet = recommendNextTrainingActivity({
+      now: dayFour,
+      overview: emptyOverview({
+        curriculumProgress: priorLevels,
+        practiceAttempts: [
+          makeAttempt("level-3/retrieve:step-2", dayOne, { outcome: "not_yet" }),
+          ...makeConsecutiveSuccessAttempts("level-3/retrieve:step-2", dayTwo, 6),
+        ],
+      }),
+      syllabus: FULL_SYLLABUS,
+    });
+    expect(sixSuccessesAfterNotYet).toMatchObject({
+      mode: "test",
+      stepId: "level-3/retrieve:step-2",
+    });
+
+    const trailingNotYetNotReady = recommendNextTrainingActivity({
+      now: dayFour,
+      overview: emptyOverview({
+        curriculumProgress: priorLevels,
+        practiceAttempts: [
+          makeAttempt("level-3/retrieve:step-2", dayOne),
+          makeAttempt("level-3/retrieve:step-2", dayTwo),
+          makeAttempt("level-3/retrieve:step-2", dayThree, { outcome: "not_yet" }),
+        ],
+      }),
+      syllabus: FULL_SYLLABUS,
+    });
+    expect(trailingNotYetNotReady.mode).toBe("practice");
   });
 
   it("rotates Practice to untouched and least recently trained eligible Behavior steps", () => {

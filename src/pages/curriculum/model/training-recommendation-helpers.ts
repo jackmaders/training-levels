@@ -16,6 +16,7 @@ import type {
 import { getLevelSections } from "./curriculum-levels";
 import { getPracticeGuidance } from "./practice-guidance";
 import { getPracticePlan, hasPracticeLadder } from "./practice-ladders";
+import { countTrailingSuccesses, getPracticeProgression } from "./practice-progression";
 
 const LAST_INDEX = -1;
 const SORT_AFTER = 1;
@@ -166,7 +167,16 @@ function isPracticeReadyForTest(
       lastTargetAttempt.target === plan.target
     );
   }
-  return getPracticeGuidance(stepId, criterion, attempts)?.readyForTest ?? false;
+  if (getPracticeGuidance(stepId, criterion, attempts)?.readyForTest === true) {
+    return true;
+  }
+  const lastOutcome = attempts.at(LAST_INDEX)?.outcome;
+  return (
+    getPracticeProgression(stepId, {
+      consecutiveSuccesses: countTrailingSuccesses(attempts),
+      ...(lastOutcome === undefined ? {} : { lastOutcome }),
+    })?.readyForTest ?? false
+  );
 }
 
 function isAttemptReadinessActive({

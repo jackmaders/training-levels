@@ -728,4 +728,113 @@ describe("curriculum training views", () => {
 
     expect(screen.queryByRole("button", { name: "Start timer" })).toBeNull();
   });
+
+  it("renders readiness choice when guidance target rungs are complete despite progression false, and withholds it for judgment steps", () => {
+    expect.hasAssertions();
+
+    const retrieveTargetOptions = [
+      "Complete 2 to 3 calm shared grabs on Get It without tugging.",
+      "Hold the object together for 1 second, then 2 seconds on Get It.",
+      "Hold the object together for 3 seconds, then 4 seconds on Get It.",
+      "Hold the object together for 5 seconds on Get It.",
+    ];
+    const finalRetrieveTarget = "Hold the object together for 5 seconds on Get It.";
+
+    const { rerender } = renderWithProviders(
+      <TrainingPractice
+        actions={createActions()}
+        decision={null}
+        finishStep={{
+          label: "Step 2: Hold the pencil for 5 seconds.",
+          pageSlug: "level-3/retrieve",
+          stepId: "level-3/retrieve:step-2",
+        }}
+        guidance={{
+          conditions: "Mark calm holds with Yes.",
+          criterion: "Hold the pencil for 5 seconds.",
+          progression:
+            "Run 2 to 3 rapid shared grabs to shorten releases, then add Get It and build shared hold time from 1 to 5 seconds.",
+          readiness:
+            "Does your Dog willingly take, hold, or release the object cleanly under the exact duration and cue conditions of this Step?",
+          readinessBasis:
+            "Consider a Test after a recorded Success at the final target, which is the full criterion.",
+          readyForTest: true,
+          restart: "Shorten hold time by a step.",
+          setup: "Prepare a spoon, a pen or pencil, and a third safe household object.",
+          source: "Main Quest Level 3 Retrieve, Step 2 (including its Try It Cold instructions).",
+          success: "Success means your Dog meets the full criterion.",
+          suggestedLimit:
+            "Pause after 5 recorded attempts; continue or finish. This is an app default.",
+          target: finalRetrieveTarget,
+          targetAdvancement: "source",
+          targetOptions: retrieveTargetOptions,
+        }}
+        history={[]}
+        onBreak={vi.fn<() => void>()}
+        onChangeTarget={vi.fn<() => void>()}
+        onOpenReading={vi.fn<() => void>()}
+        plan={null}
+        progression={{
+          appDefault:
+            "Start with two grabs, increase to three if the let-go is not shortening, then ladder the hold toward the 5-second criterion.",
+          method: "repeat_then_duration",
+          nextTarget: "Dog makes 3 grabs with you, then hold for 3 seconds.",
+          readinessQuestion: "Can your Dog keep the pencil in her mouth with you for 5 seconds?",
+          readyForTest: false,
+          source: "Level 3 Retrieve, Step 2",
+        }}
+        target={finalRetrieveTarget}
+        timerInterrupted={false}
+        totals={[]}
+      />,
+      { routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    expect(screen.getByRole("button", { name: "Recommend a Test next time" })).toBeDefined();
+
+    rerender(
+      <TrainingPractice
+        actions={createActions()}
+        decision={null}
+        finishStep={FINISH_STEP}
+        guidance={{
+          conditions: "Keep the treat protected in your hand.",
+          criterion: "Dog moves away from a treat in your hand. You're sitting down.",
+          progression: "Mark the first small nose movement away from the closed fist.",
+          readiness: "Does your Dog move her nose away promptly on several tries while seated?",
+          readinessBasis:
+            "Handler judgment: this Step has no numeric ladder. After a recorded Success, decide from the readiness question whether your Dog met the full criterion.",
+          readyForTest: true,
+          restart: "Make the setup easier.",
+          setup: "Sit close to your Dog and hold the treat at nose height.",
+          source: "Main Quest Level 1 Zen, Step 1 (including its Try It Cold instructions).",
+          success: "Success means your Dog meets the full criterion.",
+          suggestedLimit:
+            "Pause after 5 recorded attempts; continue or finish. This is an app default.",
+          target: STEP_TARGET,
+          targetAdvancement: null,
+          targetOptions: [],
+        }}
+        history={[]}
+        onBreak={vi.fn<() => void>()}
+        onChangeTarget={vi.fn<() => void>()}
+        onOpenReading={vi.fn<() => void>()}
+        plan={null}
+        progression={{
+          appDefault: "3 successful tries is a suggested point to check readiness.",
+          method: "shape_approximation",
+          nextTarget: "Dog moves her nose away from the protected treat while you sit.",
+          readinessQuestion:
+            "Does your Dog move her nose away promptly on several tries while seated?",
+          readyForTest: false,
+          source: "Level 1 Zen, Step 1",
+        }}
+        target={STEP_TARGET}
+        timerInterrupted={false}
+        totals={[]}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Recommend a Test next time" })).toBeNull();
+  });
 });
