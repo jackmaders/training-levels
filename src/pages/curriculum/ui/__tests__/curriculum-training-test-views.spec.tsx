@@ -248,4 +248,79 @@ describe("curriculum training test views", () => {
       "You recorded Practice or a Test today. Wait until another day, or confirm that you can test the Behavior cold now.",
     );
   });
+
+  it("links Finish Test to the step's curriculum page and falls back for invalid stepId", () => {
+    expect.hasAssertions();
+
+    // Arrange & Act
+    const { rerender } = renderWithProviders(
+      <TrainingTest
+        actions={{
+          errorMessage: null,
+          record: vi.fn<(outcome: "success" | "not_yet", coldOverride: boolean) => void>(),
+          saving: false,
+        }}
+        coldOverride={false}
+        history={[]}
+        step={{ ...STEP_WITH_COLD, stepId: "level-2/come:step-3" }}
+      />,
+      { routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    // Assert
+    expect(screen.getByRole("link", { name: "Finish Test" }).getAttribute("href")).toBe(
+      "/levels/level-2/come",
+    );
+
+    // Act
+    rerender(
+      <TrainingTest
+        actions={{
+          errorMessage: null,
+          record: vi.fn<(outcome: "success" | "not_yet", coldOverride: boolean) => void>(),
+          saving: false,
+        }}
+        coldOverride={false}
+        history={[]}
+        step={{ ...STEP_WITH_COLD, stepId: "invalid-step" }}
+      />,
+    );
+
+    // Assert
+    expect(screen.getByRole("link", { name: "Finish Test" }).getAttribute("href")).toBe(
+      "/levels/level-1/zen",
+    );
+  });
+
+  it("offers Start Test when recommendedMode is test and disables when blockedByOverride", () => {
+    expect.hasAssertions();
+
+    const { rerender } = renderWithProviders(
+      <CurriculumTrainingTestOffer
+        decision={null}
+        onStartTest={vi.fn<(coldOverride: boolean) => void>()}
+        practiceDates={[]}
+        recommendedMode="test"
+        step={STEP_WITH_COLD}
+        testHistory={[]}
+      />,
+      { routePaths: ["/"] },
+    );
+
+    expect(screen.getByRole("button", { name: "Start Test" })).toHaveProperty("disabled", false);
+
+    rerender(
+      <CurriculumTrainingTestOffer
+        blockedByOverride
+        decision={null}
+        onStartTest={vi.fn<(coldOverride: boolean) => void>()}
+        practiceDates={[]}
+        recommendedMode="test"
+        step={STEP_WITH_COLD}
+        testHistory={[]}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Start Test" })).toHaveProperty("disabled", true);
+  });
 });

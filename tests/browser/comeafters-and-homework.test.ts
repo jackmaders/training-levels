@@ -37,7 +37,7 @@ async function prepareStepOneForColdTest(page: Page, trainingPage: TrainingPage)
 async function passStepOneColdTest(page: Page) {
   const trainingPage = new TrainingPage(page);
   await prepareStepOneForColdTest(page, trainingPage);
-  await trainingPage.gotoTraining();
+  await trainingPage.gotoTraining("level-1/zen:step-1");
   await trainingPage.confirmColdness();
   await trainingPage.startTestActivity();
   await trainingPage.recordTest("passed");
@@ -47,7 +47,7 @@ async function passStepOneColdTest(page: Page) {
 
 async function failStepOneSameDayRetest(page: Page, curriculumPage: CurriculumLevelPage) {
   const trainingPage = new TrainingPage(page);
-  await trainingPage.gotoTraining();
+  await trainingPage.gotoTraining("level-1/zen:step-1");
   await trainingPage.confirmColdness();
   await trainingPage.startTestActivity();
   await trainingPage.recordTest("not_yet");

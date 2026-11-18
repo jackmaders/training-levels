@@ -3,10 +3,13 @@ import { useState, useSyncExternalStore } from "react";
 
 import type { BehaviorStep } from "@/shared/curriculum-data";
 
+import { toLevelRouteParams } from "../model/curriculum-levels";
 import { canTestToday } from "../model/test-eligibility";
+import type { TrainingRecommendationMode } from "../model/training-recommendation";
 import { CurriculumContentBlocks } from "./curriculum-content-blocks";
 
 const LAST_ITEM_OFFSET = 1;
+const NOT_FOUND_INDEX = -1;
 
 function subscribeToClock() {
   return () => {
@@ -33,17 +36,21 @@ interface StepTestActions {
   saving: boolean;
 }
 interface CurriculumTrainingTestOfferProps {
+  blockedByOverride?: boolean | undefined;
   decision: PracticeDecision | null;
   onStartTest: (coldOverride: boolean) => void;
   practiceDates: readonly Date[];
+  recommendedMode?: TrainingRecommendationMode | undefined;
   step: BehaviorStep;
   testHistory: readonly StepTestRecord[];
 }
 
 function CurriculumTrainingTestOffer({
+  blockedByOverride = false,
   decision,
   onStartTest,
   practiceDates,
+  recommendedMode,
   step,
   testHistory,
 }: CurriculumTrainingTestOfferProps) {
@@ -54,7 +61,8 @@ function CurriculumTrainingTestOffer({
     () => canTestToday([...practiceDates, ...testHistory.map((test) => test.testedAt)]),
     getServerTestEligibility,
   );
-  const testRecommended = decision === "recommend_test" || testHistory.length > 0;
+  const testRecommended =
+    decision === "recommend_test" || recommendedMode === "test" || testHistory.length > 0;
   if (!testRecommended) {
     return null;
   }
@@ -70,7 +78,7 @@ function CurriculumTrainingTestOffer({
       />
       <button
         className="min-h-11 rounded-md border px-3"
-        disabled={!eligibleByDay && !coldOverride}
+        disabled={blockedByOverride || (!eligibleByDay && !coldOverride)}
         type="button"
         onClick={() => {
           onStartTest(!eligibleByDay && coldOverride);
@@ -176,7 +184,7 @@ function TrainingTest({
       <TestResult latestTest={latestTest} />
       <TestError message={actions.errorMessage} />
       <TestOutcomes actions={actions} coldOverride={coldOverride} />
-      <FinishTestLink />
+      <FinishTestLink stepId={step.stepId} />
     </section>
   );
 }
@@ -252,12 +260,16 @@ function TestHistory({ history }: { history: readonly StepTestRecord[] }) {
   );
 }
 
-function FinishTestLink() {
+function FinishTestLink({ stepId }: { stepId: string }) {
+  const separatorIndex = stepId.indexOf(":");
+  const pageSlug = separatorIndex === NOT_FOUND_INDEX ? stepId : stepId.slice(0, separatorIndex);
+  const params = toLevelRouteParams(pageSlug) ?? { page: "zen", section: "level-1" };
+
   return (
     <Link
       className="inline-flex min-h-11 items-center rounded-md border px-3"
       to="/levels/$section/$page"
-      params={{ page: "zen", section: "level-1" }}
+      params={params}
     >
       Finish Test
     </Link>

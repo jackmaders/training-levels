@@ -106,26 +106,38 @@ describe("practice totals and readiness decisions", () => {
     expect(parsedDecision.success).toBe(true);
   });
 
-  it("accepts totals and readiness choices for guided Level 2 Steps", () => {
-    expect.assertions(2);
+  it("accepts totals and readiness choices across Main Quest levels and rejects invalid step IDs", () => {
+    expect.assertions(4);
     // Arrange
-    const totals = {
+    const levelTwoTotals = {
       notYetCount: 1,
       recordId: "018f47ad-9d72-7a31-a50b-a88888888888",
       stepId: "level-2/come:step-3",
       successCount: 2,
       target: "Call her from 10 feet away, without your real Come cue.",
     };
+    const levelFourTotals = {
+      ...levelTwoTotals,
+      stepId: "level-4/handling:step-2",
+    };
+    const invalidTotals = {
+      ...levelTwoTotals,
+      stepId: "level-9/unknown:step-1",
+    };
 
     // Act
-    const parsedTotals = recordPracticeTotalsInputSchema.safeParse(totals);
+    const parsedLevelTwo = recordPracticeTotalsInputSchema.safeParse(levelTwoTotals);
+    const parsedLevelFour = recordPracticeTotalsInputSchema.safeParse(levelFourTotals);
+    const parsedInvalidTotals = recordPracticeTotalsInputSchema.safeParse(invalidTotals);
     const parsedDecision = savePracticeStepDecisionInputSchema.safeParse({
       decision: "recommend_test",
-      stepId: "level-2/handling:step-1",
+      stepId: "level-3/retrieve:step-1",
     });
 
     // Assert
-    expect(parsedTotals.success).toBe(true);
+    expect(parsedLevelTwo.success).toBe(true);
+    expect(parsedLevelFour.success).toBe(true);
+    expect(parsedInvalidTotals.success).toBe(false);
     expect(parsedDecision.success).toBe(true);
   });
 
@@ -148,7 +160,7 @@ describe("practice totals and readiness decisions", () => {
     expect(parsedDecision.success).toBe(true);
   });
 
-  it("rejects readiness choices for Steps without guided Practice", () => {
+  it("rejects readiness choices for invalid step IDs", () => {
     expect.assertions(1);
 
     // Act
@@ -163,8 +175,8 @@ describe("practice totals and readiness decisions", () => {
 });
 
 describe("step Test inputs", () => {
-  it("requires a valid Test identity, outcome, Step, and coldness confirmation", () => {
-    expect.assertions(2);
+  it("requires a valid Test identity, outcome, Main Quest Step across levels, and coldness confirmation", () => {
+    expect.assertions(4);
     const input = {
       coldOverride: true,
       outcome: "not_yet",
@@ -173,10 +185,20 @@ describe("step Test inputs", () => {
     };
 
     const valid = recordStepTestInputSchema.safeParse(input);
-    const invalid = recordStepTestInputSchema.safeParse({ ...input, outcome: "maybe" });
+    const validLevelFour = recordStepTestInputSchema.safeParse({
+      ...input,
+      stepId: "level-4/communication:step-1",
+    });
+    const invalidOutcome = recordStepTestInputSchema.safeParse({ ...input, outcome: "maybe" });
+    const invalidStep = recordStepTestInputSchema.safeParse({
+      ...input,
+      stepId: "theory/01-foreword",
+    });
 
     expect(valid.success).toBe(true);
-    expect(invalid.success).toBe(false);
+    expect(validLevelFour.success).toBe(true);
+    expect(invalidOutcome.success).toBe(false);
+    expect(invalidStep.success).toBe(false);
   });
 
   it("requires at least one result when correcting practice totals", () => {

@@ -3,7 +3,11 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vite-plus/test";
 
-import { TEST_BEHAVIOR_PAGE, createBehaviorPageFixture } from "@test/vitest/fixtures/curriculum";
+import {
+  TEST_BEHAVIOR_PAGE,
+  TEST_THEORY_PAGE,
+  createBehaviorPageFixture,
+} from "@test/vitest/fixtures/curriculum";
 import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
 
 import { curriculumPageQueryOptions } from "../../api/curriculum-query-options";
@@ -46,9 +50,13 @@ function createStepTestQueryClient({
       },
     ],
   }),
+  pageSlug = "level-1/zen",
+  stepId = PRACTICE_STEP_ID,
   testHistory = [],
 }: {
-  page?: ReturnType<typeof createBehaviorPageFixture> | null;
+  page?: ReturnType<typeof createBehaviorPageFixture> | typeof TEST_THEORY_PAGE | null;
+  pageSlug?: string;
+  stepId?: string;
   testHistory?: {
     coldOverride: boolean;
     outcome: "success" | "not_yet";
@@ -60,20 +68,32 @@ function createStepTestQueryClient({
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   });
-  queryClient.setQueryData(curriculumPageQueryOptions("level-1/zen").queryKey, page);
-  queryClient.setQueryData(stepTestHistoryQueryOptions().queryKey, testHistory);
+  queryClient.setQueryData(curriculumPageQueryOptions(pageSlug).queryKey, page);
+  queryClient.setQueryData(stepTestHistoryQueryOptions(stepId).queryKey, testHistory);
   return queryClient;
 }
 
 describe("curriculum training step test", () => {
-  it("renders nothing when stepId does not match or step is missing", () => {
+  it("renders nothing when step is missing, page is non-behavior, or tryItCold is absent", () => {
     expect.hasAssertions();
 
     // Arrange
     const queryClient = createStepTestQueryClient();
+    queryClient.setQueryData(curriculumPageQueryOptions("other-step").queryKey, null);
+    queryClient.setQueryData(
+      curriculumPageQueryOptions("theory/01-foreword").queryKey,
+      TEST_THEORY_PAGE,
+    );
+    queryClient.setQueryData(
+      curriculumPageQueryOptions("level-1/come").queryKey,
+      createBehaviorPageFixture({
+        pageSlug: "level-1/come",
+        steps: [{ ...FIRST_STEP, stepId: "level-1/come:step-5", tryItCold: null }],
+      }),
+    );
 
     // Act
-    renderWithProviders(
+    const { rerender } = renderWithProviders(
       <CurriculumTrainingStepTestOffer
         decision="recommend_test"
         history={[]}
@@ -86,6 +106,48 @@ describe("curriculum training step test", () => {
 
     // Assert
     expect(screen.queryByText("Test this Step cold")).toBeNull();
+
+    // Act
+    rerender(
+      <CurriculumTrainingStepTestOffer
+        decision="recommend_test"
+        history={[]}
+        onStartTest={vi.fn<() => void>()}
+        stepId="theory/01-foreword:step-1"
+        totals={[]}
+      />,
+    );
+
+    // Assert
+    expect(screen.queryByText("Test this Step cold")).toBeNull();
+
+    // Act
+    rerender(
+      <CurriculumTrainingStepTestOffer
+        decision="recommend_test"
+        history={[]}
+        onStartTest={vi.fn<() => void>()}
+        stepId="level-1/come:step-5"
+        totals={[]}
+      />,
+    );
+
+    // Assert
+    expect(screen.queryByText("Test this Step cold")).toBeNull();
+
+    // Act
+    rerender(
+      <CurriculumTrainingStepTestOffer
+        decision="recommend_test"
+        history={[]}
+        onStartTest={vi.fn<() => void>()}
+        stepId="level-1/zen:step-99"
+        totals={[]}
+      />,
+    );
+
+    // Assert
+    expect(screen.queryByText("Test this Step cold")).toBeNull();
   });
 
   it("renders test offer and calls onStartTest when eligible", async () => {
@@ -94,7 +156,26 @@ describe("curriculum training step test", () => {
     // Arrange
     const user = userEvent.setup();
     const onStartTest = vi.fn<() => void>();
-    const queryClient = createStepTestQueryClient();
+    const stepId = "level-2/come:step-3";
+    const queryClient = createStepTestQueryClient({
+      page: createBehaviorPageFixture({
+        pageSlug: "level-2/come",
+        steps: [
+          {
+            ...FIRST_STEP,
+            stepId,
+            tryItCold: [
+              {
+                type: "paragraph" as const,
+                content: [{ text: "Come Step 3 cold instructions", type: "text" as const }],
+              },
+            ],
+          },
+        ],
+      }),
+      pageSlug: "level-2/come",
+      stepId,
+    });
     renderWithProviders(
       <CurriculumTrainingStepTestOffer
         decision="recommend_test"
@@ -106,9 +187,16 @@ describe("curriculum training step test", () => {
             target: "First target",
             undoneAt: null,
           },
+          {
+            attemptId: "a2",
+            createdAt: new Date(),
+            outcome: "not_yet",
+            target: "Undone attempt today",
+            undoneAt: new Date(),
+          },
         ]}
         onStartTest={onStartTest}
-        stepId={PRACTICE_STEP_ID}
+        stepId={stepId}
         totals={[{ createdAt: new Date("2020-01-02T00:00:00.000Z") }]}
       />,
       { queryClient, routePaths: ["/"] },
@@ -130,7 +218,7 @@ describe("curriculum training step test", () => {
 
     // Act
     const { unmount } = renderWithProviders(
-      <CurriculumTrainingTestGate active={false} coldOverride={false}>
+      <CurriculumTrainingTestGate active={false} coldOverride={false} stepId={PRACTICE_STEP_ID}>
         <p>Practice view</p>
       </CurriculumTrainingTestGate>,
       { queryClient: inactiveClient, routePaths: ["/"] },
@@ -142,7 +230,7 @@ describe("curriculum training step test", () => {
 
     // Act
     renderWithProviders(
-      <CurriculumTrainingTestGate active coldOverride={false}>
+      <CurriculumTrainingTestGate active coldOverride={false} stepId={PRACTICE_STEP_ID}>
         <p>Practice view</p>
       </CurriculumTrainingTestGate>,
       { queryClient: missingClient, routePaths: ["/"] },
@@ -152,21 +240,65 @@ describe("curriculum training step test", () => {
     expect(screen.getByText("Cold Test instructions are unavailable.")).toBeDefined();
   });
 
-  it("renders TrainingTest when gate is active and step is present", () => {
+  it("renders TrainingTest when gate is active for any cold-testable step", () => {
     expect.hasAssertions();
 
     // Arrange
-    const queryClient = createStepTestQueryClient();
+    const stepId = "level-2/come:step-3";
+    const queryClient = createStepTestQueryClient({
+      page: createBehaviorPageFixture({
+        pageSlug: "level-2/come",
+        steps: [
+          {
+            ...FIRST_STEP,
+            stepId,
+            tryItCold: [
+              {
+                type: "paragraph" as const,
+                content: [{ text: "Cold instructions for Come Step 3", type: "text" as const }],
+              },
+            ],
+          },
+        ],
+      }),
+      pageSlug: "level-2/come",
+      stepId,
+    });
 
     // Act
     renderWithProviders(
-      <CurriculumTrainingTestGate active coldOverride={false}>
+      <CurriculumTrainingTestGate active coldOverride={false} stepId={stepId}>
         <p>Practice view</p>
       </CurriculumTrainingTestGate>,
-      { queryClient, routePaths: ["/"] },
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
     );
 
     // Assert
-    expect(screen.getByText("Cold instructions")).toBeDefined();
+    expect(screen.getByText("Cold instructions for Come Step 3")).toBeDefined();
+    expect(screen.getByRole("link", { name: "Finish Test" }).getAttribute("href")).toBe(
+      "/levels/level-2/come",
+    );
+  });
+
+  it("forwards recommendedMode and blockedByOverride to CurriculumTrainingTestOffer", () => {
+    expect.hasAssertions();
+
+    const stepId = "level-1/zen:step-1";
+    const queryClient = createStepTestQueryClient({ stepId });
+
+    renderWithProviders(
+      <CurriculumTrainingStepTestOffer
+        blockedByOverride
+        decision={null}
+        history={[]}
+        onStartTest={vi.fn<() => void>()}
+        recommendedMode="test"
+        stepId={stepId}
+        totals={[]}
+      />,
+      { queryClient, routePaths: ["/"] },
+    );
+
+    expect(screen.getByRole("button", { name: "Start Test" })).toHaveProperty("disabled", true);
   });
 });

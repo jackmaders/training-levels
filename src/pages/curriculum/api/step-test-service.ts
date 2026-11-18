@@ -1,5 +1,6 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 
+import { getCurriculumPage } from "@/shared/curriculum-data/index.server";
 import { dogs, stepCompletions, stepTests } from "@/shared/db";
 import { getDb, type Database, type DbContext } from "@/shared/db/index.server";
 import { ApplicationError } from "@/shared/errors";
@@ -7,9 +8,24 @@ import { ApplicationError } from "@/shared/errors";
 import type { RecordStepTestInput } from "./training-schema";
 
 const DEFAULT_DOG_NAME = "My Dog";
+const NOT_FOUND_INDEX = -1;
 type TrainingUserContext = DbContext & { userId: string };
 
+function requireColdTestStep(stepId: string): void {
+  const separatorIndex = stepId.indexOf(":");
+  const page =
+    separatorIndex === NOT_FOUND_INDEX ? null : getCurriculumPage(stepId.slice(0, separatorIndex));
+  const step =
+    page?.kind === "behavior"
+      ? page.steps.find((candidate) => candidate.stepId === stepId)
+      : undefined;
+  if ((step?.tryItCold?.length ?? 0) === 0) {
+    throw new ApplicationError("CURRICULUM_STEP_NOT_FOUND", { details: { stepId } });
+  }
+}
+
 async function getStepTestHistory(stepId: string, { db = getDb(), userId }: TrainingUserContext) {
+  requireColdTestStep(stepId);
   const dogId = await findPrimaryDogId(db, userId);
   if (dogId === null) {
     return [];
@@ -32,9 +48,7 @@ async function recordStepTest(
   input: RecordStepTestInput,
   { db = getDb(), userId }: TrainingUserContext,
 ) {
-  if (input.stepId !== "level-1/zen:step-1") {
-    throw new ApplicationError("CURRICULUM_STEP_NOT_FOUND", { details: { stepId: input.stepId } });
-  }
+  requireColdTestStep(input.stepId);
   const dogId = await ensurePrimaryDogId(db, userId);
   await persistStepTest(input, dogId, db);
   const test = await findStepTest(input.testId, dogId, db);

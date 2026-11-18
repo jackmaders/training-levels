@@ -27,7 +27,7 @@ import { CurriculumBehaviorArticle } from "../curriculum-behavior-article";
 vi.mock(import("../../api/curriculum.functions"));
 vi.mock(import("../../api/generalization.functions"));
 
-const LEVEL_ROUTE_PATHS = ["/", "/levels/$section/$page"];
+const LEVEL_ROUTE_PATHS = ["/", "/levels/$section/$page", "/training"];
 
 afterEach(() => {
   window.location.hash = "";
@@ -97,6 +97,18 @@ describe("curriculum behavior article structure", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Level 1: Zen" })).toBeDefined();
     expect(screen.queryByText("Impulse Control")).toBeNull();
     expect(screen.getByText("2 of 5 steps")).toBeDefined();
+  });
+
+  it("links Practice Step 1 explicitly to level-1/zen:step-1", () => {
+    expect.assertions(1);
+
+    // Arrange & Act
+    renderBehaviorArticle({ page: TEST_BEHAVIOR_PAGE });
+
+    // Assert
+    expect(screen.getByRole("link", { name: "Practice Step 1" }).getAttribute("href")).toBe(
+      "/training?stepId=level-1%2Fzen%3Astep-1",
+    );
   });
 
   it("renders populated optional sections and steps intro blocks", () => {

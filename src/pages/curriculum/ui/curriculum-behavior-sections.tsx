@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 import type {
   BehaviorCurriculumPage,
   BehaviorStepSummary,
@@ -34,12 +36,13 @@ function BehaviorHeader({
       </Progress>
       <CurriculumLevelReadiness completedStepIds={completedStepIds} section={section} />
       {page.pageSlug === "level-1/zen" ? (
-        <a
+        <Link
           className="inline-flex rounded-md bg-primary px-4 py-2 text-primary-foreground"
-          href="/training"
+          search={{ stepId: "level-1/zen:step-1" }}
+          to="/training"
         >
           Practice Step 1
-        </a>
+        </Link>
       ) : null}
     </header>
   );

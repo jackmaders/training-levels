@@ -3,12 +3,13 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { stepProgressQueryOptions } from "../api/curriculum-query-options";
 import { generalizationKeys } from "../api/generalization-query-options";
-import { PRACTICE_STEP_ID, stepTestHistoryQueryOptions } from "../api/training-query-options";
+import { trainingOverviewQueryOptions } from "../api/recommendation-query-options";
+import { stepTestHistoryQueryOptions } from "../api/training-query-options";
 import { recordStepTestFn } from "../api/training.functions";
 import type { StepTestActions } from "./curriculum-training-test-views";
 import type { Outcome } from "./curriculum-training-views";
 
-function useStepTestActions(): StepTestActions {
+function useStepTestActions(stepId: string): StepTestActions {
   const queryClient = useQueryClient();
   const recordTest = useServerFn(recordStepTestFn);
   const mutation = useMutation({
@@ -17,14 +18,17 @@ function useStepTestActions(): StepTestActions {
         data: {
           coldOverride,
           outcome,
-          stepId: PRACTICE_STEP_ID,
+          stepId,
           testId: crypto.randomUUID(),
         },
       }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: stepTestHistoryQueryOptions().queryKey });
+      await queryClient.invalidateQueries({
+        queryKey: stepTestHistoryQueryOptions(stepId).queryKey,
+      });
       await queryClient.invalidateQueries({ queryKey: stepProgressQueryOptions().queryKey });
       await queryClient.invalidateQueries({ queryKey: generalizationKeys.all });
+      await queryClient.invalidateQueries({ queryKey: trainingOverviewQueryOptions().queryKey });
     },
   });
 

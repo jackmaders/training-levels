@@ -6,7 +6,6 @@ import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
 
 import { PRACTICE_STEP_OPTIONS } from "../../model/practice-ladders";
 import {
-  STEP_TARGET,
   TrainingBreak,
   TrainingHeading,
   TrainingPractice,
@@ -14,6 +13,8 @@ import {
   type PracticeActions,
   type PracticeRecord,
 } from "../curriculum-training-views";
+
+const STEP_TARGET = "Dog moves away from a treat held in your hand while you are sitting.";
 
 afterEach(() => {
   vi.useRealTimers();
@@ -190,7 +191,7 @@ describe("curriculum training views", () => {
     const onSelectStep = vi.fn<() => void>();
     const onStartPractice = vi.fn<() => void>();
 
-    renderWithProviders(
+    const { rerender } = renderWithProviders(
       <TrainingPrep
         decision="recommend_test"
         equipment={[]}
@@ -224,6 +225,25 @@ describe("curriculum training views", () => {
 
     await user.click(screen.getByRole("button", { name: "Start Practice" }));
     expect(onStartPractice).toHaveBeenCalledOnce();
+
+    rerender(
+      <TrainingPrep
+        decision={null}
+        equipment={[]}
+        guidance={null}
+        history={[]}
+        plan={null}
+        recommendationPanel={<p>Custom recommendation</p>}
+        selectedStepId={FINISH_STEP.stepId}
+        startDisabled
+        stepOptions={PRACTICE_STEP_OPTIONS}
+        target={STEP_TARGET}
+        onSelectStep={onSelectStep}
+        onStart={onStartPractice}
+      />,
+    );
+    expect(screen.getByText("Custom recommendation")).toBeDefined();
+    expect(screen.getByRole("button", { name: "Start Practice" })).toHaveProperty("disabled", true);
   });
 
   it("renders TrainingPractice with guidance, progression, target choices, and reading button", async () => {

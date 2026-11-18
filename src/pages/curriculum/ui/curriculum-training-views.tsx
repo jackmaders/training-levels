@@ -17,7 +17,6 @@ import {
 } from "./curriculum-training-reading";
 import { CurriculumTrainingTotals, type PracticeTotalRecord } from "./curriculum-training-totals";
 
-const STEP_TARGET = "Dog moves away from a treat held in your hand while you are sitting.";
 const LAST_ITEM_OFFSET = 1;
 const DEFAULT_PRACTICE_LIMIT = 5;
 const TIMER_TICK_MILLISECONDS = 1000;
@@ -72,7 +71,9 @@ function TrainingPrep({
   onSelectStep,
   onStart,
   plan,
+  recommendationPanel = null,
   selectedStepId,
+  startDisabled = false,
   stepOptions,
   target,
   testOffer = null,
@@ -84,7 +85,9 @@ function TrainingPrep({
   onSelectStep: (stepId: string) => void;
   onStart: () => void;
   plan: PracticePlan | null;
+  recommendationPanel?: ReactNode;
   selectedStepId: string;
+  startDisabled?: boolean;
   stepOptions: readonly PracticeStepOption[];
   target: string;
   testOffer?: ReactNode;
@@ -96,6 +99,7 @@ function TrainingPrep({
       <h2 className="text-xl font-semibold" id="prep-heading">
         Prep
       </h2>
+      {recommendationPanel}
       <label className="grid max-w-lg gap-2 font-medium" htmlFor="practice-step">
         Behavior and Step
         <select
@@ -123,7 +127,8 @@ function TrainingPrep({
       <AttemptCounts history={currentHistory} />
       <SavedDecisionNotice decision={decision} />
       <button
-        className="rounded-md bg-primary px-4 py-2 text-primary-foreground"
+        className="rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50"
+        disabled={startDisabled}
         type="button"
         onClick={onStart}
       >
@@ -803,5 +808,5 @@ function FinishTrainingLink({
   );
 }
 
-export { STEP_TARGET, TrainingBreak, TrainingHeading, TrainingPractice, TrainingPrep };
+export { TrainingBreak, TrainingHeading, TrainingPractice, TrainingPrep };
 export type { Outcome, PracticeActions, PracticeDecision, PracticeRecord };
