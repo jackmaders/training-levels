@@ -153,7 +153,7 @@ describe("general training FAQ", () => {
               content: [
                 { text: "Use ", type: "text" },
                 { text: "zen", type: "code" },
-                { children: [{ text: " calmly", type: "text" }], type: "emphasis" },
+                { children: [{ text: " calmly", type: "text" }], type: "em" },
                 { text: "?", type: "text" },
               ],
               type: "paragraph",

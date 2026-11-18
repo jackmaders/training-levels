@@ -91,6 +91,10 @@ describe("source-backed Practice ladders", () => {
     expect(() => getPracticePlan("level-1/zen:step-1", [])).toThrow(
       "No source-backed Practice ladder is available for level-1/zen:step-1.",
     );
+  });
+
+  it("handles restarts, unknown targets, and clamping at the end of a ladder", () => {
+    expect.hasAssertions();
 
     const restarted = getPracticePlan("level-3/crate:step-2", [
       { outcome: "not_yet", target: "3 feet · 30 seconds" },

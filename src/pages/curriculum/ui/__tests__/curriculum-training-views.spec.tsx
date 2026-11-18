@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -19,18 +19,32 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const FINISH_STEP = PRACTICE_STEP_OPTIONS[0];
+const [FINISH_STEP] = PRACTICE_STEP_OPTIONS;
 
-function createActions(overrides: Partial<PracticeActions> = {}): PracticeActions {
+function createPracticeHistoryItem(index: number): PracticeRecord {
   return {
-    correct: vi.fn(),
-    errorMessage: null,
-    record: vi.fn(),
-    retry: vi.fn(),
-    saving: false,
-    undo: vi.fn(),
-    ...overrides,
+    attemptId: `a-${index}`,
+    createdAt: new Date("2026-01-01T00:00:00.000Z"),
+    outcome: index % 2 === 0 ? "success" : "not_yet",
+    target: "1 second",
+    undoneAt: index === 0 ? new Date("2026-01-01T00:01:00.000Z") : null,
   };
+}
+
+function createActions(overrides?: Partial<PracticeActions>): PracticeActions {
+  const base: PracticeActions = {
+    correct: vi.fn<() => void>(),
+    correctTotals: vi.fn<() => void>(),
+    errorMessage: null,
+    handleRetry: vi.fn<() => void>(),
+    pendingAttempt: null,
+    record: vi.fn<() => void>(),
+    recordTotals: vi.fn<() => void>(),
+    saveDecision: vi.fn<() => void>(),
+    saving: false,
+    undo: vi.fn<() => void>(),
+  };
+  return overrides ? Object.assign(base, overrides) : base;
 }
 
 describe("curriculum training views", () => {
@@ -38,18 +52,12 @@ describe("curriculum training views", () => {
     expect.hasAssertions();
 
     const { rerender } = renderWithProviders(
-      <TrainingHeading mode="prep" stepLabel="Level 1 Zen, Step 1" />,
+      <TrainingHeading mode="Practice" stepLabel="Level 1 Zen, Step 1" />,
       { routePaths: ["/"] },
     );
-    expect(screen.getByRole("heading", { name: "Guided prep" })).toBe(true);
-
-    rerender(<TrainingHeading mode="practice" stepLabel="Level 1 Zen, Step 1" />);
     expect(screen.getByRole("heading", { name: "Guided practice" })).toBe(true);
 
-    rerender(<TrainingHeading mode="break" stepLabel="Level 1 Zen, Step 1" />);
-    expect(screen.getByRole("heading", { name: "Guided break" })).toBe(true);
-
-    rerender(<TrainingHeading mode="test" stepLabel="Level 1 Zen, Step 1" />);
+    rerender(<TrainingHeading mode="Test" stepLabel="Level 1 Zen, Step 1" />);
     expect(screen.getByRole("heading", { name: "Guided test" })).toBe(true);
   });
 
@@ -58,13 +66,9 @@ describe("curriculum training views", () => {
 
     const user = userEvent.setup();
     const actions = createActions({ errorMessage: "Save failed" });
-    const history: PracticeRecord[] = Array.from({ length: 10 }, (_, index) => ({
-      attemptId: `a-${index}`,
-      createdAt: new Date("2026-01-01T00:00:00.000Z"),
-      outcome: index % 2 === 0 ? "success" : "not_yet",
-      target: "1 second",
-      undoneAt: index === 0 ? new Date("2026-01-01T00:01:00.000Z") : null,
-    }));
+    const history: PracticeRecord[] = Array.from({ length: 10 }, (_item, index) =>
+      createPracticeHistoryItem(index),
+    );
 
     renderWithProviders(
       <TrainingPractice
@@ -73,9 +77,9 @@ describe("curriculum training views", () => {
         finishStep={FINISH_STEP}
         guidance={null}
         history={history}
-        onBreak={vi.fn()}
-        onChangeTarget={vi.fn()}
-        onOpenReading={vi.fn()}
+        onBreak={vi.fn<() => void>()}
+        onChangeTarget={vi.fn<() => void>()}
+        onOpenReading={vi.fn<() => void>()}
         plan={null}
         progression={null}
         target="1 second"
@@ -85,7 +89,7 @@ describe("curriculum training views", () => {
       { routePaths: ["/", "/levels/$section/$page"] },
     );
 
-    expect(screen.getByText(/Could not save this attempt/)).toBe(true);
+    expect(screen.getByText(/Could not save this attempt/u)).toBe(true);
     expect(
       screen.getByText(
         "App-default practice limit reached. Take a break, then choose Continue or Finish.",
@@ -94,15 +98,13 @@ describe("curriculum training views", () => {
 
     await user.click(screen.getByRole("button", { name: "Retry save" }));
 
-    expect((screen.getByRole("button", { name: "Success" }) as HTMLButtonElement).disabled).toBe(
-      true,
-    );
+    expect(screen.getByRole("button", { name: "Success" })).toHaveProperty("disabled", true);
 
     await user.click(screen.getByRole("button", { name: "Undo" }));
     expect(actions.undo).toHaveBeenCalledWith();
   });
 
-  it("runs timed hold countdown in TrainingPractice", () => {
+  it("runs timed hold countdown in TrainingPractice", async () => {
     expect.hasAssertions();
 
     vi.useFakeTimers();
@@ -115,19 +117,22 @@ describe("curriculum training views", () => {
         finishStep={FINISH_STEP}
         guidance={null}
         history={[]}
-        onBreak={vi.fn()}
-        onChangeTarget={vi.fn()}
-        onOpenReading={vi.fn()}
+        onBreak={vi.fn<() => void>()}
+        onChangeTarget={vi.fn<() => void>()}
+        onOpenReading={vi.fn<() => void>()}
         plan={{
+          appDefaultPracticeLimit: 10,
+          appDefaultRepetitions: 1,
+          distanceFeet: 0,
           durationSeconds: 1,
-          focusSummary: "1s hold",
-          mode: "timed",
-          nextFocusSummary: null,
-          nextTargetLabel: null,
-          readyForTest: false,
+          easierTarget: null,
+          nextTarget: null,
+          priorAchievement: null,
+          restartReason: null,
           source: "Zen ladder",
-          targetLabel: "1 second",
-          targetOptions: [{ durationSeconds: 1, label: "1 second" }],
+          stepId: "level-1/zen:step-1",
+          target: "1 second",
+          targetOptions: [{ distanceFeet: 0, durationSeconds: 1, label: "1 second" }],
         }}
         progression={null}
         target="1 second"
@@ -137,7 +142,8 @@ describe("curriculum training views", () => {
       { routePaths: ["/", "/levels/$section/$page"] },
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Start timer" }));
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await user.click(screen.getByRole("button", { name: "Start timer" }));
     act(() => {
       vi.advanceTimersByTime(1100);
     });
@@ -148,7 +154,7 @@ describe("curriculum training views", () => {
     expect.hasAssertions();
 
     const user = userEvent.setup();
-    const onContinue = vi.fn();
+    const onContinue = vi.fn<() => void>();
 
     renderWithProviders(<TrainingBreak finishStep={FINISH_STEP} onContinue={onContinue} />, {
       routePaths: ["/", "/levels/$section/$page"],
@@ -162,9 +168,8 @@ describe("curriculum training views", () => {
     expect.hasAssertions();
 
     const user = userEvent.setup();
-    const onSelectStep = vi.fn();
-    const onSelectTarget = vi.fn();
-    const onStartPractice = vi.fn();
+    const onSelectStep = vi.fn<() => void>();
+    const onStartPractice = vi.fn<() => void>();
 
     renderWithProviders(
       <TrainingPrep
@@ -190,32 +195,26 @@ describe("curriculum training views", () => {
     expect.hasAssertions();
 
     const user = userEvent.setup();
-    const onChangeTarget = vi.fn();
-    const onOpenReading = vi.fn();
+    const onChangeTarget = vi.fn<() => void>();
+    const onOpenReading = vi.fn<() => void>();
 
     renderWithProviders(
       <TrainingPractice
         actions={createActions()}
         decision="keep_practicing"
         finishStep={FINISH_STEP}
-        guidance={{
-          advancementRule: { kind: "consecutive", required: 3 },
-          currentTargetIndex: 0,
-          notes: ["Keep calm"],
-          readyToAdvance: true,
-          stepDownSuggestion: "Try 1 second",
-          target: "3 seconds",
-          targetOptions: ["1 second", "3 seconds", "5 seconds"],
-        }}
+        guidance={null}
         history={[]}
-        onBreak={vi.fn()}
+        onBreak={vi.fn<() => void>()}
         onChangeTarget={onChangeTarget}
         onOpenReading={onOpenReading}
         plan={null}
         progression={{
           appDefault: "App default",
-          method: "consecutive_successes",
+          method: "duration_ladder",
           nextTarget: "5 seconds",
+          readinessQuestion: "Ready?",
+          readyForTest: false,
           source: "Test source",
         }}
         target="3 seconds"

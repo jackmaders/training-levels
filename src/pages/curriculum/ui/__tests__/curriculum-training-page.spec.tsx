@@ -49,6 +49,7 @@ function createTrainingQueryClient({
     attemptId: string;
     createdAt: Date;
     outcome: "success" | "not_yet";
+    stepId: string;
     target: string;
     undoneAt: Date | null;
   }[];
@@ -60,6 +61,7 @@ function createTrainingQueryClient({
     recordId: string;
     stepId: string;
     successCount: number;
+    target: string;
   }[];
 } = {}) {
   vi.mocked(getPracticeHistoryFn).mockResolvedValue(history);
@@ -87,7 +89,7 @@ describe("curriculum training page", () => {
       <CurriculumTrainingPage
         selectedStepId={PRACTICE_STEP_ID}
         selectedTarget={undefined}
-        onSelectionChange={vi.fn()}
+        onSelectionChange={vi.fn<() => void>()}
       />,
       { queryClient, routePaths: ["/", "/levels/$section/$page"] },
     );
@@ -101,14 +103,11 @@ describe("curriculum training page", () => {
 
     // Arrange
     const user = userEvent.setup();
-    const onSelectionChange = vi.fn();
+    const onSelectionChange = vi.fn<() => void>();
     vi.mocked(recordPracticeAttemptFn).mockResolvedValueOnce({
       attemptId: "a1",
-      createdAt: "2026-01-01T00:00:00.000Z",
+      dogId: "dog-1",
       outcome: "success",
-      stepId: PRACTICE_STEP_ID,
-      target: "Target",
-      undoneAt: null,
     });
     const queryClient = createTrainingQueryClient();
 
@@ -153,41 +152,30 @@ describe("curriculum training page", () => {
 
     // Arrange
     const user = userEvent.setup();
-    const onSelectionChange = vi.fn();
+    const onSelectionChange = vi.fn<() => void>();
     vi.mocked(undoPracticeAttemptFn).mockResolvedValueOnce({
       attemptId: "a1",
-      createdAt: "2026-01-01T00:00:00.000Z",
-      outcome: "success",
-      stepId: PRACTICE_STEP_ID,
-      target: "Target",
-      undoneAt: "2026-01-01T00:01:00.000Z",
+      undone: true,
     });
     vi.mocked(correctPracticeAttemptFn).mockResolvedValueOnce({
       attemptId: "a1",
-      createdAt: "2026-01-01T00:00:00.000Z",
       outcome: "not_yet",
-      stepId: PRACTICE_STEP_ID,
-      target: "Target",
-      undoneAt: null,
     });
     vi.mocked(recordPracticeTotalsFn).mockResolvedValueOnce({
-      createdAt: "2026-01-01T00:00:00.000Z",
       notYetCount: 1,
       recordId: "t1",
       stepId: PRACTICE_STEP_ID,
       successCount: 2,
+      target: "Target",
     });
     vi.mocked(correctPracticeTotalsFn).mockResolvedValueOnce({
-      createdAt: "2026-01-01T00:00:00.000Z",
       notYetCount: 0,
       recordId: "t1",
-      stepId: PRACTICE_STEP_ID,
       successCount: 3,
     });
     vi.mocked(savePracticeStepDecisionFn).mockResolvedValueOnce({
       decision: "keep_practicing",
       stepId: PRACTICE_STEP_ID,
-      updatedAt: "2026-01-01T00:00:00.000Z",
     });
 
     const queryClient = createTrainingQueryClient({
@@ -196,12 +184,13 @@ describe("curriculum training page", () => {
           attemptId: "a1",
           createdAt: new Date("2026-01-01T00:00:00.000Z"),
           outcome: "success",
+          stepId: PRACTICE_STEP_ID,
           target: "Target",
           undoneAt: null,
         },
       ],
     });
-    const secondOption = PRACTICE_STEP_OPTIONS[1];
+    const [, secondOption] = PRACTICE_STEP_OPTIONS;
     queryClient.setQueryData(
       curriculumPageQueryOptions(secondOption.pageSlug).queryKey,
       TEST_BEHAVIOR_PAGE,
@@ -233,19 +222,11 @@ describe("curriculum training page", () => {
     const user = userEvent.setup();
     vi.mocked(undoPracticeAttemptFn).mockResolvedValueOnce({
       attemptId: "a1",
-      createdAt: "2026-01-01T00:00:00.000Z",
-      outcome: "success",
-      stepId: PRACTICE_STEP_ID,
-      target: "Target",
-      undoneAt: "2026-01-01T00:01:00.000Z",
+      undone: true,
     });
     vi.mocked(correctPracticeAttemptFn).mockResolvedValueOnce({
       attemptId: "a1",
-      createdAt: "2026-01-01T00:00:00.000Z",
       outcome: "not_yet",
-      stepId: PRACTICE_STEP_ID,
-      target: "Target",
-      undoneAt: null,
     });
     const queryClient = createTrainingQueryClient({
       history: [
@@ -253,6 +234,7 @@ describe("curriculum training page", () => {
           attemptId: "a1",
           createdAt: new Date("2026-01-01T00:00:00.000Z"),
           outcome: "success",
+          stepId: PRACTICE_STEP_ID,
           target: "Target",
           undoneAt: null,
         },
@@ -262,13 +244,13 @@ describe("curriculum training page", () => {
       <CurriculumTrainingPage
         selectedStepId={PRACTICE_STEP_ID}
         selectedTarget={undefined}
-        onSelectionChange={vi.fn()}
+        onSelectionChange={vi.fn<() => void>()}
       />,
       { queryClient, routePaths: ["/", "/levels/$section/$page"] },
     );
 
     // Act
-    await user.click(screen.getByRole("button", { name: /Practice/ }));
+    await user.click(screen.getByRole("button", { name: /Practice/u }));
     await user.click(screen.getByRole("button", { name: "Undo" }));
 
     // Assert
@@ -284,28 +266,21 @@ describe("curriculum training page", () => {
     const user = userEvent.setup();
     vi.mocked(correctPracticeAttemptFn).mockResolvedValueOnce({
       attemptId: "a1",
-      createdAt: "2026-01-01T00:00:00.000Z",
       outcome: "not_yet",
-      stepId: PRACTICE_STEP_ID,
-      target: "Target",
-      undoneAt: null,
     });
     vi.mocked(recordPracticeTotalsFn).mockResolvedValueOnce({
-      createdAt: "2026-01-01T00:00:00.000Z",
       notYetCount: 0,
       recordId: "t1",
       stepId: PRACTICE_STEP_ID,
       successCount: 2,
+      target: "Target",
     });
     vi.mocked(recordPracticeAttemptFn)
       .mockRejectedValueOnce(new Error("Network down"))
       .mockResolvedValueOnce({
         attemptId: "a2",
-        createdAt: "2026-01-01T00:00:00.000Z",
+        dogId: "dog-1",
         outcome: "success",
-        stepId: PRACTICE_STEP_ID,
-        target: "Target",
-        undoneAt: null,
       });
 
     const queryClient = createTrainingQueryClient({
@@ -314,6 +289,7 @@ describe("curriculum training page", () => {
           attemptId: "a1",
           createdAt: new Date("2026-01-01T00:00:00.000Z"),
           outcome: "success",
+          stepId: PRACTICE_STEP_ID,
           target: "Target",
           undoneAt: null,
         },
@@ -323,13 +299,13 @@ describe("curriculum training page", () => {
       <CurriculumTrainingPage
         selectedStepId={PRACTICE_STEP_ID}
         selectedTarget={undefined}
-        onSelectionChange={vi.fn()}
+        onSelectionChange={vi.fn<() => void>()}
       />,
       { queryClient, routePaths: ["/", "/levels/$section/$page"] },
     );
 
     // Act: enter practice
-    await user.click(screen.getByRole("button", { name: /Practice/ }));
+    await user.click(screen.getByRole("button", { name: /Practice/u }));
 
     // Act: take a break and continue
     await user.click(screen.getByRole("button", { name: "Take a break" }));
@@ -353,7 +329,7 @@ describe("curriculum training page", () => {
     // Act: fail attempt and retry
     await user.click(screen.getByRole("button", { name: "Success" }));
     await waitFor(() => {
-      expect(screen.getByText(/Could not save this attempt/)).toBe(true);
+      expect(screen.getByText(/Could not save this attempt/u)).toBe(true);
     });
     await user.click(screen.getByRole("button", { name: "Retry save" }));
     await waitFor(() => {
@@ -366,14 +342,10 @@ describe("curriculum training page", () => {
 
     // Arrange
     const user = userEvent.setup();
-    const onSelectionChange = vi.fn();
+    const onSelectionChange = vi.fn<() => void>();
     vi.mocked(correctPracticeAttemptFn).mockResolvedValueOnce({
       attemptId: "a2",
-      createdAt: "2026-01-01T00:00:00.000Z",
       outcome: "success",
-      stepId: PRACTICE_STEP_ID,
-      target: "Target",
-      undoneAt: null,
     });
     const queryClient = createTrainingQueryClient({
       history: [
@@ -381,6 +353,7 @@ describe("curriculum training page", () => {
           attemptId: "a1",
           createdAt: new Date("2026-01-01T00:00:00.000Z"),
           outcome: "success",
+          stepId: PRACTICE_STEP_ID,
           target: "Target",
           undoneAt: new Date("2026-01-01T00:01:00.000Z"),
         },
@@ -388,6 +361,7 @@ describe("curriculum training page", () => {
           attemptId: "a2",
           createdAt: new Date("2026-01-01T00:02:00.000Z"),
           outcome: "not_yet",
+          stepId: PRACTICE_STEP_ID,
           target: "Target",
           undoneAt: null,
         },
@@ -403,12 +377,10 @@ describe("curriculum training page", () => {
     );
 
     // Act: enter practice and change target if target selector is present
-    await user.click(screen.getByRole("button", { name: /Practice/ }));
-    const targetSelect = screen.queryByLabelText("Target");
-    if (targetSelect !== null) {
-      await user.selectOptions(targetSelect, "15 seconds");
-      expect(onSelectionChange).toHaveBeenCalledWith(PRACTICE_STEP_ID, "15 seconds");
-    }
+    await user.click(screen.getByRole("button", { name: /Practice/u }));
+    const targetSelect = screen.getByLabelText("Target");
+    await user.selectOptions(targetSelect, "15 seconds");
+    expect(onSelectionChange).toHaveBeenCalledWith(PRACTICE_STEP_ID, "15 seconds");
 
     // Act: correct not_yet attempt
     await user.click(screen.getByRole("button", { name: "Correct" }));

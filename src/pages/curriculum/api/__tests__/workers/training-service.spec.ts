@@ -344,6 +344,11 @@ describe("training-service (workers D1)", () => {
     await expect(
       undoPracticeAttempt("018f47ad-9d72-7a31-a50b-a99999999999", { db, userId: "undo-owner" }),
     ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+  });
+
+  it("handles practice attempt undo and missing attempts for an existing dog", async () => {
+    expect.hasAssertions();
+    const db = getDb(env.DB);
 
     await db.insert(dogs).values({ id: "undo-dog", userId: "undo-owner" });
 
@@ -376,6 +381,11 @@ describe("training-service (workers D1)", () => {
       attemptId: "018f47ad-9d72-7a31-a50b-a88888888888",
       undone: true,
     });
+  });
+
+  it("rejects unknown steps and invalid totals or targets", async () => {
+    expect.hasAssertions();
+    const db = getDb(env.DB);
 
     await expect(
       recordStepTest(
@@ -414,6 +424,11 @@ describe("training-service (workers D1)", () => {
         { db, userId: "edge-owner" },
       ),
     ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+  });
+
+  it("handles edge-owner decision, totals correction, and unknown targets", async () => {
+    expect.hasAssertions();
+    const db = getDb(env.DB);
 
     await db.insert(dogs).values({ id: "edge-dog", userId: "edge-owner" });
 

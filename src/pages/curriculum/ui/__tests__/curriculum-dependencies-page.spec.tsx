@@ -18,6 +18,14 @@ import {
 } from "../../api/curriculum-query-options";
 import { CurriculumDependenciesPage } from "../curriculum-dependencies-page";
 
+function getLastElement(elements: HTMLElement[]): HTMLElement {
+  const element = elements.at(-1);
+  if (!element) {
+    throw new Error("Expected at least one element");
+  }
+  return element;
+}
+
 describe("curriculum dependencies page", () => {
   it("renders behaviors across levels and switches selection on click", async () => {
     expect.hasAssertions();
@@ -27,7 +35,6 @@ describe("curriculum dependencies page", () => {
     const matPage = createBehaviorPageFixture({
       ...TEST_BEHAVIOR_PAGE,
       pageSlug: "level-2/go-to-mat",
-      slug: "level-2/go-to-mat",
       title: "Go to Mat",
     });
     const syllabus = createSyllabusFixture({
@@ -35,20 +42,23 @@ describe("curriculum dependencies page", () => {
         ...TEST_SYLLABUS.sections,
         {
           href: "/levels/level-2",
-          kind: "level",
           levelNumber: 2,
           pages: [
             {
               href: "/levels/level-2/go-to-mat",
               kind: "behavior",
+              order: 1,
               pageSlug: "level-2/go-to-mat",
+              sectionSlug: "level-2",
               stepIds: ["level-2/go-to-mat#step-1"],
               title: "Go to Mat",
             },
             {
               href: "/levels/level-2/stay",
               kind: "behavior",
+              order: 2,
               pageSlug: "level-2/stay",
+              sectionSlug: "level-2",
               stepIds: [],
               title: "Stay",
             },
@@ -78,7 +88,7 @@ describe("curriculum dependencies page", () => {
     expect(screen.getByRole("heading", { name: "Main Quest foundations" })).toBe(true);
 
     // Act
-    await user.click(screen.getAllByRole("button", { name: /^Zen\b/ })[0]);
+    await user.click(getLastElement(screen.getAllByRole("button", { name: /^Zen\b/u })));
 
     // Assert
     expect(screen.getByRole("heading", { name: "Zen" })).toBe(true);
@@ -92,41 +102,46 @@ describe("curriculum dependencies page", () => {
     const matPage = createBehaviorPageFixture({
       ...TEST_BEHAVIOR_PAGE,
       pageSlug: "level-2/go-to-mat",
-      slug: "level-2/go-to-mat",
       title: "Go to Mat",
     });
     const syllabus = createSyllabusFixture({
       sections: [
         {
           href: "/levels/level-1",
-          kind: "level",
           levelNumber: 1,
           pages: [
             {
               href: "/levels/level-1/zen",
               kind: "behavior",
+              order: 1,
               pageSlug: "level-1/zen",
+              sectionSlug: "level-1",
               stepIds: ["level-1/zen#step-1"],
               title: "Zen",
             },
             {
               href: "/levels/level-1/come",
               kind: "behavior",
+              order: 2,
               pageSlug: "level-1/come",
-              stepIds: undefined,
+              sectionSlug: "level-1",
               title: "Come",
             },
             {
               href: "/levels/level-1/sit",
               kind: "behavior",
+              order: 3,
               pageSlug: "level-1/sit",
+              sectionSlug: "level-1",
               stepIds: [],
               title: "Sit",
             },
             {
               href: "/levels/level-1/down",
               kind: "behavior",
+              order: 4,
               pageSlug: "level-1/down",
+              sectionSlug: "level-1",
               stepIds: [],
               title: "Down",
             },
@@ -136,20 +151,23 @@ describe("curriculum dependencies page", () => {
         },
         {
           href: "/levels/level-2",
-          kind: "level",
           levelNumber: 2,
           pages: [
             {
               href: "/levels/level-2/go-to-mat",
               kind: "behavior",
+              order: 1,
               pageSlug: "level-2/go-to-mat",
+              sectionSlug: "level-2",
               stepIds: ["level-2/go-to-mat#step-1"],
               title: "Go to Mat",
             },
             {
               href: "/levels/level-2/down",
               kind: "behavior",
+              order: 2,
               pageSlug: "level-2/down",
+              sectionSlug: "level-2",
               stepIds: [],
               title: "Level 2 Down",
             },
@@ -183,8 +201,8 @@ describe("curriculum dependencies page", () => {
     expect(screen.getByRole("heading", { name: "Level 2 Down" })).toBe(true);
 
     // Act: click Come in the Dependency list section (last button matching Come)
-    const comeButtons = screen.getAllByRole("button", { name: /^Come\b/ });
-    await user.click(comeButtons.at(-1)!);
+    const comeButtons = screen.getAllByRole("button", { name: /^Come\b/u });
+    await user.click(getLastElement(comeButtons));
 
     // Assert
     expect(screen.getByRole("heading", { name: "Come" })).toBe(true);
