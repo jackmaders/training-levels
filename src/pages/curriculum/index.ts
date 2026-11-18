@@ -8,6 +8,22 @@ export {
 } from "./api/curriculum-query-options";
 export { PRACTICE_STEP_ID, practiceHistoryQueryOptions } from "./api/training-query-options";
 export { trainingOverviewQueryOptions } from "./api/recommendation-query-options";
+export {
+  getCurrentLevelNumber,
+  getTrainingFallbackGuidance,
+  inspectManualStepSelection,
+  isStepTestable,
+  recommendNextTrainingActivity,
+} from "./model/training-recommendation";
+export type {
+  InspectManualStepSelectionInput,
+  ManualStepSelectionInspection,
+  RecommendNextTrainingActivityInput,
+  TrainingRecommendation,
+  TrainingRecommendationMode,
+  UnmetPrerequisite,
+  WaitingTestNotice,
+} from "./model/training-recommendation";
 export type {
   ArticleSectionSlug,
   LoadCurriculumArticleOptions,
