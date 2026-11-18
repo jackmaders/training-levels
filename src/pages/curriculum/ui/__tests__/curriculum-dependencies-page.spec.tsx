@@ -18,16 +18,19 @@ import {
 } from "../../api/curriculum-query-options";
 import { CurriculumDependenciesPage } from "../curriculum-dependencies-page";
 
-vi.mock(import("../../api/curriculum.functions"), async (importOriginal) => ({
-  ...(await importOriginal()),
-  getCurriculumPageFn: vi
-    .fn<() => Promise<typeof TEST_BEHAVIOR_PAGE>>()
-    .mockResolvedValue(TEST_BEHAVIOR_PAGE),
-  getCurriculumSyllabusFn: vi
-    .fn<() => Promise<typeof TEST_SYLLABUS>>()
-    .mockResolvedValue(TEST_SYLLABUS),
-  getStepProgressFn: vi.fn<() => Promise<never[]>>().mockResolvedValue([]),
-}));
+vi.mock(import("../../api/curriculum.functions"), async (importOriginal) => {
+  const actual: object = await importOriginal();
+  return {
+    ...actual,
+    getCurriculumPageFn: vi
+      .fn<() => Promise<typeof TEST_BEHAVIOR_PAGE>>()
+      .mockResolvedValue(TEST_BEHAVIOR_PAGE),
+    getCurriculumSyllabusFn: vi
+      .fn<() => Promise<typeof TEST_SYLLABUS>>()
+      .mockResolvedValue(TEST_SYLLABUS),
+    getStepProgressFn: vi.fn<() => Promise<never[]>>().mockResolvedValue([]),
+  } as never;
+});
 
 function getLastElement(elements: HTMLElement[]): HTMLElement {
   const element = elements.at(-1);

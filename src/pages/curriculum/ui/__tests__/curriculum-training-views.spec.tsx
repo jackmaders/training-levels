@@ -122,10 +122,10 @@ describe("curriculum training views", () => {
     expect(actions.undo).toHaveBeenCalledWith("a-9");
   });
 
-  it("runs timed hold countdown in TrainingPractice", () => {
+  it("runs timed hold countdown in TrainingPractice", async () => {
     expect.hasAssertions();
 
-    vi.useFakeTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const actions = createActions();
 
     renderWithProviders(
@@ -160,9 +160,8 @@ describe("curriculum training views", () => {
       { routePaths: ["/", "/levels/$section/$page"] },
     );
 
-    act(() => {
-      screen.getByRole("button", { name: "Start timer" }).click();
-    });
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Start timer" }));
     act(() => {
       vi.advanceTimersByTime(1100);
     });

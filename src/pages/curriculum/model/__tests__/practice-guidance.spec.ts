@@ -247,7 +247,7 @@ describe("guided Practice authoring", () => {
   });
 
   it("returns no guidance for Steps outside the authored Levels or criteria", () => {
-    expect.assertions(3);
+    expect.assertions(5);
 
     const otherLevel = getPracticeGuidance("level-3/crate:step-2", "The dog stays in the crate");
     const unknownStep = getPracticeGuidance("level-1/zen:step-9", "Dog stays away.");
@@ -256,5 +256,7 @@ describe("guided Practice authoring", () => {
     expect(otherLevel).toBeNull();
     expect(unknownStep).toBeNull();
     expect(blankCriterion).toBeNull();
+    expect(getPracticeGuidance("invalid", "criterion")).toBeNull();
+    expect(getPracticeGuidance("", "criterion")).toBeNull();
   });
 });

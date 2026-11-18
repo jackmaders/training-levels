@@ -365,4 +365,33 @@ describe("curriculum-service (workers D1)", () => {
     expect(bobProgress).toStrictEqual(["level-3/zen:step-4"]);
     expect(allDogs.map((row) => row.userId)).toStrictEqual(["user-alice", "user-bob"]);
   });
+
+  it("unmarks a step when the user has no dog yet", async () => {
+    expect.hasAssertions();
+    const db = getDb(env.DB);
+    await db.insert(user).values({ email: "nodog@example.com", id: "user-nodog", name: "No Dog" });
+
+    const result = await toggleStep(
+      { completed: false, stepId: "level-1/zen:step-2" },
+      { db, userId: "user-nodog" },
+    );
+
+    expect(result).toStrictEqual({ completed: false, stepId: "level-1/zen:step-2" });
+  });
+
+  it("requires a passing step test for level-1/zen:step-1 when a dog exists without one", async () => {
+    expect.hasAssertions();
+    const db = getDb(env.DB);
+    await db
+      .insert(user)
+      .values({ email: "notest@example.com", id: "user-notest", name: "No Test" });
+    await toggleStep(
+      { completed: true, stepId: "level-1/zen:step-2" },
+      { db, userId: "user-notest" },
+    );
+
+    await expect(
+      toggleStep({ completed: true, stepId: "level-1/zen:step-1" }, { db, userId: "user-notest" }),
+    ).rejects.toMatchObject({ code: "CURRICULUM_STEP_TEST_REQUIRED" });
+  });
 });

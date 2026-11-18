@@ -3,7 +3,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { TEST_BEHAVIOR_PAGE } from "@test/vitest/fixtures/curriculum";
+import { TEST_BEHAVIOR_PAGE, createProsePageFixture } from "@test/vitest/fixtures/curriculum";
 import { renderWithProviders } from "@test/vitest/wrappers/testing-wrapper";
 
 import { curriculumPageQueryOptions } from "../../api/curriculum-query-options";
@@ -384,5 +384,30 @@ describe("curriculum training page", () => {
     await waitFor(() => {
       expect(correctPracticeAttemptFn).toHaveBeenCalledOnce();
     });
+  });
+
+  it("renders unavailable message when curriculum page is not a behavior", () => {
+    expect.hasAssertions();
+
+    const queryClient = createTrainingQueryClient();
+    queryClient.setQueryData(
+      curriculumPageQueryOptions("level-1/zen").queryKey,
+      createProsePageFixture({
+        href: "/levels/level-1/zen",
+        pageSlug: "level-1/zen",
+        title: "Zen",
+      }),
+    );
+
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={PRACTICE_STEP_ID}
+        selectedTarget={undefined}
+        onSelectionChange={vi.fn<() => void>()}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    expect(screen.getByText("Training instructions are unavailable.")).toBeDefined();
   });
 });

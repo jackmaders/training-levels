@@ -67,6 +67,33 @@ describe("behavior-specific FAQ", () => {
     // Assert
     expect(faq).toStrictEqual([]);
   });
+
+  it("collects Question notes from aboutTheCues when present", () => {
+    expect.hasAssertions();
+    const page = createBehaviorPageFixture({
+      aboutTheCues: [
+        {
+          blocks: [
+            { content: [{ text: "When should I add the cue?", type: "text" }], type: "paragraph" },
+            { content: [{ text: "After 80% success.", type: "text" }], type: "paragraph" },
+          ],
+          title: [{ text: "Question", type: "text" }],
+          type: "callout",
+          variant: "note",
+        },
+      ],
+    });
+
+    const faq = getBehaviorFaq(page);
+
+    expect(faq).toStrictEqual([
+      {
+        answer: [{ content: [{ text: "After 80% success.", type: "text" }], type: "paragraph" }],
+        question: "When should I add the cue?",
+        source: { href: "/levels/level-1/zen", label: "Level 1 Zen" },
+      },
+    ]);
+  });
 });
 
 describe("general training FAQ", () => {

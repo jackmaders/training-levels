@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ComponentType } from "react";
 import { describe, expect, it, vi } from "vite-plus/test";
 
@@ -13,29 +14,32 @@ const { mockNavigate, mockSearch } = vi.hoisted(() => ({
   })),
 }));
 
-vi.mock(import("@/pages/curriculum"), async (importOriginal) => ({
-  ...(await importOriginal()),
-  CurriculumTrainingPage: ({
-    onSelectionChange,
-    selectedStepId,
-    selectedTarget,
-  }: {
-    onSelectionChange: (stepId: string, target?: string) => void;
-    selectedStepId?: string;
-    selectedTarget?: string;
-  }) => (
-    <button
-      data-step={selectedStepId}
-      data-target={selectedTarget}
-      type="button"
-      onClick={() => {
-        onSelectionChange("level-1/zen:step-2", "5 seconds");
-      }}
-    >
-      Trigger
-    </button>
-  ),
-}));
+vi.mock(import("@/pages/curriculum"), async (importOriginal) => {
+  const actual: object = await importOriginal();
+  return {
+    ...actual,
+    CurriculumTrainingPage: ({
+      onSelectionChange,
+      selectedStepId,
+      selectedTarget,
+    }: {
+      onSelectionChange: (stepId: string, target?: string) => void;
+      selectedStepId?: string;
+      selectedTarget?: string;
+    }) => (
+      <button
+        data-step={selectedStepId}
+        data-target={selectedTarget}
+        type="button"
+        onClick={() => {
+          onSelectionChange("level-1/zen:step-2", "5 seconds");
+        }}
+      >
+        Trigger
+      </button>
+    ),
+  } as never;
+});
 
 type ValidateSearchFn = (search: Record<string, unknown>) => {
   stepId: string | undefined;
@@ -58,16 +62,17 @@ describe("training route", () => {
     });
   });
 
-  it("renders CurriculumTrainingPage and navigates on selection change", () => {
+  it("renders CurriculumTrainingPage and navigates on selection change", async () => {
     expect.assertions(1);
 
+    const user = userEvent.setup();
     vi.spyOn(TrainingRoute, "useSearch").mockImplementation(mockSearch);
     vi.spyOn(TrainingRoute, "useNavigate").mockReturnValue(mockNavigate);
 
     const Component = getRouteOption(TrainingRoute, "component") as ComponentType;
     render(<Component />);
 
-    screen.getByRole("button", { name: "Trigger" }).click();
+    await user.click(screen.getByRole("button", { name: "Trigger" }));
 
     expect(mockNavigate).toHaveBeenCalledWith({
       replace: true,

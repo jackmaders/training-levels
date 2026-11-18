@@ -364,19 +364,16 @@ function getPrerequisiteChain(pageSlug: string): string[] {
   const chain = new Set<string>();
   const pending = [pageSlug];
 
-  while (pending.length > 0) {
-    const current = pending.pop();
-    if (current !== undefined) {
-      const nextTargets = MAIN_QUEST_RELATIONSHIPS.filter(
-        (relationship) =>
-          relationship.sourcePageSlug === current &&
-          relationship.kind === "prerequisite" &&
-          !chain.has(relationship.targetPageSlug),
-      ).map((relationship) => relationship.targetPageSlug);
-      for (const target of nextTargets) {
-        chain.add(target);
-        pending.push(target);
-      }
+  for (let current = pending.pop(); current !== undefined; current = pending.pop()) {
+    const nextTargets = MAIN_QUEST_RELATIONSHIPS.filter(
+      (relationship) =>
+        relationship.sourcePageSlug === current &&
+        relationship.kind === "prerequisite" &&
+        !chain.has(relationship.targetPageSlug),
+    ).map((relationship) => relationship.targetPageSlug);
+    for (const target of nextTargets) {
+      chain.add(target);
+      pending.push(target);
     }
   }
 

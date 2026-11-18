@@ -463,4 +463,32 @@ describe("training-service (workers D1)", () => {
       ),
     ).rejects.toMatchObject({ code: "CURRICULUM_STEP_NOT_FOUND" });
   });
+
+  it("rejects recordStepTest for non-zen-step-1 and correctPracticeTotals for missing record", async () => {
+    expect.hasAssertions();
+    const db = getDb(env.DB);
+    await db
+      .insert(user)
+      .values({ email: "edge2@example.com", id: "edge-owner-2", name: "Edge Owner 2" });
+    await db.insert(dogs).values({ id: "edge-dog-2", userId: "edge-owner-2" });
+
+    await expect(
+      recordStepTest(
+        {
+          coldOverride: false,
+          outcome: "success",
+          stepId: "level-1/zen:step-2",
+          testId: "018f47ad-9d72-7a31-a50b-c77777777777",
+        },
+        { db, userId: "edge-owner-2" },
+      ),
+    ).rejects.toMatchObject({ code: "CURRICULUM_STEP_NOT_FOUND" });
+
+    await expect(
+      correctPracticeTotals(
+        { notYetCount: 0, recordId: "018f47ad-9d72-7a31-a50b-c66666666666", successCount: 1 },
+        { db, userId: "edge-owner-2" },
+      ),
+    ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+  });
 });
