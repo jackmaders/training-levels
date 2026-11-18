@@ -68,6 +68,16 @@ describe("behavior-specific FAQ", () => {
     expect(faq).toStrictEqual([]);
   });
 
+  it("handles undefined aboutTheCues", () => {
+    expect.hasAssertions();
+    const page = { ...createBehaviorPageFixture() };
+    Reflect.deleteProperty(page, "aboutTheCues");
+
+    const faq = getBehaviorFaq(page);
+
+    expect(faq).toStrictEqual([]);
+  });
+
   it("collects Question notes from aboutTheCues when present", () => {
     expect.hasAssertions();
     const page = createBehaviorPageFixture({

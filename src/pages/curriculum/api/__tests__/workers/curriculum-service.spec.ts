@@ -394,4 +394,41 @@ describe("curriculum-service (workers D1)", () => {
       toggleStep({ completed: true, stepId: "level-1/zen:step-1" }, { db, userId: "user-notest" }),
     ).rejects.toMatchObject({ code: "CURRICULUM_STEP_TEST_REQUIRED" });
   });
+
+  it("requires a passing step test for level-1/zen:step-1 when the user has no dog", async () => {
+    expect.hasAssertions();
+    const db = getDb(env.DB);
+    await db.insert(user).values({
+      email: "notest-nodog@example.com",
+      id: "user-notest-nodog",
+      name: "No Test No Dog",
+    });
+
+    await expect(
+      toggleStep(
+        { completed: true, stepId: "level-1/zen:step-1" },
+        { db, userId: "user-notest-nodog" },
+      ),
+    ).rejects.toMatchObject({ code: "CURRICULUM_STEP_TEST_REQUIRED" });
+  });
+
+  it("allows idempotent completion of level-1/zen:step-1 when already completed", async () => {
+    expect.hasAssertions();
+    const db = getDb(env.DB);
+    await db
+      .insert(user)
+      .values({ email: "already-done@example.com", id: "user-already-done", name: "Already Done" });
+    await db.insert(dogs).values({ id: "dog-already-done", userId: "user-already-done" });
+    await db.insert(stepCompletions).values({
+      dogId: "dog-already-done",
+      stepId: "level-1/zen:step-1",
+    });
+
+    const result = await toggleStep(
+      { completed: true, stepId: "level-1/zen:step-1" },
+      { db, userId: "user-already-done" },
+    );
+
+    expect(result).toStrictEqual({ completed: true, stepId: "level-1/zen:step-1" });
+  });
 });

@@ -102,6 +102,14 @@ describe("curriculum dependencies page", () => {
     expect(screen.getByRole("heading", { name: "Main Quest foundations" })).toBeDefined();
 
     // Act
+    await Promise.all(
+      screen
+        .getAllByRole("button", { name: /^Zen\b/u })
+        .slice(0, 1)
+        .map(async (button) => {
+          await user.click(button);
+        }),
+    );
     await user.click(getLastElement(screen.getAllByRole("button", { name: /^Zen\b/u })));
 
     // Assert

@@ -491,4 +491,121 @@ describe("training-service (workers D1)", () => {
       ),
     ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
   });
+
+  it("throws INTERNAL_SERVER_ERROR when inserted dog or record cannot be read back", async () => {
+    expect.hasAssertions();
+
+    const emptySelectChain = {
+      from: () => ({
+        where: () => ({
+          limit: resolvedEmpty,
+          orderBy: () => ({
+            limit: resolvedEmpty,
+          }),
+        }),
+      }),
+    };
+    const stubDbEmpty = {
+      batch: resolvedEmpty,
+      insert: () => ({
+        select: () => ({
+          onConflictDoNothing: resolvedVoid,
+        }),
+        values: () => ({
+          onConflictDoNothing: resolvedVoid,
+        }),
+      }),
+      select: () => emptySelectChain,
+    } as unknown as ReturnType<typeof getDb>;
+
+    await expect(
+      recordPracticeTotals(
+        {
+          notYetCount: 0,
+          recordId: "018f47ad-9d72-7a31-a50b-d11111111111",
+          stepId: "level-1/zen:step-1",
+          successCount: 1,
+          target: "Zen target",
+        },
+        { db: stubDbEmpty, userId: "stub-user" },
+      ),
+    ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+
+    await expect(
+      recordStepTest(
+        {
+          coldOverride: false,
+          outcome: "success",
+          stepId: "level-1/zen:step-1",
+          testId: "018f47ad-9d72-7a31-a50b-d22222222222",
+        },
+        { db: stubDbEmpty, userId: "stub-user" },
+      ),
+    ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+
+    await expect(
+      recordPracticeAttempt(
+        {
+          attemptId: "018f47ad-9d72-7a31-a50b-d33333333333",
+          outcome: "success",
+          stepId: "level-1/zen:step-1",
+          target: "Zen target",
+        },
+        { db: stubDbEmpty, userId: "stub-user" },
+      ),
+    ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+
+    let selectCount = 0;
+    const stubResponses = [[{ id: "stub-dog" }], []];
+    const stubDbDogOnly = {
+      batch: resolvedEmpty,
+      insert: () => ({
+        select: () => ({
+          onConflictDoNothing: resolvedVoid,
+        }),
+        values: () => ({
+          onConflictDoNothing: resolvedVoid,
+        }),
+      }),
+      select: () => ({
+        from: () => ({
+          // oxlint-disable-next-line typescript/promise-function-async -- Drizzle query builder is both thenable and chainable
+          where: () => {
+            const rowsPromise = Promise.resolve(stubResponses[selectCount]);
+            selectCount += 1;
+            async function getRows() {
+              return await rowsPromise;
+            }
+            return Object.assign(rowsPromise, {
+              limit: getRows,
+              orderBy: () => ({
+                limit: getRows,
+              }),
+            });
+          },
+        }),
+      }),
+    } as unknown as ReturnType<typeof getDb>;
+
+    await expect(
+      recordStepTest(
+        {
+          coldOverride: false,
+          outcome: "success",
+          stepId: "level-1/zen:step-1",
+          testId: "018f47ad-9d72-7a31-a50b-d44444444444",
+        },
+        { db: stubDbDogOnly, userId: "stub-user" },
+      ),
+    ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+  });
 });
+
+async function resolvedEmpty() {
+  await Promise.resolve();
+  return [];
+}
+
+async function resolvedVoid() {
+  await Promise.resolve();
+}
