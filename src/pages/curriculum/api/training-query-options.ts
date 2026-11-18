@@ -1,14 +1,46 @@
 import { queryOptions } from "@tanstack/react-query";
 
-import { getPracticeHistoryFn } from "./training.functions";
+import {
+  getPracticeHistoryFn,
+  getPracticeStepDecisionFn,
+  getStepTestHistoryFn,
+  getPracticeTotalsFn,
+} from "./training.functions";
 
 const PRACTICE_STEP_ID = "level-1/zen:step-1";
 
 function practiceHistoryQueryOptions(stepId = PRACTICE_STEP_ID) {
   return queryOptions({
-    queryFn: () => getPracticeHistoryFn({ data: { stepId } }),
+    queryFn: async () => await getPracticeHistoryFn({ data: { stepId } }),
     queryKey: ["training", "practice-history", stepId],
   });
 }
 
-export { PRACTICE_STEP_ID, practiceHistoryQueryOptions };
+function practiceTotalsQueryOptions(stepId = PRACTICE_STEP_ID) {
+  return queryOptions({
+    queryFn: async () => await getPracticeTotalsFn({ data: { stepId } }),
+    queryKey: ["training", "practice-totals", stepId],
+  });
+}
+
+function practiceStepDecisionQueryOptions(stepId = PRACTICE_STEP_ID) {
+  return queryOptions({
+    queryFn: async () => await getPracticeStepDecisionFn({ data: { stepId } }),
+    queryKey: ["training", "practice-step-decision", stepId],
+  });
+}
+
+function stepTestHistoryQueryOptions(stepId = PRACTICE_STEP_ID) {
+  return queryOptions({
+    queryFn: async () => await getStepTestHistoryFn({ data: { stepId } }),
+    queryKey: ["training", "step-test-history", stepId],
+  });
+}
+
+export {
+  PRACTICE_STEP_ID,
+  practiceHistoryQueryOptions,
+  practiceStepDecisionQueryOptions,
+  practiceTotalsQueryOptions,
+  stepTestHistoryQueryOptions,
+};

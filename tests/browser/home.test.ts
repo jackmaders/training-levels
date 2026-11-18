@@ -38,7 +38,7 @@ test("keyboard users can skip the shared header to the main content", async ({ p
   await expect(homePage.skipLink).toBeFocused();
   await expect(homePage.skipLink).toHaveAttribute("href", "#main-content");
   await expect(homePage.skipLink).toBeInViewport();
-  await expect.poll(() => homePage.isSkipLinkTopmost()).toBe(true);
+  await expect.poll(async () => await homePage.isSkipLinkTopmost()).toBe(true);
 
   // Act
   await homePage.activateSkipLink();

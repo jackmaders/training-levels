@@ -18,4 +18,5 @@ export { CurriculumLevelPage } from "./ui/curriculum-level-page";
 export type { CurriculumLevelPageProps } from "./ui/curriculum-level-page";
 export { CurriculumSectionIndexPage } from "./ui/curriculum-section-index-page";
 export type { CurriculumSectionIndexPageProps } from "./ui/curriculum-section-index-page";
+export { CurriculumDependenciesPage } from "./ui/curriculum-dependencies-page";
 export { CurriculumTrainingPage } from "./ui/curriculum-training-page";

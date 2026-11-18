@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { asc, eq } from "drizzle-orm";
 import { describe, expect, it } from "vite-plus/test";
 
-import { dogs, stepCompletions } from "@/shared/db";
+import { dogs, stepCompletions, stepTests } from "@/shared/db";
 import { getDb } from "@/shared/db/index.server";
 import { user } from "@/shared/db/schema";
 import { ApplicationError } from "@/shared/errors";
@@ -72,17 +72,38 @@ describe("curriculum-service (workers D1)", () => {
 
     // Act
     const result = await toggleStep(
-      { completed: true, stepId: "level-1/zen:step-1" },
+      { completed: true, stepId: "level-1/zen:step-3" },
       { userId: "user-lazy" },
     );
     const dogRows = await db.select().from(dogs).where(eq(dogs.userId, "user-lazy"));
     const progress = await getStepProgress({ db, userId: "user-lazy" });
 
     // Assert
-    expect(result).toStrictEqual({ completed: true, stepId: "level-1/zen:step-1" });
+    expect(result).toStrictEqual({ completed: true, stepId: "level-1/zen:step-3" });
     expect(dogRows).toMatchObject([{ name: "My Dog", userId: "user-lazy" }]);
     expect(dogRows[0]?.createdAt).toBeInstanceOf(Date);
-    expect(progress).toStrictEqual(["level-1/zen:step-1"]);
+    expect(progress).toStrictEqual(["level-1/zen:step-3"]);
+  });
+
+  it("rejects checking a Tested Step that has no passing Test or prior completion", async () => {
+    expect.assertions(2);
+
+    // Arrange
+    const db = getDb(env.DB);
+    await db
+      .insert(user)
+      .values({ email: "bypass@example.com", id: "user-bypass", name: "Bypass" });
+    await db.insert(dogs).values({ id: "dog-bypass", userId: "user-bypass" });
+
+    // Act
+    const toggle = toggleStep(
+      { completed: true, stepId: "level-1/zen:step-1" },
+      { db, userId: "user-bypass" },
+    );
+
+    // Assert
+    await expect(toggle).rejects.toMatchObject({ code: "CURRICULUM_STEP_TEST_REQUIRED" });
+    await expect(getStepProgress({ db, userId: "user-bypass" })).resolves.toStrictEqual([]);
   });
 
   it("is idempotent when marking the same step complete repeatedly", async () => {
@@ -94,22 +115,22 @@ describe("curriculum-service (workers D1)", () => {
       .insert(user)
       .values({ email: "repeat@example.com", id: "user-repeat", name: "Repeat User" });
     await toggleStep(
-      { completed: true, stepId: "level-1/zen:step-1" },
+      { completed: true, stepId: "level-1/zen:step-3" },
       { db, userId: "user-repeat" },
     );
 
     // Act
     const second = await toggleStep(
-      { completed: true, stepId: "level-1/zen:step-1" },
+      { completed: true, stepId: "level-1/zen:step-3" },
       { db, userId: "user-repeat" },
     );
     const dogRows = await db.select().from(dogs).where(eq(dogs.userId, "user-repeat"));
     const progress = await getStepProgress({ db, userId: "user-repeat" });
 
     // Assert
-    expect(second).toStrictEqual({ completed: true, stepId: "level-1/zen:step-1" });
+    expect(second).toStrictEqual({ completed: true, stepId: "level-1/zen:step-3" });
     expect(dogRows).toHaveLength(1);
-    expect(progress).toStrictEqual(["level-1/zen:step-1"]);
+    expect(progress).toStrictEqual(["level-1/zen:step-3"]);
   });
 
   it("creates only one Dog and persists both steps under concurrent toggleStep calls", async () => {
@@ -126,7 +147,7 @@ describe("curriculum-service (workers D1)", () => {
     // Act
     const results = await Promise.all([
       toggleStep(
-        { completed: true, stepId: "level-1/zen:step-1" },
+        { completed: true, stepId: "level-1/zen:step-3" },
         { db, userId: "user-concurrent" },
       ),
       toggleStep(
@@ -139,12 +160,12 @@ describe("curriculum-service (workers D1)", () => {
 
     // Assert
     expect(results).toStrictEqual([
-      { completed: true, stepId: "level-1/zen:step-1" },
+      { completed: true, stepId: "level-1/zen:step-3" },
       { completed: true, stepId: "level-1/come:step-2" },
     ]);
     expect(dogRows).toHaveLength(1);
     expect(dogRows[0]).toMatchObject({ name: "My Dog", userId: "user-concurrent" });
-    expect(progress).toStrictEqual(["level-1/come:step-2", "level-1/zen:step-1"]);
+    expect(progress).toStrictEqual(["level-1/come:step-2", "level-1/zen:step-3"]);
   });
 
   it("reads and writes progress strictly on the user's first Dog ordered by created_at ASC", async () => {
@@ -206,13 +227,13 @@ describe("curriculum-service (workers D1)", () => {
 
     // Act
     const result = await toggleStep(
-      { completed: false, stepId: "level-1/zen:step-1" },
+      { completed: false, stepId: "level-1/zen:step-3" },
       { db, userId: "user-uncheck-nodog" },
     );
     const dogRows = await db.select().from(dogs).where(eq(dogs.userId, "user-uncheck-nodog"));
 
     // Assert
-    expect(result).toStrictEqual({ completed: false, stepId: "level-1/zen:step-1" });
+    expect(result).toStrictEqual({ completed: false, stepId: "level-1/zen:step-3" });
     expect(dogRows).toHaveLength(0);
   });
 
@@ -225,7 +246,7 @@ describe("curriculum-service (workers D1)", () => {
       .insert(user)
       .values({ email: "uncheck@example.com", id: "user-uncheck", name: "Uncheck User" });
     await toggleStep(
-      { completed: true, stepId: "level-1/zen:step-1" },
+      { completed: true, stepId: "level-1/zen:step-3" },
       { db, userId: "user-uncheck" },
     );
     await toggleStep(
@@ -235,13 +256,13 @@ describe("curriculum-service (workers D1)", () => {
 
     // Act
     const removed = await toggleStep(
-      { completed: false, stepId: "level-1/zen:step-1" },
+      { completed: false, stepId: "level-1/zen:step-3" },
       { db, userId: "user-uncheck" },
     );
     const remaining = await getStepProgress({ db, userId: "user-uncheck" });
 
     // Assert
-    expect(removed).toStrictEqual({ completed: false, stepId: "level-1/zen:step-1" });
+    expect(removed).toStrictEqual({ completed: false, stepId: "level-1/zen:step-3" });
     expect(remaining).toStrictEqual(["level-1/zen:step-2"]);
   });
 
@@ -262,13 +283,13 @@ describe("curriculum-service (workers D1)", () => {
 
     // Act
     const result = await toggleStep(
-      { completed: false, stepId: "level-1/zen:step-1" },
+      { completed: false, stepId: "level-1/zen:step-3" },
       { db, userId: "user-uncheck-idempotent" },
     );
     const remaining = await getStepProgress({ db, userId: "user-uncheck-idempotent" });
 
     // Assert
-    expect(result).toStrictEqual({ completed: false, stepId: "level-1/zen:step-1" });
+    expect(result).toStrictEqual({ completed: false, stepId: "level-1/zen:step-3" });
     expect(remaining).toStrictEqual(["level-1/zen:step-2"]);
   });
 
@@ -343,5 +364,93 @@ describe("curriculum-service (workers D1)", () => {
     expect(aliceProgress).toStrictEqual(["level-2/focus:step-3"]);
     expect(bobProgress).toStrictEqual(["level-3/zen:step-4"]);
     expect(allDogs.map((row) => row.userId)).toStrictEqual(["user-alice", "user-bob"]);
+  });
+
+  it("unmarks a step when the user has no dog yet", async () => {
+    expect.hasAssertions();
+    const db = getDb(env.DB);
+    await db.insert(user).values({ email: "nodog@example.com", id: "user-nodog", name: "No Dog" });
+
+    const result = await toggleStep(
+      { completed: false, stepId: "level-1/zen:step-2" },
+      { db, userId: "user-nodog" },
+    );
+
+    expect(result).toStrictEqual({ completed: false, stepId: "level-1/zen:step-2" });
+  });
+
+  it("requires a passing step test for level-1/zen:step-1 when a dog exists without one", async () => {
+    expect.hasAssertions();
+    const db = getDb(env.DB);
+    await db
+      .insert(user)
+      .values({ email: "notest@example.com", id: "user-notest", name: "No Test" });
+    await toggleStep(
+      { completed: true, stepId: "level-1/zen:step-2" },
+      { db, userId: "user-notest" },
+    );
+
+    await expect(
+      toggleStep({ completed: true, stepId: "level-1/zen:step-1" }, { db, userId: "user-notest" }),
+    ).rejects.toMatchObject({ code: "CURRICULUM_STEP_TEST_REQUIRED" });
+  });
+
+  it("requires a passing step test for level-1/zen:step-1 when the user has no dog", async () => {
+    expect.hasAssertions();
+    const db = getDb(env.DB);
+    await db.insert(user).values({
+      email: "notest-nodog@example.com",
+      id: "user-notest-nodog",
+      name: "No Test No Dog",
+    });
+
+    await expect(
+      toggleStep(
+        { completed: true, stepId: "level-1/zen:step-1" },
+        { db, userId: "user-notest-nodog" },
+      ),
+    ).rejects.toMatchObject({ code: "CURRICULUM_STEP_TEST_REQUIRED" });
+  });
+
+  it("allows idempotent completion of level-1/zen:step-1 when already completed", async () => {
+    expect.hasAssertions();
+    const db = getDb(env.DB);
+    await db
+      .insert(user)
+      .values({ email: "already-done@example.com", id: "user-already-done", name: "Already Done" });
+    await db.insert(dogs).values({ id: "dog-already-done", userId: "user-already-done" });
+    await db.insert(stepCompletions).values({
+      dogId: "dog-already-done",
+      stepId: "level-1/zen:step-1",
+    });
+
+    const result = await toggleStep(
+      { completed: true, stepId: "level-1/zen:step-1" },
+      { db, userId: "user-already-done" },
+    );
+
+    expect(result).toStrictEqual({ completed: true, stepId: "level-1/zen:step-1" });
+  });
+
+  it("allows completing level-1/zen:step-1 when a passing step test exists", async () => {
+    expect.hasAssertions();
+    const db = getDb(env.DB);
+    await db
+      .insert(user)
+      .values({ email: "passed-test@example.com", id: "user-passed-test", name: "Passed Test" });
+    await db.insert(dogs).values({ id: "dog-passed-test", userId: "user-passed-test" });
+    await db.insert(stepTests).values({
+      dogId: "dog-passed-test",
+      outcome: "success",
+      stepId: "level-1/zen:step-1",
+      testId: "test-passed-1",
+    });
+
+    const result = await toggleStep(
+      { completed: true, stepId: "level-1/zen:step-1" },
+      { db, userId: "user-passed-test" },
+    );
+
+    expect(result).toStrictEqual({ completed: true, stepId: "level-1/zen:step-1" });
   });
 });

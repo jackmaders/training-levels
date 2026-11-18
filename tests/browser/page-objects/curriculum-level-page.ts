@@ -83,15 +83,15 @@ class CurriculumLevelPage {
     await this.focusControlByKeyboard(link);
   }
 
-  public async focusControlByKeyboard(control: Locator) {
-    for (let attempt = 0; attempt < MAX_KEYBOARD_TABS_TO_FOCUS_LEVEL_LINK; attempt += 1) {
-      await this.page.keyboard.press("Tab");
-      if (await control.evaluate((element) => element === document.activeElement)) {
-        return;
-      }
+  public async focusControlByKeyboard(control: Locator, attempt = 0): Promise<void> {
+    if (attempt >= MAX_KEYBOARD_TABS_TO_FOCUS_LEVEL_LINK) {
+      throw new Error("Control was not reachable by keyboard tab navigation");
     }
-
-    throw new Error("Control was not reachable by keyboard tab navigation");
+    await this.page.keyboard.press("Tab");
+    if (await control.evaluate((element) => element === document.activeElement)) {
+      return;
+    }
+    await this.focusControlByKeyboard(control, attempt + 1);
   }
 
   public async gotoLevelPage(section: string, page: string) {
@@ -114,8 +114,8 @@ class CurriculumLevelPage {
     }, theme);
   }
 
-  public horizontalOverflow() {
-    return this.page.evaluate(() => {
+  public async horizontalOverflow() {
+    return await this.page.evaluate(() => {
       const documentWidth = document.documentElement.scrollWidth;
       const bodyWidth = document.body.scrollWidth;
       const viewportWidth = document.documentElement.clientWidth;
@@ -145,8 +145,8 @@ class CurriculumLevelPage {
     await this.mobileDrawer.waitFor({ state: "visible" });
   }
 
-  public mobileDrawerFitsViewport() {
-    return this.mobileDrawer.evaluate((element) => {
+  public async mobileDrawerFitsViewport() {
+    return await this.mobileDrawer.evaluate((element) => {
       const bounds = element.getBoundingClientRect();
       const viewportWidth = document.documentElement.clientWidth;
       return bounds.left >= 0 && bounds.right <= viewportWidth;
@@ -164,7 +164,9 @@ class CurriculumLevelPage {
   }
 
   public async setDarkTheme() {
-    await this.page.evaluate(() => document.documentElement.classList.add("dark"));
+    await this.page.evaluate(() => {
+      document.documentElement.classList.add("dark");
+    });
   }
 
   public async toggleStepCheckboxByKeyboard(stepHeading: string) {
