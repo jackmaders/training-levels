@@ -73,7 +73,7 @@ function CurriculumTrainingPage({
   const viewActions: PracticeActions = {
     ...actions,
     record: (outcome, currentTarget) => {
-      onSelectionChange(selectedStepId);
+      onSelectionChange(selectedStepId, undefined);
       actions.record(outcome, currentTarget);
     },
   };
@@ -83,9 +83,10 @@ function CurriculumTrainingPage({
         history.filter((attempt) => attempt.undoneAt === null),
       )
     : null;
+  const lastOutcome = history.toReversed().find((attempt) => attempt.undoneAt === null)?.outcome;
   const progression = getPracticeProgression(selectedStepId, {
     consecutiveSuccesses: countTrailingSuccesses(history),
-    lastOutcome: history.toReversed().find((attempt) => attempt.undoneAt === null)?.outcome,
+    ...(lastOutcome !== undefined ? { lastOutcome } : {}),
   });
   if (curriculumPage === null || curriculumPage.kind !== "behavior") {
     return <main className="mx-auto max-w-3xl p-6">Training instructions are unavailable.</main>;
@@ -122,7 +123,7 @@ function CurriculumTrainingPage({
                   equipment={curriculumPage.equipment}
                   guidance={guidance}
                   history={history}
-                  onSelectStep={(stepId) => onSelectionChange(stepId)}
+                  onSelectStep={(stepId) => onSelectionChange(stepId, undefined)}
                   onStart={() => setView("practice")}
                   plan={plan}
                   selectedStepId={selectedStepId}

@@ -33,14 +33,14 @@ describe("practice progression rules", () => {
     });
 
     // Assert
-    expect(afterSuccess.nextTarget).toBe(
+    expect(afterSuccess?.nextTarget).toBe(
       "Dog stays away from the treat in your closed fist for 3 seconds.",
     );
-    expect(afterMiss.nextTarget).toBe(
+    expect(afterMiss?.nextTarget).toBe(
       "Dog stays away from the treat in your closed fist for 1 second.",
     );
-    expect(afterSuccess.readyForTest).toBe(false);
-    expect(getPracticeProgression(stepId, { consecutiveSuccesses: 5 }).readyForTest).toBe(true);
+    expect(afterSuccess?.readyForTest).toBe(false);
+    expect(getPracticeProgression(stepId, { consecutiveSuccesses: 5 })?.readyForTest).toBe(true);
   });
 
   it("describes Zen Step 3 as an assistance change followed by a duration ladder", () => {
@@ -74,11 +74,11 @@ describe("practice progression rules", () => {
     });
 
     // Assert
-    expect(approximation.method).toBe("shape_approximation");
-    expect(approximation.nextTarget).toContain("pencil");
-    expect(repetition.method).toBe("repeat_then_duration");
-    expect(repetition.nextTarget).toContain("3 grabs");
-    expect(repetition.readyForTest).toBe(false);
+    expect(approximation?.method).toBe("shape_approximation");
+    expect(approximation?.nextTarget).toContain("pencil");
+    expect(repetition?.method).toBe("repeat_then_duration");
+    expect(repetition?.nextTarget).toContain("3 grabs");
+    expect(repetition?.readyForTest).toBe(false);
   });
 
   it("rejects Steps that have no authored Practice progression", () => {

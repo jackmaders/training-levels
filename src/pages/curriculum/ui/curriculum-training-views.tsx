@@ -301,7 +301,7 @@ function TrainingPractice({
 
   useEffect(() => {
     if (!timerActive) {
-      return;
+      return undefined;
     }
     const timerId = window.setInterval(() => {
       if (deadlineTimestamp !== null) {
@@ -310,7 +310,9 @@ function TrainingPractice({
         setRemainingSeconds(Math.max(0, secondsRemaining));
       }
     }, TIMER_TICK_MILLISECONDS);
-    return () => window.clearInterval(timerId);
+    return () => {
+      window.clearInterval(timerId);
+    };
   }, [deadlineTimestamp, timerActive]);
   function handleSaveDecision(nextDecision: PracticeDecision) {
     actions.saveDecision(nextDecision);

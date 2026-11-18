@@ -6,7 +6,7 @@ describe("source-backed Practice ladders", () => {
   it("starts Crate Step 3 at five feet with no duration", () => {
     expect.hasAssertions();
     // Arrange
-    const attempts = [];
+    const attempts: Parameters<typeof getPracticePlan>[1] = [];
 
     // Act
     const plan = getPracticePlan("level-3/crate:step-3", attempts);
@@ -18,8 +18,8 @@ describe("source-backed Practice ladders", () => {
       distanceFeet: 5,
       durationSeconds: 0,
       priorAchievement: null,
-      source: expect.stringContaining("Level 3 Crate, Step 3"),
     });
+    expect(plan?.source).toContain("Level 3 Crate, Step 3");
   });
 
   it("keeps the prior achievement visible and restarts the harder axis from its source baseline", () => {
@@ -38,8 +38,8 @@ describe("source-backed Practice ladders", () => {
       distanceFeet: 5,
       durationSeconds: 60,
       priorAchievement: "5 feet · 120 seconds",
-      restartReason: expect.stringContaining("5 ft/1 min"),
     });
+    expect(plan?.restartReason).toContain("5 ft/1 min");
   });
 
   it("increases distance one foot at a time across the longer Step 3 ladder", () => {

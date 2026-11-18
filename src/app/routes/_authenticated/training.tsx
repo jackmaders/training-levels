@@ -4,8 +4,8 @@ import { CurriculumTrainingPage } from "@/pages/curriculum";
 
 const Route = createFileRoute("/_authenticated/training")({
   validateSearch: (search: Record<string, unknown>) => ({
-    stepId: typeof search.stepId === "string" ? search.stepId : undefined,
-    target: typeof search.target === "string" ? search.target : undefined,
+    stepId: typeof search["stepId"] === "string" ? search["stepId"] : undefined,
+    target: typeof search["target"] === "string" ? search["target"] : undefined,
   }),
   component: TrainingRoute,
 });
@@ -18,9 +18,9 @@ function TrainingRoute() {
     <CurriculumTrainingPage
       selectedStepId={search.stepId}
       selectedTarget={search.target}
-      onSelectionChange={(stepId, target) =>
-        navigate({ search: { stepId, target }, replace: true })
-      }
+      onSelectionChange={(stepId, target) => {
+        void navigate({ search: { stepId, target }, replace: true });
+      }}
     />
   );
 }

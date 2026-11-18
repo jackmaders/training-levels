@@ -29,6 +29,9 @@ function CurriculumDependenciesPage() {
     section.pages.filter((page) => page.kind === "behavior"),
   );
   const selected = behaviors.find((page) => page.pageSlug === selectedPageSlug) ?? behaviors[0];
+  if (selected === undefined) {
+    throw new Error("No curriculum behaviors found.");
+  }
   const { data: detail } = useSuspenseQuery(curriculumPageQueryOptions(selected.pageSlug));
   const completed = new Set(completedStepIds);
   const chain = new Set(getPrerequisiteChain(selected.pageSlug));
@@ -40,7 +43,7 @@ function CurriculumDependenciesPage() {
   useLayoutEffect(() => {
     const canvas = graphCanvasRef.current;
     if (canvas === null) {
-      return;
+      return undefined;
     }
 
     const measurePaths = () => {
@@ -76,7 +79,9 @@ function CurriculumDependenciesPage() {
     for (const node of nodeRefs.current.values()) {
       observer.observe(node);
     }
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   }, []);
 
   return (
@@ -291,6 +296,9 @@ function formatKind(kind: DependencyKind): string {
     }
     case "reading": {
       return "Reading suggestion";
+    }
+    default: {
+      return kind;
     }
   }
 }
