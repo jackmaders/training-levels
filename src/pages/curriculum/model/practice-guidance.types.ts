@@ -1,7 +1,7 @@
 import type { StepNumber } from "@/shared/curriculum-data";
 
 export type TargetAdvancement = "app default" | "source";
-export type TargetUnit = "foot" | "inch" | "second";
+export type TargetUnit = "foot" | "inch" | "minute" | "second";
 
 export interface PracticeGuidance {
   conditions: string;

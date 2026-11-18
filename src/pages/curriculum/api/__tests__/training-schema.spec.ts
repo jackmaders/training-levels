@@ -141,6 +141,25 @@ describe("practice totals and readiness decisions", () => {
     expect(parsedDecision.success).toBe(true);
   });
 
+  it("accepts totals and readiness choices for guided Level 3 Steps", () => {
+    expect.assertions(2);
+
+    const parsedTotals = recordPracticeTotalsInputSchema.safeParse({
+      notYetCount: 0,
+      recordId: "018f47ad-9d72-7a31-a50b-a99999999999",
+      stepId: "level-3/relax:step-1",
+      successCount: 1,
+      target: "Settle and remain truly relaxed for 1 minute.",
+    });
+    const parsedDecision = savePracticeStepDecisionInputSchema.safeParse({
+      decision: "recommend_test",
+      stepId: "level-3/zen:step-2",
+    });
+
+    expect(parsedTotals.success).toBe(true);
+    expect(parsedDecision.success).toBe(true);
+  });
+
   it("rejects readiness choices for invalid step IDs", () => {
     expect.assertions(1);
 
