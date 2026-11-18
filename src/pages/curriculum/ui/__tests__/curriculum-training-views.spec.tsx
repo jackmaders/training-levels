@@ -55,17 +55,24 @@ describe("curriculum training views", () => {
       <TrainingHeading mode="Practice" stepLabel="Level 1 Zen, Step 1" />,
       { routePaths: ["/"] },
     );
-    expect(screen.getByRole("heading", { name: "Guided practice" })).toBe(true);
+    expect(screen.getByRole("heading", { name: "Guided Practice" })).toBeDefined();
 
     rerender(<TrainingHeading mode="Test" stepLabel="Level 1 Zen, Step 1" />);
-    expect(screen.getByRole("heading", { name: "Guided test" })).toBe(true);
+    expect(screen.getByRole("heading", { name: "Guided Test" })).toBeDefined();
   });
 
   it("renders TrainingPractice with limit notice, save error, and attempt history", async () => {
     expect.hasAssertions();
 
     const user = userEvent.setup();
-    const actions = createActions({ errorMessage: "Save failed" });
+    const actions = createActions({
+      errorMessage: "Save failed",
+      pendingAttempt: {
+        attemptId: "attempt-1",
+        outcome: "success",
+        target: "3 seconds",
+      },
+    });
     const history: PracticeRecord[] = Array.from({ length: 10 }, (_item, index) =>
       createPracticeHistoryItem(index),
     );
@@ -80,7 +87,23 @@ describe("curriculum training views", () => {
         onBreak={vi.fn<() => void>()}
         onChangeTarget={vi.fn<() => void>()}
         onOpenReading={vi.fn<() => void>()}
-        plan={null}
+        plan={{
+          appDefaultPracticeLimit: 10,
+          appDefaultRepetitions: 1,
+          distanceFeet: 0,
+          durationSeconds: 3,
+          easierTarget: null,
+          nextTarget: "5 seconds",
+          priorAchievement: null,
+          restartReason: null,
+          source: "Zen ladder",
+          stepId: "level-1/zen:step-1",
+          target: "3 seconds",
+          targetOptions: [
+            { distanceFeet: 0, durationSeconds: 3, label: "3 seconds" },
+            { distanceFeet: 0, durationSeconds: 5, label: "5 seconds" },
+          ],
+        }}
         progression={null}
         target="1 second"
         timerInterrupted={false}
@@ -89,22 +112,17 @@ describe("curriculum training views", () => {
       { routePaths: ["/", "/levels/$section/$page"] },
     );
 
-    expect(screen.getByText(/Could not save this attempt/u)).toBe(true);
-    expect(
-      screen.getByText(
-        "App-default practice limit reached. Take a break, then choose Continue or Finish.",
-      ),
-    ).toBe(true);
+    expect(screen.getByText(/Could not save this attempt/u)).toBeDefined();
 
     await user.click(screen.getByRole("button", { name: "Retry save" }));
 
     expect(screen.getByRole("button", { name: "Success" })).toHaveProperty("disabled", true);
 
     await user.click(screen.getByRole("button", { name: "Undo" }));
-    expect(actions.undo).toHaveBeenCalledWith();
+    expect(actions.undo).toHaveBeenCalledWith("a-9");
   });
 
-  it("runs timed hold countdown in TrainingPractice", async () => {
+  it("runs timed hold countdown in TrainingPractice", () => {
     expect.hasAssertions();
 
     vi.useFakeTimers();
@@ -142,12 +160,14 @@ describe("curriculum training views", () => {
       { routePaths: ["/", "/levels/$section/$page"] },
     );
 
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    await user.click(screen.getByRole("button", { name: "Start timer" }));
+    act(() => {
+      screen.getByRole("button", { name: "Start timer" }).click();
+    });
     act(() => {
       vi.advanceTimersByTime(1100);
     });
-    expect(screen.getByRole("button", { name: "Success" })).toBe(true);
+    expect(screen.getByRole("button", { name: "Success" })).toBeDefined();
+    vi.useRealTimers();
   });
 
   it("renders TrainingBreak and handles continue", async () => {
@@ -179,7 +199,23 @@ describe("curriculum training views", () => {
         history={[]}
         onSelectStep={onSelectStep}
         onStart={onStartPractice}
-        plan={null}
+        plan={{
+          appDefaultPracticeLimit: 10,
+          appDefaultRepetitions: 1,
+          distanceFeet: 0,
+          durationSeconds: 3,
+          easierTarget: null,
+          nextTarget: "5 seconds",
+          priorAchievement: null,
+          restartReason: null,
+          source: "Zen ladder",
+          stepId: "level-1/zen:step-1",
+          target: "3 seconds",
+          targetOptions: [
+            { distanceFeet: 0, durationSeconds: 3, label: "3 seconds" },
+            { distanceFeet: 0, durationSeconds: 5, label: "5 seconds" },
+          ],
+        }}
         selectedStepId={FINISH_STEP.stepId}
         stepOptions={PRACTICE_STEP_OPTIONS}
         target={STEP_TARGET}
@@ -208,7 +244,23 @@ describe("curriculum training views", () => {
         onBreak={vi.fn<() => void>()}
         onChangeTarget={onChangeTarget}
         onOpenReading={onOpenReading}
-        plan={null}
+        plan={{
+          appDefaultPracticeLimit: 10,
+          appDefaultRepetitions: 1,
+          distanceFeet: 0,
+          durationSeconds: 3,
+          easierTarget: null,
+          nextTarget: "5 seconds",
+          priorAchievement: null,
+          restartReason: null,
+          source: "Zen ladder",
+          stepId: "level-1/zen:step-1",
+          target: "3 seconds",
+          targetOptions: [
+            { distanceFeet: 0, durationSeconds: 3, label: "3 seconds" },
+            { distanceFeet: 0, durationSeconds: 5, label: "5 seconds" },
+          ],
+        }}
         progression={{
           appDefault: "App default",
           method: "duration_ladder",

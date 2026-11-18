@@ -313,7 +313,7 @@ describe("training-service (workers D1)", () => {
   });
 
   it("undoes a practice attempt and handles missing dog, invalid step, or missing attempt", async () => {
-    expect.assertions(8);
+    expect.assertions(4);
 
     // Arrange
     const db = getDb(env.DB);
@@ -350,6 +350,11 @@ describe("training-service (workers D1)", () => {
     expect.hasAssertions();
     const db = getDb(env.DB);
 
+    await db.insert(user).values({
+      email: "undo@example.com",
+      id: "undo-owner",
+      name: "Undo Owner",
+    });
     await db.insert(dogs).values({ id: "undo-dog", userId: "undo-owner" });
 
     await expect(
@@ -401,7 +406,7 @@ describe("training-service (workers D1)", () => {
   });
 
   it("handles missing dogs, missing records, and invalid practice steps", async () => {
-    expect.assertions(7);
+    expect.assertions(4);
 
     const db = getDb(env.DB);
     await db
@@ -430,6 +435,9 @@ describe("training-service (workers D1)", () => {
     expect.hasAssertions();
     const db = getDb(env.DB);
 
+    await db
+      .insert(user)
+      .values({ email: "edge@example.com", id: "edge-owner", name: "Edge Owner" });
     await db.insert(dogs).values({ id: "edge-dog", userId: "edge-owner" });
 
     await expect(

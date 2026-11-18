@@ -41,7 +41,7 @@ describe("curriculum training readiness choice", () => {
 
     // Assert
     expect(handleSave).toHaveBeenCalledWith("keep_practicing");
-    expect(screen.getByText("Saved: Keep practicing.")).toBe(true);
+    expect(screen.getByText("Saved: Keep practicing.")).toBeDefined();
   });
 
   it("calls handleSave with recommend_test and shows saved output", async () => {
@@ -57,6 +57,6 @@ describe("curriculum training readiness choice", () => {
 
     // Assert
     expect(handleSave).toHaveBeenCalledWith("recommend_test");
-    expect(screen.getByText("Saved: Recommend a Test next time.")).toBe(true);
+    expect(screen.getByText("Saved: Recommend a Test next time.")).toBeDefined();
   });
 });

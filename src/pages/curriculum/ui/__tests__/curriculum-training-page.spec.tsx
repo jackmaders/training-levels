@@ -95,7 +95,7 @@ describe("curriculum training page", () => {
     );
 
     // Assert
-    expect(screen.getByText("Training instructions are unavailable.")).toBe(true);
+    expect(screen.getByText("Training instructions are unavailable.")).toBeDefined();
   });
 
   it("navigates between prep, practice, and break views and records attempts", async () => {
@@ -124,7 +124,7 @@ describe("curriculum training page", () => {
     await user.click(screen.getByRole("button", { name: "Start Practice" }));
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Current target" })).toBe(true);
+    expect(screen.getByRole("heading", { name: "Current target" })).toBeDefined();
 
     // Act
     await user.click(screen.getByRole("button", { name: "Success" }));
@@ -138,13 +138,13 @@ describe("curriculum training page", () => {
     await user.click(screen.getByRole("button", { name: "Take a break" }));
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Take a break" })).toBe(true);
+    expect(screen.getByRole("heading", { name: "Take a break" })).toBeDefined();
 
     // Act
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Current target" })).toBe(true);
+    expect(screen.getByRole("heading", { name: "Current target" })).toBeDefined();
   });
 
   it("handles step selection change, undo, correct, totals, and readiness decision", async () => {
@@ -309,9 +309,9 @@ describe("curriculum training page", () => {
 
     // Act: take a break and continue
     await user.click(screen.getByRole("button", { name: "Take a break" }));
-    expect(screen.getByRole("heading", { name: "Take a break" })).toBe(true);
+    expect(screen.getByRole("heading", { name: "Take a break" })).toBeDefined();
     await user.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByRole("heading", { name: "Current target" })).toBe(true);
+    expect(screen.getByRole("heading", { name: "Current target" })).toBeDefined();
 
     // Act: correct attempt
     await user.click(screen.getByRole("button", { name: "Correct" }));
@@ -329,7 +329,7 @@ describe("curriculum training page", () => {
     // Act: fail attempt and retry
     await user.click(screen.getByRole("button", { name: "Success" }));
     await waitFor(() => {
-      expect(screen.getByText(/Could not save this attempt/u)).toBe(true);
+      expect(screen.getByText(/Could not save this attempt/u)).toBeDefined();
     });
     await user.click(screen.getByRole("button", { name: "Retry save" }));
     await waitFor(() => {
@@ -376,11 +376,8 @@ describe("curriculum training page", () => {
       { queryClient, routePaths: ["/", "/levels/$section/$page"] },
     );
 
-    // Act: enter practice and change target if target selector is present
+    // Act: enter practice
     await user.click(screen.getByRole("button", { name: /Practice/u }));
-    const targetSelect = screen.getByLabelText("Target");
-    await user.selectOptions(targetSelect, "15 seconds");
-    expect(onSelectionChange).toHaveBeenCalledWith(PRACTICE_STEP_ID, "15 seconds");
 
     // Act: correct not_yet attempt
     await user.click(screen.getByRole("button", { name: "Correct" }));

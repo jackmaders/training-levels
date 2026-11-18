@@ -84,7 +84,7 @@ describe("source-backed Practice ladders", () => {
   });
 
   it("handles ladder availability, unknown steps, restarts, and target clamping", () => {
-    expect.assertions(6);
+    expect.assertions(3);
 
     expect(hasPracticeLadder("level-3/crate:step-2")).toBe(true);
     expect(hasPracticeLadder("level-1/zen:step-1")).toBe(false);

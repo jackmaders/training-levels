@@ -69,8 +69,8 @@ describe("curriculum training test views", () => {
     );
 
     // Assert
-    expect(screen.getByText("Latest Test: Not yet — Needs practice.")).toBe(true);
-    expect(screen.getByText("Cold Test instructions are unavailable.")).toBe(true);
+    expect(screen.getByText("Latest Test: Not yet — Needs practice.")).toBeDefined();
+    expect(screen.getByText("Cold Test instructions are unavailable.")).toBeDefined();
     expect(screen.getByRole("button", { name: "Start Test" })).toHaveProperty("disabled", true);
 
     // Act
@@ -112,8 +112,8 @@ describe("curriculum training test views", () => {
     // Assert
     expect(record).toHaveBeenCalledWith("success", true);
     expect(record).toHaveBeenCalledWith("not_yet", true);
-    expect(screen.getByText("Could not save this Test. Network error")).toBe(true);
-    expect(screen.getByText("Test passed. This Step is complete.")).toBe(true);
+    expect(screen.getByText("Could not save this Test. Network error")).toBeDefined();
+    expect(screen.getByText("Test passed. This Step is complete.")).toBeDefined();
   });
 
   it("allows starting test without cold override when eligible by day and handles null tryItCold", async () => {
@@ -138,8 +138,8 @@ describe("curriculum training test views", () => {
       screen.getByText(
         "The last recorded Practice or Test was on another day. Start without warming up this Behavior.",
       ),
-    ).toBe(true);
-    expect(screen.getByText("Cold Test instructions are unavailable.")).toBe(true);
+    ).toBeDefined();
+    expect(screen.getByText("Cold Test instructions are unavailable.")).toBeDefined();
 
     // Act
     await user.click(screen.getByRole("button", { name: "Start Test" }));
@@ -193,7 +193,7 @@ describe("curriculum training test views", () => {
     );
 
     // Assert
-    expect(screen.getByText("Not yet. Needs practice; Practice is recommended.")).toBe(true);
+    expect(screen.getByText("Not yet. Needs practice; Practice is recommended.")).toBeDefined();
   });
 
   it("renders LatestTestStatus when latestTest outcome is success", () => {
@@ -220,6 +220,6 @@ describe("curriculum training test views", () => {
     );
 
     // Assert
-    expect(screen.getByText("Latest Test: Passed — Step complete.")).toBe(true);
+    expect(screen.getByText("Latest Test: Passed — Step complete.")).toBeDefined();
   });
 });

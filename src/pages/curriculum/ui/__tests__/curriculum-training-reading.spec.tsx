@@ -80,10 +80,10 @@ describe("curriculum training reading", () => {
     await user.click(screen.getByRole("button", { name: "Explanation" }));
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Explanation" })).toBe(true);
-    expect(screen.getByText("Practice ladder: Zen ladder")).toBe(true);
-    expect(screen.getByText("Cold note")).toBe(true);
-    expect(screen.getByText("Comeafter note")).toBe(true);
+    expect(screen.getByRole("heading", { name: "Explanation" })).toBeDefined();
+    expect(screen.getByText("Practice ladder: Zen ladder")).toBeDefined();
+    expect(screen.getByText("Cold note")).toBeDefined();
+    expect(screen.getByText("Comeafter note")).toBeDefined();
 
     // Act
     await user.click(screen.getByRole("button", { name: "Back to practice" }));
@@ -93,7 +93,7 @@ describe("curriculum training reading", () => {
       screen.getByText(
         "Timed hold interrupted when you opened reading. It was not recorded; start a fresh timed attempt.",
       ),
-    ).toBe(true);
+    ).toBeDefined();
   });
 
   it("opens faq and handles missing step instructions", async () => {
@@ -117,14 +117,16 @@ describe("curriculum training reading", () => {
     await user.click(screen.getByRole("button", { name: "Explanation" }));
 
     // Assert
-    expect(screen.getByText("The source instructions for this Step are unavailable.")).toBe(true);
+    expect(
+      screen.getByText("The source instructions for this Step are unavailable."),
+    ).toBeDefined();
 
     // Act
     await user.click(screen.getByRole("button", { name: "Back" }));
     await user.click(screen.getByRole("button", { name: "FAQ" }));
 
     // Assert
-    expect(screen.getByRole("heading", { name: "FAQ" })).toBe(true);
+    expect(screen.getByRole("heading", { name: "FAQ" })).toBeDefined();
   });
 
   it("opens explanation without progression source and with null step/page optional blocks", async () => {
@@ -162,7 +164,7 @@ describe("curriculum training reading", () => {
     await user.click(screen.getByRole("button", { name: "Explanation" }));
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Explanation" })).toBe(true);
+    expect(screen.getByRole("heading", { name: "Explanation" })).toBeDefined();
     expect(screen.queryByText(/Practice ladder:/u)).toBeNull();
   });
 });

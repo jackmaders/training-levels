@@ -137,7 +137,7 @@ describe("curriculum training step test", () => {
     );
 
     // Assert
-    expect(screen.getByText("Practice view")).toBe(true);
+    expect(screen.getByText("Practice view")).toBeDefined();
     unmount();
 
     // Act
@@ -149,7 +149,7 @@ describe("curriculum training step test", () => {
     );
 
     // Assert
-    expect(screen.getByText("Cold Test instructions are unavailable.")).toBe(true);
+    expect(screen.getByText("Cold Test instructions are unavailable.")).toBeDefined();
   });
 
   it("renders TrainingTest when gate is active and step is present", () => {
@@ -167,6 +167,6 @@ describe("curriculum training step test", () => {
     );
 
     // Assert
-    expect(screen.getByText("Cold instructions")).toBe(true);
+    expect(screen.getByText("Cold instructions")).toBeDefined();
   });
 });

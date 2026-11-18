@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import {
   TEST_BEHAVIOR_PAGE,
@@ -17,6 +17,17 @@ import {
   stepProgressQueryOptions,
 } from "../../api/curriculum-query-options";
 import { CurriculumDependenciesPage } from "../curriculum-dependencies-page";
+
+vi.mock(import("../../api/curriculum.functions"), async (importOriginal) => ({
+  ...(await importOriginal()),
+  getCurriculumPageFn: vi
+    .fn<() => Promise<typeof TEST_BEHAVIOR_PAGE>>()
+    .mockResolvedValue(TEST_BEHAVIOR_PAGE),
+  getCurriculumSyllabusFn: vi
+    .fn<() => Promise<typeof TEST_SYLLABUS>>()
+    .mockResolvedValue(TEST_SYLLABUS),
+  getStepProgressFn: vi.fn<() => Promise<never[]>>().mockResolvedValue([]),
+}));
 
 function getLastElement(elements: HTMLElement[]): HTMLElement {
   const element = elements.at(-1);
@@ -41,8 +52,8 @@ describe("curriculum dependencies page", () => {
       sections: [
         ...TEST_SYLLABUS.sections,
         {
-          href: "/levels/level-2",
-          levelNumber: 2,
+          href: "/levels/level-3",
+          levelNumber: 3,
           pages: [
             {
               href: "/levels/level-2/go-to-mat",
@@ -63,8 +74,8 @@ describe("curriculum dependencies page", () => {
               title: "Stay",
             },
           ],
-          sectionSlug: "level-2",
-          title: "Level 2",
+          sectionSlug: "level-3",
+          title: "Level 3",
         },
       ],
     });
@@ -85,13 +96,13 @@ describe("curriculum dependencies page", () => {
     });
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Main Quest foundations" })).toBe(true);
+    expect(screen.getByRole("heading", { name: "Main Quest foundations" })).toBeDefined();
 
     // Act
     await user.click(getLastElement(screen.getAllByRole("button", { name: /^Zen\b/u })));
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Zen" })).toBe(true);
+    expect(screen.getByRole("heading", { name: "Zen" })).toBeDefined();
   });
 
   it("handles dependency list clicks, relationship target clicks, and missing stepIds or detail", async () => {
@@ -150,8 +161,8 @@ describe("curriculum dependencies page", () => {
           title: "Level 1",
         },
         {
-          href: "/levels/level-2",
-          levelNumber: 2,
+          href: "/levels/level-3",
+          levelNumber: 3,
           pages: [
             {
               href: "/levels/level-2/go-to-mat",
@@ -172,8 +183,8 @@ describe("curriculum dependencies page", () => {
               title: "Level 2 Down",
             },
           ],
-          sectionSlug: "level-2",
-          title: "Level 2",
+          sectionSlug: "level-3",
+          title: "Level 3",
         },
       ],
     });
@@ -198,14 +209,14 @@ describe("curriculum dependencies page", () => {
     await user.click(screen.getByRole("button", { name: "Level 2 Down" }));
 
     // Assert: selected behavior switched to Level 2 Down (with null detail)
-    expect(screen.getByRole("heading", { name: "Level 2 Down" })).toBe(true);
+    expect(screen.getByRole("heading", { name: "Level 2 Down" })).toBeDefined();
 
     // Act: click Come in the Dependency list section (last button matching Come)
     const comeButtons = screen.getAllByRole("button", { name: /^Come\b/u });
     await user.click(getLastElement(comeButtons));
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Come" })).toBe(true);
+    expect(screen.getByRole("heading", { name: "Come" })).toBeDefined();
   });
 
   it("throws when syllabus has no behavior pages", () => {

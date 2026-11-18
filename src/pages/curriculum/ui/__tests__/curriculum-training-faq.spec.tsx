@@ -72,8 +72,8 @@ describe("curriculum training faq", () => {
       screen.getByText(
         "The Level 1 Zen chapter has no Problem or Question notes. Use the Explanation for its full Step instructions.",
       ),
-    ).toBe(true);
-    expect(screen.getByText("General answers are unavailable.")).toBe(true);
+    ).toBeDefined();
+    expect(screen.getByText("General answers are unavailable.")).toBeDefined();
   });
 
   it("renders behavior and general faq entries when available", () => {
@@ -105,8 +105,8 @@ describe("curriculum training faq", () => {
     });
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Level 1 Zen questions" })).toBe(true);
-    expect(screen.getByRole("heading", { name: "General training questions" })).toBe(true);
+    expect(screen.getByRole("heading", { name: "Level 1 Zen questions" })).toBeDefined();
+    expect(screen.getByRole("heading", { name: "General training questions" })).toBeDefined();
   });
 
   it("ignores behavior pages in general faq queries", () => {
@@ -140,6 +140,6 @@ describe("curriculum training faq", () => {
     );
 
     // Assert
-    expect(screen.getByText("General answers are unavailable.")).toBe(true);
+    expect(screen.getByText("General answers are unavailable.")).toBeDefined();
   });
 });

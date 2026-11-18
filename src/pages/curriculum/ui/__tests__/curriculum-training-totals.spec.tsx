@@ -59,7 +59,7 @@ describe("curriculum training totals", () => {
     await user.click(screen.getByRole("button", { name: "Correct totals" }));
 
     // Assert
-    expect(screen.getByText("Saved groups total: 4 Success · 2 Not yet")).toBe(true);
+    expect(screen.getByText("Saved groups total: 4 Success · 2 Not yet")).toBeDefined();
     expect(correctTotals).toHaveBeenCalledWith("rec-1", 5, 1);
   });
 });

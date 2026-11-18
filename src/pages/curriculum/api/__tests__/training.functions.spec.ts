@@ -120,7 +120,7 @@ describe("training functions", () => {
     expect(getPracticeTotals).toHaveBeenCalledWith("level-1/zen:step-1", {
       userId: TEST_SESSION.user.id,
     });
-    expect(result).toBeNull();
+    expect(result).toStrictEqual([]);
   });
 
   it("delegates recordPracticeTotalsFn with progress:update permission", async () => {
