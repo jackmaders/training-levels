@@ -35,7 +35,7 @@ describe("curriculum functions getCurriculumSyllabusFn", () => {
 
     // Assert
     expect(hasPermission).toHaveBeenCalledWith(TEST_SESSION.user.role, "curriculum:read");
-    expect(getSyllabus).toHaveBeenCalledTimes(1);
+    expect(getSyllabus).toHaveBeenCalledOnce();
     expect(result).toStrictEqual(TEST_SYLLABUS);
   });
 

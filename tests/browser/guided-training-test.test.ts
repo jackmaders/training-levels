@@ -55,11 +55,11 @@ test("cold Test uses the full criterion and allows a confirmed same-day override
   baseURL,
   page,
 }) => {
-  await page.clock.install({ time: new Date() });
   const trainingPage = await signUpAndVisitBehavior(page, baseURL);
 
   await prepareSameDayTest(trainingPage);
   await recommendPracticeAfterFailure(trainingPage);
+  await page.clock.install({ time: new Date() });
   await page.clock.fastForward("24:00:00");
   await trainingPage.finishTest();
   await trainingPage.gotoTraining();
@@ -71,7 +71,6 @@ test("passing a cold Test completes the Step and a failed retest preserves that 
   baseURL,
   page,
 }) => {
-  await page.clock.install({ time: new Date() });
   const trainingPage = await signUpAndVisitBehavior(page, baseURL);
 
   await prepareSameDayTest(trainingPage);

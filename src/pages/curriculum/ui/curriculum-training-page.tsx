@@ -122,7 +122,7 @@ function CurriculumTrainingPage({
                   equipment={curriculumPage.equipment}
                   guidance={guidance}
                   history={history}
-                  onSelectStep={(stepId) => onSelectionChange(stepId, undefined)}
+                  onSelectStep={(stepId) => onSelectionChange(stepId)}
                   onStart={() => setView("practice")}
                   plan={plan}
                   selectedStepId={selectedStepId}

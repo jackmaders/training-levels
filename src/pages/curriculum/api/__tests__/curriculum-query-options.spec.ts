@@ -66,7 +66,7 @@ describe("curriculum query options", () => {
 
     // Assert
     expect(options.queryKey).toStrictEqual(["curriculum", "syllabus"]);
-    expect(getCurriculumSyllabusFn).toHaveBeenCalledTimes(1);
+    expect(getCurriculumSyllabusFn).toHaveBeenCalledOnce();
     expect(result).toStrictEqual(TEST_SYLLABUS);
   });
 
@@ -116,7 +116,7 @@ describe("curriculum query options", () => {
 
     // Assert
     expect(options.queryKey).toStrictEqual(["curriculum", "step-progress"]);
-    expect(getStepProgressFn).toHaveBeenCalledTimes(1);
+    expect(getStepProgressFn).toHaveBeenCalledOnce();
     expect(result).toStrictEqual(["level-1/zen:step-1"]);
   });
 });
