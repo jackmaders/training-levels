@@ -110,5 +110,11 @@ describe("source-backed Practice ladders", () => {
       { outcome: "success", target: "5 feet · 60 seconds" },
     ]);
     expect(clamped.nextTarget).toBeNull();
+
+    const durationRestart = getPracticePlan("level-3/crate:step-3", [
+      { outcome: "not_yet", target: "5 feet · 300 seconds" },
+    ]);
+    expect(durationRestart.restartReason).toBe("Restart the duration ladder at 5 ft/1 min.");
+    expect(durationRestart.target).toBe("5 feet · 60 seconds");
   });
 });

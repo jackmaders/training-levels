@@ -185,7 +185,7 @@ describe("curriculum training page", () => {
           createdAt: new Date("2026-01-01T00:00:00.000Z"),
           outcome: "success",
           stepId: PRACTICE_STEP_ID,
-          target: "Target",
+          target: "10 seconds",
           undoneAt: null,
         },
       ],
@@ -235,7 +235,7 @@ describe("curriculum training page", () => {
           createdAt: new Date("2026-01-01T00:00:00.000Z"),
           outcome: "success",
           stepId: PRACTICE_STEP_ID,
-          target: "Target",
+          target: "10 seconds",
           undoneAt: null,
         },
       ],
@@ -290,7 +290,7 @@ describe("curriculum training page", () => {
           createdAt: new Date("2026-01-01T00:00:00.000Z"),
           outcome: "success",
           stepId: PRACTICE_STEP_ID,
-          target: "Target",
+          target: "10 seconds",
           undoneAt: null,
         },
       ],
@@ -409,5 +409,58 @@ describe("curriculum training page", () => {
     );
 
     expect(screen.getByText("Training instructions are unavailable.")).toBeDefined();
+  });
+
+  it("saves a practice decision and corrects totals", async () => {
+    expect.hasAssertions();
+
+    const user = userEvent.setup();
+    vi.mocked(savePracticeStepDecisionFn).mockResolvedValueOnce({
+      decision: "keep_practicing",
+      stepId: PRACTICE_STEP_ID,
+    });
+    vi.mocked(correctPracticeTotalsFn).mockResolvedValueOnce({
+      notYetCount: 1,
+      recordId: "t1",
+      successCount: 4,
+    });
+
+    const queryClient = createTrainingQueryClient({
+      history: [
+        {
+          attemptId: "a1",
+          createdAt: new Date("2026-01-01T00:00:00.000Z"),
+          outcome: "success",
+          stepId: PRACTICE_STEP_ID,
+          target: "10 seconds",
+          undoneAt: null,
+        },
+      ],
+      totals: [
+        {
+          createdAt: new Date("2026-01-01T00:00:00.000Z"),
+          notYetCount: 1,
+          recordId: "t1",
+          stepId: PRACTICE_STEP_ID,
+          successCount: 3,
+          target: "Target",
+        },
+      ],
+    });
+
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={PRACTICE_STEP_ID}
+        selectedTarget={undefined}
+        onSelectionChange={vi.fn<() => void>()}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    await user.click(screen.getByRole("button", { name: /Practice/u }));
+    await user.click(screen.getByRole("button", { name: "Correct totals" }));
+    await waitFor(() => {
+      expect(correctPracticeTotalsFn).toHaveBeenCalledOnce();
+    });
   });
 });

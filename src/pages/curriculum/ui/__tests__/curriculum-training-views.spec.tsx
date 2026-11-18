@@ -283,4 +283,72 @@ describe("curriculum training views", () => {
     await user.click(screen.getByRole("button", { name: "Explanation" }));
     expect(onOpenReading).toHaveBeenCalledOnce();
   });
+
+  it("renders timer completion actions, practice limit notice, and omits invalid finish link", async () => {
+    expect.hasAssertions();
+
+    vi.useFakeTimers();
+    const onConfirm = vi.fn<(outcome: "not_yet" | "success") => void>();
+    const actions = { ...createActions(), record: onConfirm };
+
+    renderWithProviders(
+      <TrainingPractice
+        actions={actions}
+        decision={null}
+        finishStep={{ ...FINISH_STEP, pageSlug: "zen" }}
+        guidance={null}
+        history={[
+          {
+            attemptId: "a1",
+            createdAt: new Date("2026-01-01T00:00:00.000Z"),
+            outcome: "success",
+            target: "1 second",
+            undoneAt: null,
+          },
+        ]}
+        onBreak={vi.fn<() => void>()}
+        onChangeTarget={vi.fn<() => void>()}
+        onOpenReading={vi.fn<() => void>()}
+        plan={{
+          appDefaultPracticeLimit: 1,
+          appDefaultRepetitions: 1,
+          distanceFeet: 0,
+          durationSeconds: 1,
+          easierTarget: null,
+          nextTarget: null,
+          priorAchievement: null,
+          restartReason: null,
+          source: "Zen ladder",
+          stepId: "level-1/zen:step-1",
+          target: "1 second",
+          targetOptions: [],
+        }}
+        progression={null}
+        target="1 second"
+        timerInterrupted={false}
+        totals={[]}
+      />,
+      { routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    expect(
+      screen.getByText(
+        "App-default practice limit reached. Take a break, then choose Continue or Finish.",
+      ),
+    ).toBeDefined();
+    expect(screen.queryByRole("link", { name: "Finish Practice" })).toBeNull();
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await user.click(screen.getByRole("button", { name: "Start timer" }));
+    await vi.advanceTimersByTimeAsync(1100);
+    await user.click(screen.getByRole("button", { name: "Confirm Success" }));
+    expect(onConfirm).toHaveBeenCalledWith("success", "1 second");
+
+    await user.click(screen.getByRole("button", { name: "Start timer" }));
+    await vi.advanceTimersByTimeAsync(1100);
+    vi.useRealTimers();
+
+    await user.click(screen.getByRole("button", { name: "Record Not yet" }));
+    expect(onConfirm).toHaveBeenCalledWith("not_yet", "1 second");
+  });
 });

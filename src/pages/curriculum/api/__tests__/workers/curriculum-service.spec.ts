@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { asc, eq } from "drizzle-orm";
 import { describe, expect, it } from "vite-plus/test";
 
-import { dogs, stepCompletions } from "@/shared/db";
+import { dogs, stepCompletions, stepTests } from "@/shared/db";
 import { getDb } from "@/shared/db/index.server";
 import { user } from "@/shared/db/schema";
 import { ApplicationError } from "@/shared/errors";
@@ -427,6 +427,28 @@ describe("curriculum-service (workers D1)", () => {
     const result = await toggleStep(
       { completed: true, stepId: "level-1/zen:step-1" },
       { db, userId: "user-already-done" },
+    );
+
+    expect(result).toStrictEqual({ completed: true, stepId: "level-1/zen:step-1" });
+  });
+
+  it("allows completing level-1/zen:step-1 when a passing step test exists", async () => {
+    expect.hasAssertions();
+    const db = getDb(env.DB);
+    await db
+      .insert(user)
+      .values({ email: "passed-test@example.com", id: "user-passed-test", name: "Passed Test" });
+    await db.insert(dogs).values({ id: "dog-passed-test", userId: "user-passed-test" });
+    await db.insert(stepTests).values({
+      dogId: "dog-passed-test",
+      outcome: "success",
+      stepId: "level-1/zen:step-1",
+      testId: "test-passed-1",
+    });
+
+    const result = await toggleStep(
+      { completed: true, stepId: "level-1/zen:step-1" },
+      { db, userId: "user-passed-test" },
     );
 
     expect(result).toStrictEqual({ completed: true, stepId: "level-1/zen:step-1" });
