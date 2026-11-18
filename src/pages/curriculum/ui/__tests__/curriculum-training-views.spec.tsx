@@ -1,4 +1,4 @@
-import { act, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -338,17 +338,20 @@ describe("curriculum training views", () => {
     ).toBeDefined();
     expect(screen.queryByRole("link", { name: "Finish Practice" })).toBeNull();
 
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    await user.click(screen.getByRole("button", { name: "Start timer" }));
-    await vi.advanceTimersByTimeAsync(1100);
-    await user.click(screen.getByRole("button", { name: "Confirm Success" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start timer" }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1100);
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Confirm Success" }));
     expect(onConfirm).toHaveBeenCalledWith("success", "1 second");
 
-    await user.click(screen.getByRole("button", { name: "Start timer" }));
-    await vi.advanceTimersByTimeAsync(1100);
+    fireEvent.click(screen.getByRole("button", { name: "Start timer" }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1100);
+    });
     vi.useRealTimers();
 
-    await user.click(screen.getByRole("button", { name: "Record Not yet" }));
+    fireEvent.click(screen.getByRole("button", { name: "Record Not yet" }));
     expect(onConfirm).toHaveBeenCalledWith("not_yet", "1 second");
   });
 });

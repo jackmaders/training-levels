@@ -259,4 +259,14 @@ describe("guided Practice authoring", () => {
     expect(getPracticeGuidance("invalid", "criterion")).toBeNull();
     expect(getPracticeGuidance("", "criterion")).toBeNull();
   });
+
+  it("resets to the first target when a success attempt has an unknown target", () => {
+    expect.assertions(1);
+
+    const guidance = requireGuidance(COME_FORTY_FEET, COME_FORTY_FEET_CRITERION, [
+      { outcome: "success", target: "unknown target" },
+    ]);
+
+    expect(guidance.target).toBe(guidance.targetOptions[0]);
+  });
 });
