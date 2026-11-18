@@ -7,6 +7,11 @@ import type { PRACTICE_STEP_OPTIONS, PracticePlan } from "../model/practice-ladd
 import type { PracticeProgression } from "../model/practice-progression";
 import { CurriculumContentBlocks } from "./curriculum-content-blocks";
 import { CurriculumTrainingReadinessChoice } from "./curriculum-training-readiness-choice";
+import {
+  InterruptedTimerNotice,
+  TrainingReadingLinks,
+  type TrainingReadingKind,
+} from "./curriculum-training-reading";
 import { CurriculumTrainingTotals, type PracticeTotalRecord } from "./curriculum-training-totals";
 
 const STEP_TARGET = "Dog moves away from a treat held in your hand while you are sitting.";
@@ -169,9 +174,11 @@ function TrainingPractice({
   history,
   onBreak,
   onChangeTarget,
+  onOpenReading,
   finishStep,
   plan,
   progression,
+  timerInterrupted,
   totals,
   target,
 }: {
@@ -180,6 +187,9 @@ function TrainingPractice({
   history: readonly PracticeRecord[];
   onBreak: () => void;
   onChangeTarget: (target: string) => void;
+  /** Opens reading; reports whether a timed hold was started but not yet recorded. */
+  onOpenReading: (kind: TrainingReadingKind, interruptedTimedHold: boolean) => void;
+  timerInterrupted: boolean;
   finishStep: PracticeStepOption;
   plan: PracticePlan | null;
   progression: PracticeProgression | null;
@@ -190,6 +200,7 @@ function TrainingPractice({
   const lastAttempt = currentHistory.at(-LAST_ITEM_OFFSET);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [deadlineTimestamp, setDeadlineTimestamp] = useState<number | null>(null);
+  const [showTimerInterrupted, setShowTimerInterrupted] = useState(timerInterrupted);
   const timerComplete = remainingSeconds === 0;
   const timerActive =
     deadlineTimestamp !== null && remainingSeconds !== null && remainingSeconds > 0;
@@ -202,6 +213,7 @@ function TrainingPractice({
     record: (outcome, currentTarget) => {
       setRemainingSeconds(null);
       setDeadlineTimestamp(null);
+      setShowTimerInterrupted(false);
       actions.record(outcome, currentTarget);
     },
   };
@@ -225,6 +237,7 @@ function TrainingPractice({
 
   return (
     <section aria-labelledby="practice-heading" className="space-y-5">
+      <TrainingReadingLinks onOpen={(kind) => onOpenReading(kind, remainingSeconds !== null)} />
       <div className="space-y-2">
         <h2 className="text-xl font-semibold" id="practice-heading">
           Current target
@@ -250,6 +263,7 @@ function TrainingPractice({
           </>
         )}
       </div>
+      {showTimerInterrupted && remainingSeconds === null ? <InterruptedTimerNotice /> : null}
       {plan === null || targetDuration === 0 ? null : (
         <TimerControls
           complete={timerComplete}
@@ -257,6 +271,7 @@ function TrainingPractice({
           target={target}
           onConfirm={(outcome) => practiceActions.record(outcome, target)}
           onStart={() => {
+            setShowTimerInterrupted(false);
             setDeadlineTimestamp(Date.now() + targetDuration * TIMER_TICK_MILLISECONDS);
             setRemainingSeconds(targetDuration);
           }}
