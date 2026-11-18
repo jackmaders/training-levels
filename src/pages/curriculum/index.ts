@@ -7,6 +7,7 @@ export {
   stepProgressQueryOptions,
 } from "./api/curriculum-query-options";
 export { PRACTICE_STEP_ID, practiceHistoryQueryOptions } from "./api/training-query-options";
+export { trainingOverviewQueryOptions } from "./api/recommendation-query-options";
 export type {
   ArticleSectionSlug,
   LoadCurriculumArticleOptions,
