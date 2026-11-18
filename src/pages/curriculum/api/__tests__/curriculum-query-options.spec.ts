@@ -28,8 +28,14 @@ import {
   getCurriculumSyllabusFn,
   getStepProgressFn,
 } from "../curriculum.functions";
+import {
+  EMPTY_PAGE_GENERALIZATION,
+  pageGeneralizationQueryOptions,
+} from "../generalization-query-options";
+import { getPageGeneralizationFn } from "../generalization.functions";
 
 vi.mock(import("../curriculum.functions"));
+vi.mock(import("../generalization.functions"));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -257,14 +263,15 @@ describe("curriculum article loader", () => {
 });
 
 describe("level page loader", () => {
-  it("loads syllabus, level page, and step progress in parallel for valid params", async () => {
-    expect.assertions(4);
+  it("loads syllabus, level page, step progress, and generalization data for valid params", async () => {
+    expect.assertions(5);
 
     // Arrange
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     vi.mocked(getCurriculumSyllabusFn).mockResolvedValueOnce(TEST_SYLLABUS);
     vi.mocked(getCurriculumPageFn).mockResolvedValueOnce(TEST_BEHAVIOR_PAGE);
     vi.mocked(getStepProgressFn).mockResolvedValueOnce(["level-1/zen:step-1"]);
+    vi.mocked(getPageGeneralizationFn).mockResolvedValueOnce(EMPTY_PAGE_GENERALIZATION);
 
     // Act
     const loadedPage = await loadLevelPage({
@@ -284,10 +291,13 @@ describe("level page loader", () => {
     expect(queryClient.getQueryData(stepProgressQueryOptions().queryKey)).toStrictEqual([
       "level-1/zen:step-1",
     ]);
+    expect(
+      queryClient.getQueryData(pageGeneralizationQueryOptions("level-1/zen").queryKey),
+    ).toStrictEqual(EMPTY_PAGE_GENERALIZATION);
   });
 
   it("throws notFound without calling server functions when route params are invalid", async () => {
-    expect.assertions(3);
+    expect.assertions(4);
 
     // Arrange
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -303,10 +313,11 @@ describe("level page loader", () => {
     expect(isNotFound(caught)).toBe(true);
     expect(getCurriculumSyllabusFn).not.toHaveBeenCalled();
     expect(getCurriculumPageFn).not.toHaveBeenCalled();
+    expect(getPageGeneralizationFn).not.toHaveBeenCalled();
   });
 
-  it("throws notFound when level page query resolves to null", async () => {
-    expect.assertions(1);
+  it("throws notFound before fetching generalization when level page query resolves to null", async () => {
+    expect.assertions(2);
 
     // Arrange
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -323,6 +334,7 @@ describe("level page loader", () => {
 
     // Assert
     expect(isNotFound(caught)).toBe(true);
+    expect(getPageGeneralizationFn).not.toHaveBeenCalled();
   });
 });
 
