@@ -46,28 +46,28 @@ async function recordStepTest(
 
 async function persistStepTest(input: RecordStepTestInput, dogId: string, db: Database) {
   const now = new Date();
-  const queries = [
-    db
-      .insert(stepTests)
-      .values({
-        coldOverride: input.coldOverride,
-        dogId,
-        outcome: input.outcome,
-        stepId: input.stepId,
-        testId: input.testId,
-        testedAt: now,
-      })
-      .onConflictDoNothing({ target: stepTests.testId }),
-  ];
-  if (input.outcome === "success") {
-    queries.push(
-      db
-        .insert(stepCompletions)
-        .values({ completedAt: now, dogId, id: crypto.randomUUID(), stepId: input.stepId })
-        .onConflictDoNothing({ target: [stepCompletions.dogId, stepCompletions.stepId] }),
-    );
+  const insertTest = db
+    .insert(stepTests)
+    .values({
+      coldOverride: input.coldOverride,
+      dogId,
+      outcome: input.outcome,
+      stepId: input.stepId,
+      testId: input.testId,
+      testedAt: now,
+    })
+    .onConflictDoNothing({ target: stepTests.testId });
+  if (input.outcome !== "success") {
+    await insertTest;
+    return;
   }
-  await db.batch(queries);
+  await db.batch([
+    insertTest,
+    db
+      .insert(stepCompletions)
+      .values({ completedAt: now, dogId, id: crypto.randomUUID(), stepId: input.stepId })
+      .onConflictDoNothing({ target: [stepCompletions.dogId, stepCompletions.stepId] }),
+  ]);
 }
 
 async function findStepTest(testId: string, dogId: string, db: Database) {

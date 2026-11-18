@@ -4,8 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { stepProgressQueryOptions } from "../api/curriculum-query-options";
 import { PRACTICE_STEP_ID, stepTestHistoryQueryOptions } from "../api/training-query-options";
 import { recordStepTestFn } from "../api/training.functions";
-import type { Outcome } from "./curriculum-training-practice-view";
 import type { StepTestActions } from "./curriculum-training-test-views";
+import type { Outcome } from "./curriculum-training-views";
 
 function useStepTestActions(): StepTestActions {
   const queryClient = useQueryClient();
@@ -28,7 +28,9 @@ function useStepTestActions(): StepTestActions {
 
   return {
     errorMessage: mutation.error?.message ?? null,
-    record: (outcome, coldOverride) => mutation.mutate({ coldOverride, outcome }),
+    record: (outcome, coldOverride) => {
+      mutation.mutate({ coldOverride, outcome });
+    },
     saving: mutation.isPending,
   };
 }

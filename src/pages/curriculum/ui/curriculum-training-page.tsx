@@ -9,11 +9,9 @@ import { useState, type Dispatch, type SetStateAction } from "react";
 
 import { curriculumPageQueryOptions } from "../api/curriculum-query-options";
 import {
-  PRACTICE_STEP_ID,
   practiceHistoryQueryOptions,
   practiceStepDecisionQueryOptions,
   practiceTotalsQueryOptions,
-  stepTestHistoryQueryOptions,
 } from "../api/training-query-options";
 import {
   correctPracticeAttemptFn,
@@ -23,70 +21,126 @@ import {
   savePracticeStepDecisionFn,
   undoPracticeAttemptFn,
 } from "../api/training.functions";
+import { getPracticePlan, PRACTICE_STEP_OPTIONS } from "../model/practice-ladders";
 import { getPracticeProgression } from "../model/practice-progression";
 import {
+  CurriculumTrainingStepTestOffer,
+  CurriculumTrainingTestGate,
+} from "./curriculum-training-step-test";
+import {
   STEP_TARGET,
+  TrainingBreak,
+  TrainingHeading,
+  TrainingPractice,
+  TrainingPrep,
   type Outcome,
   type PracticeActions,
   type PracticeRecord,
-} from "./curriculum-training-practice-view";
-import { CurriculumTrainingScreen } from "./curriculum-training-screen";
-import { useStepTestActions } from "./use-step-test-actions";
+} from "./curriculum-training-views";
 
-function CurriculumTrainingPage() {
-  const { decisionRecord, curriculumPage, history, testHistory, totals } = useTrainingQueries();
-  const [view, setView] = useState<"prep" | "practice" | "test">("prep");
-  const [coldOverride, setColdOverride] = useState(false);
-  const actions = usePracticeActions();
-  const testActions = useStepTestActions();
-  const progression = getPracticeProgression(PRACTICE_STEP_ID, {
+type TrainingView = "prep" | "practice" | "break" | "test" | "test-override";
+
+function CurriculumTrainingPage({
+  onSelectionChange,
+  selectedStepId: requestedStepId,
+  selectedTarget,
+}: {
+  onSelectionChange: (stepId: string | undefined, target: string | undefined) => void;
+  selectedStepId: string | undefined;
+  selectedTarget: string | undefined;
+}) {
+  const [view, setView] = useState<TrainingView>("prep");
+  const selectedStep =
+    PRACTICE_STEP_OPTIONS.find((step) => step.stepId === requestedStepId) ??
+    PRACTICE_STEP_OPTIONS[0];
+  const selectedStepId = selectedStep.stepId;
+  const { data: history } = useSuspenseQuery(practiceHistoryQueryOptions(selectedStepId));
+  const { data: totals } = useSuspenseQuery(practiceTotalsQueryOptions(selectedStepId));
+  const { data: decisionRecord } = useSuspenseQuery(
+    practiceStepDecisionQueryOptions(selectedStepId),
+  );
+  const { data: curriculumPage } = useSuspenseQuery(
+    curriculumPageQueryOptions(selectedStep.pageSlug),
+  );
+  const actions = usePracticeActions(selectedStepId);
+  const viewActions: PracticeActions = {
+    ...actions,
+    record: (outcome, currentTarget) => {
+      onSelectionChange(selectedStepId, undefined);
+      actions.record(outcome, currentTarget);
+    },
+  };
+  const plan =
+    selectedStepId === PRACTICE_STEP_OPTIONS[0].stepId
+      ? null
+      : getPracticePlan(
+          selectedStepId,
+          history.filter((attempt) => attempt.undoneAt === null),
+        );
+  const progression = getPracticeProgression(selectedStepId, {
     consecutiveSuccesses: countTrailingSuccesses(history),
     lastOutcome: history.toReversed().find((attempt) => attempt.undoneAt === null)?.outcome,
   });
-
-  const step =
-    curriculumPage?.kind === "behavior"
-      ? curriculumPage.steps.find((candidate) => candidate.stepId === PRACTICE_STEP_ID)
-      : undefined;
-  if (
-    curriculumPage === null ||
-    curriculumPage.kind !== "behavior" ||
-    step === undefined ||
-    progression === null
-  ) {
+  const target =
+    plan?.targetOptions.some((option) => option.label === selectedTarget) === true
+      ? (selectedTarget ?? STEP_TARGET)
+      : (plan?.target ?? STEP_TARGET);
+  if (curriculumPage === null || curriculumPage.kind !== "behavior") {
     return <main className="mx-auto max-w-3xl p-6">Training instructions are unavailable.</main>;
   }
 
   return (
-    <CurriculumTrainingScreen
-      coldOverride={coldOverride}
-      decision={decisionRecord?.decision ?? null}
-      equipment={curriculumPage.equipment}
-      history={history}
-      onStartPractice={() => setView("practice")}
-      onStartTest={(override) => {
-        setColdOverride(override);
-        setView("test");
-      }}
-      practiceActions={actions}
-      progression={progression}
-      step={step}
-      testActions={testActions}
-      testHistory={testHistory}
-      totals={totals}
-      view={view}
-    />
+    <main className="mx-auto max-w-3xl space-y-8 px-4 pt-8 pb-36 sm:px-6">
+      <TrainingHeading mode={getHeadingMode(view)} stepLabel={selectedStep.label} />
+      <CurriculumTrainingTestGate coldOverride={view === "test-override"} active={isTestView(view)}>
+        {view === "prep" ? (
+          <TrainingPrep
+            decision={decisionRecord?.decision ?? null}
+            equipment={curriculumPage.equipment}
+            history={history}
+            onSelectStep={(stepId) => onSelectionChange(stepId, undefined)}
+            onStart={() => setView("practice")}
+            plan={plan}
+            selectedStepId={selectedStepId}
+            stepOptions={PRACTICE_STEP_OPTIONS}
+            target={target}
+            testOffer={
+              <CurriculumTrainingStepTestOffer
+                decision={decisionRecord?.decision ?? null}
+                history={history}
+                onStartTest={(coldOverride) => setView(coldOverride ? "test-override" : "test")}
+                stepId={selectedStepId}
+                totals={totals}
+              />
+            }
+          />
+        ) : view === "practice" ? (
+          <TrainingPractice
+            actions={viewActions}
+            decision={decisionRecord?.decision ?? null}
+            history={history}
+            onBreak={() => setView("break")}
+            onChangeTarget={(nextTarget) => onSelectionChange(selectedStepId, nextTarget)}
+            finishStep={selectedStep}
+            plan={plan}
+            progression={progression}
+            totals={totals}
+            target={target}
+          />
+        ) : (
+          <TrainingBreak onContinue={() => setView("practice")} finishStep={selectedStep} />
+        )}
+      </CurriculumTrainingTestGate>
+    </main>
   );
 }
 
-function useTrainingQueries() {
-  return {
-    curriculumPage: useSuspenseQuery(curriculumPageQueryOptions("level-1/zen")).data,
-    decisionRecord: useSuspenseQuery(practiceStepDecisionQueryOptions()).data,
-    history: useSuspenseQuery(practiceHistoryQueryOptions()).data,
-    testHistory: useSuspenseQuery(stepTestHistoryQueryOptions()).data,
-    totals: useSuspenseQuery(practiceTotalsQueryOptions()).data,
-  };
+function isTestView(view: TrainingView): view is "test" | "test-override" {
+  return view === "test" || view === "test-override";
+}
+
+function getHeadingMode(view: TrainingView): "Practice" | "Test" {
+  return isTestView(view) ? "Test" : "Practice";
 }
 
 function countTrailingSuccesses(history: readonly PracticeRecord[]): number {
@@ -113,7 +167,10 @@ function usePracticePageFunctions() {
 
 function createMutationCallbacks(
   queryClient: QueryClient,
-  setPendingAttempt: Dispatch<SetStateAction<{ attemptId: string; outcome: Outcome } | null>>,
+  stepId: string,
+  setPendingAttempt: Dispatch<
+    SetStateAction<{ attemptId: string; outcome: Outcome; target: string } | null>
+  >,
   setErrorMessage: Dispatch<SetStateAction<string | null>>,
 ) {
   return {
@@ -121,18 +178,22 @@ function createMutationCallbacks(
     onSuccess: async () => {
       setPendingAttempt(null);
       setErrorMessage(null);
-      await queryClient.invalidateQueries({ queryKey: practiceHistoryQueryOptions().queryKey });
-      await queryClient.invalidateQueries({ queryKey: practiceTotalsQueryOptions().queryKey });
       await queryClient.invalidateQueries({
-        queryKey: practiceStepDecisionQueryOptions().queryKey,
+        queryKey: practiceHistoryQueryOptions(stepId).queryKey,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: practiceTotalsQueryOptions(stepId).queryKey,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: practiceStepDecisionQueryOptions(stepId).queryKey,
       });
     },
   };
 }
 
-function usePracticeActions(): PracticeActions {
-  const attemptActions = usePracticeAttemptActions();
-  const progressActions = usePracticeProgressActions();
+function usePracticeActions(stepId: string): PracticeActions {
+  const attemptActions = usePracticeAttemptActions(stepId);
+  const progressActions = usePracticeProgressActions(stepId);
 
   return {
     ...attemptActions,
@@ -141,19 +202,33 @@ function usePracticeActions(): PracticeActions {
   };
 }
 
-function usePracticeAttemptActions() {
+function usePracticeAttemptActions(stepId: string) {
   const queryClient = useQueryClient();
   const serverFunctions = usePracticePageFunctions();
   const [pendingAttempt, setPendingAttempt] = useState<{
     attemptId: string;
     outcome: Outcome;
+    target: string;
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const callbacks = createMutationCallbacks(queryClient, setPendingAttempt, setErrorMessage);
+  const callbacks = createMutationCallbacks(
+    queryClient,
+    stepId,
+    setPendingAttempt,
+    setErrorMessage,
+  );
   const recordMutation = useMutation({
-    mutationFn: async ({ attemptId, outcome }: { attemptId: string; outcome: Outcome }) =>
+    mutationFn: async ({
+      attemptId,
+      outcome,
+      target,
+    }: {
+      attemptId: string;
+      outcome: Outcome;
+      target: string;
+    }) =>
       await serverFunctions.recordAttempt({
-        data: { attemptId, outcome, stepId: PRACTICE_STEP_ID, target: STEP_TARGET },
+        data: { attemptId, outcome, stepId, target },
       }),
     ...callbacks,
   });
@@ -180,8 +255,8 @@ function usePracticeAttemptActions() {
       }
     },
     pendingAttempt,
-    record: (outcome: Outcome) => {
-      const nextAttempt = pendingAttempt ?? { attemptId: crypto.randomUUID(), outcome };
+    record: (outcome: Outcome, target: string) => {
+      const nextAttempt = pendingAttempt ?? { attemptId: crypto.randomUUID(), outcome, target };
       setPendingAttempt(nextAttempt);
       recordMutation.mutate(nextAttempt);
     },
@@ -190,11 +265,11 @@ function usePracticeAttemptActions() {
   };
 }
 
-function usePracticeProgressActions() {
+function usePracticeProgressActions(stepId: string) {
   const queryClient = useQueryClient();
-  const callbacks = createPracticeProgressCallbacks(queryClient);
-  const totalsActions = usePracticeTotalsMutations(callbacks);
-  const decisionActions = usePracticeDecisionMutation(callbacks);
+  const callbacks = createPracticeProgressCallbacks(queryClient, stepId);
+  const totalsActions = usePracticeTotalsMutations(callbacks, stepId);
+  const decisionActions = usePracticeDecisionMutation(callbacks, stepId);
 
   return {
     ...totalsActions,
@@ -203,18 +278,23 @@ function usePracticeProgressActions() {
   };
 }
 
-function createPracticeProgressCallbacks(queryClient: QueryClient) {
+function createPracticeProgressCallbacks(queryClient: QueryClient, stepId: string) {
   return {
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: practiceTotalsQueryOptions().queryKey });
       await queryClient.invalidateQueries({
-        queryKey: practiceStepDecisionQueryOptions().queryKey,
+        queryKey: practiceTotalsQueryOptions(stepId).queryKey,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: practiceStepDecisionQueryOptions(stepId).queryKey,
       });
     },
   };
 }
 
-function usePracticeTotalsMutations(callbacks: ReturnType<typeof createPracticeProgressCallbacks>) {
+function usePracticeTotalsMutations(
+  callbacks: ReturnType<typeof createPracticeProgressCallbacks>,
+  stepId: string,
+) {
   const recordTotals = useServerFn(recordPracticeTotalsFn);
   const recordTotalsMutation = useMutation({
     mutationFn: async ({
@@ -228,7 +308,7 @@ function usePracticeTotalsMutations(callbacks: ReturnType<typeof createPracticeP
         data: {
           notYetCount,
           recordId: crypto.randomUUID(),
-          stepId: PRACTICE_STEP_ID,
+          stepId,
           successCount,
           target: STEP_TARGET,
         },
@@ -259,11 +339,12 @@ function usePracticeTotalsMutations(callbacks: ReturnType<typeof createPracticeP
 
 function usePracticeDecisionMutation(
   callbacks: ReturnType<typeof createPracticeProgressCallbacks>,
+  stepId: string,
 ) {
   const saveDecision = useServerFn(savePracticeStepDecisionFn);
   const decisionMutation = useMutation({
     mutationFn: async (decision: "keep_practicing" | "recommend_test") =>
-      await saveDecision({ data: { decision, stepId: PRACTICE_STEP_ID } }),
+      await saveDecision({ data: { decision, stepId } }),
     ...callbacks,
   });
 

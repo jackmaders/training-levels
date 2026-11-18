@@ -246,10 +246,10 @@ describe("training-service (workers D1)", () => {
     await db.insert(dogs).values({ id: "test-dog", userId: "test-owner" });
     const passedTest = {
       coldOverride: false,
-      outcome: "success" as const,
+      outcome: "success",
       stepId: "level-1/zen:step-1",
       testId: "018f47ad-9d72-7a31-a50b-b11111111111",
-    };
+    } as const;
     await recordStepTest(passedTest, { db, userId: "test-owner" });
 
     // Act

@@ -3,32 +3,79 @@ import type { Locator, Page } from "@playwright/test";
 import { waitForHydration } from "./hydration";
 
 class TrainingPage {
-  public readonly startPractice!: Locator;
-  public readonly startTest!: Locator;
-  public readonly coldnessOverride!: Locator;
-  public readonly passTestButton!: Locator;
-  public readonly failTestButton!: Locator;
-  public readonly testHistory!: Locator;
-  public readonly testActivity!: Locator;
-  public readonly prep!: Locator;
-  public readonly startButton!: Locator;
-  public readonly successButton!: Locator;
-  public readonly notYetButton!: Locator;
-  public readonly undoButton!: Locator;
-  public readonly finishLink!: Locator;
-  public readonly history!: Locator;
-  public readonly counts!: Locator;
-
   private readonly page: Page;
 
   public constructor(page: Page) {
     this.page = page;
-    Object.assign(this, createTrainingPageLocators(page));
   }
 
-  public async gotoBehavior() {
-    await this.page.goto("/levels/level-1/zen");
-    await waitForHydration(this.page);
+  public get startPractice(): Locator {
+    return this.page.getByRole("link", { name: "Practice Step 1" });
+  }
+  public get startButton(): Locator {
+    return this.page.getByRole("button", { name: /^(?:Start|Resume) Practice$/u });
+  }
+  public get successButton(): Locator {
+    return this.page.getByRole("button", { exact: true, name: "Success" });
+  }
+  public get notYetButton(): Locator {
+    return this.page.getByRole("button", { exact: true, name: "Not yet" });
+  }
+  public get undoButton(): Locator {
+    return this.page.getByRole("button", { name: "Undo" });
+  }
+  public get finishLink(): Locator {
+    return this.page.getByRole("link", { name: "Finish Practice" });
+  }
+  public get history(): Locator {
+    return this.page.getByRole("list", { name: "Practice history" });
+  }
+  public get counts(): Locator {
+    return this.page.getByText(/^\d+ Success · \d+ Not yet$/u);
+  }
+  public get stepSelect(): Locator {
+    return this.page.getByLabel("Behavior and Step");
+  }
+  public get target(): Locator {
+    return this.page.getByRole("status", { name: "Current practice target" });
+  }
+  public get nextTargetButton(): Locator {
+    return this.page.getByRole("button", { name: "Next ladder target" });
+  }
+  public get timerStartButton(): Locator {
+    return this.page.getByRole("button", { name: "Start timer" });
+  }
+  public get confirmTimerSuccess(): Locator {
+    return this.page.getByRole("button", { name: "Confirm Success" });
+  }
+  public get breakButton(): Locator {
+    return this.page.getByRole("button", { name: "Take a break" });
+  }
+  public get continueButton(): Locator {
+    return this.page.getByRole("button", { name: "Continue" });
+  }
+  public get breakHeading(): Locator {
+    return this.page.getByRole("heading", { name: "Take a break" });
+  }
+  public get prep(): Locator {
+    return this.page.getByRole("region", { name: "Prep" });
+  }
+  public get startTest(): Locator {
+    return this.page.getByRole("button", { name: "Start Test" });
+  }
+  public get coldnessOverride(): Locator {
+    return this.page.getByRole("checkbox", {
+      name: "I confirm I can test this Behavior cold without warming it up now.",
+    });
+  }
+  public get testActivity(): Locator {
+    return this.page.getByRole("region", { name: "Test the full Step criterion cold" });
+  }
+  public get passTestButton(): Locator {
+    return this.page.getByRole("button", { name: "Test passed" });
+  }
+  public get failTestButton(): Locator {
+    return this.page.getByRole("button", { exact: true, name: "Not yet" });
   }
 
   public async gotoTraining() {
@@ -36,40 +83,13 @@ class TrainingPage {
     await waitForHydration(this.page);
   }
 
-  public async startTestActivity() {
-    await this.startTest.click();
-    await this.passTestButton.waitFor({ state: "visible" });
-  }
-
   public async confirmColdness() {
     await this.coldnessOverride.check();
   }
 
-  public async finishTest() {
-    await this.page.getByRole("link", { name: "Finish Test" }).click();
-  }
-
-  public async startFromPrep() {
-    await this.startPractice.click();
-    await waitForHydration(this.page);
-  }
-
-  public async enterPractice() {
-    await this.startFromPrep();
-    await this.startButton.click();
-    await this.successButton.waitFor({ state: "visible" });
-  }
-
-  public async recordSuccess() {
-    await this.successButton.click();
-  }
-
-  public async recordSuccesses(count: number) {
-    if (count === 0) {
-      return;
-    }
-    await this.recordSuccess();
-    await this.recordSuccesses(count - 1);
+  public async startTestActivity() {
+    await this.startTest.click();
+    await this.passTestButton.waitFor({ state: "visible" });
   }
 
   public async recordTest(outcome: "passed" | "not_yet") {
@@ -77,8 +97,56 @@ class TrainingPage {
     await button.click();
   }
 
+  public async finishTest() {
+    await this.page.getByRole("link", { name: "Finish Test" }).click();
+  }
+
+  public async recordSuccesses(count: number) {
+    if (count === 0) {
+      return;
+    }
+    await this.successButton.click();
+    await this.recordSuccesses(count - 1);
+  }
+
   public async finishPractice() {
     await this.finishLink.click();
+  }
+
+  public async gotoBehavior() {
+    await this.page.goto("/levels/level-1/zen");
+    await waitForHydration(this.page);
+  }
+
+  public async startFromPrep() {
+    await this.startPractice.click();
+    await waitForHydration(this.page);
+  }
+
+  public async selectStep(label: string) {
+    await this.stepSelect.selectOption({ label });
+  }
+
+  public async chooseNextTarget() {
+    await this.nextTargetButton.click();
+  }
+
+  public async startTimer() {
+    await this.timerStartButton.click();
+  }
+
+  public async takeBreak() {
+    await this.breakButton.click();
+  }
+
+  public async continuePractice() {
+    await this.continueButton.click();
+  }
+
+  public async enterPractice() {
+    await this.startFromPrep();
+    await this.startButton.click();
+    await this.successButton.waitFor({ state: "visible" });
   }
 
   public async reload() {
@@ -107,28 +175,6 @@ class TrainingPage {
   public totalsRegion() {
     return this.page.getByRole("region", { name: "Enter totals" });
   }
-}
-
-function createTrainingPageLocators(page: Page) {
-  return {
-    coldnessOverride: page.getByRole("checkbox", {
-      name: "I confirm I can test this Behavior cold without warming it up now.",
-    }),
-    counts: page.getByText(/\d+ Success · \d+ Not yet/u),
-    failTestButton: page.getByRole("button", { exact: true, name: "Not yet" }),
-    finishLink: page.getByRole("link", { name: "Finish Practice" }),
-    history: page.getByRole("list", { name: "Practice history" }),
-    notYetButton: page.getByRole("button", { exact: true, name: "Not yet" }),
-    passTestButton: page.getByRole("button", { name: "Test passed" }),
-    prep: page.getByRole("region", { name: "Prep" }),
-    startButton: page.getByRole("button", { name: /^(?:Start|Resume) Practice$/u }),
-    startPractice: page.getByRole("link", { name: "Practice Step 1" }),
-    startTest: page.getByRole("button", { name: "Start Test" }),
-    successButton: page.getByRole("button", { exact: true, name: "Success" }),
-    testActivity: page.getByRole("region", { name: "Test the full Step criterion cold" }),
-    testHistory: page.getByRole("list", { name: "Test history" }),
-    undoButton: page.getByRole("button", { name: "Undo" }),
-  };
 }
 
 export { TrainingPage };

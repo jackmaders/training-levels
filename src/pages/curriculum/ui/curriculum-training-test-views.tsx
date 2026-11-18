@@ -49,19 +49,19 @@ function CurriculumTrainingTestOffer({
   return (
     <div className="space-y-3 rounded-md border p-4">
       <h3 className="font-medium">Test this Step cold</h3>
-      <p className="text-sm text-muted-foreground">
-        {eligibleByDay
-          ? "The last recorded Practice or Test was on another day. Start without warming up this Behavior."
-          : "You recorded Practice or a Test today. Wait until another day, or confirm that you can test the Behavior cold now."}
-      </p>
-      {eligibleByDay ? null : (
-        <ColdnessConfirmation checked={coldOverride} onChange={setColdOverride} />
-      )}
+      <LatestTestStatus latestTest={testHistory.at(-LAST_ITEM_OFFSET)} />
+      <ColdnessGuidance
+        checked={coldOverride}
+        eligibleByDay={eligibleByDay}
+        onChange={setColdOverride}
+      />
       <button
         className="min-h-11 rounded-md border px-3"
         disabled={!eligibleByDay && !coldOverride}
         type="button"
-        onClick={() => onStartTest(!eligibleByDay && coldOverride)}
+        onClick={() => {
+          onStartTest(!eligibleByDay && coldOverride);
+        }}
       >
         Start Test
       </button>
@@ -70,6 +70,48 @@ function CurriculumTrainingTestOffer({
       ) : null}
       <TestHistory history={testHistory} />
     </div>
+  );
+}
+
+function LatestTestStatus({ latestTest }: { latestTest: StepTestRecord | undefined }) {
+  if (latestTest === undefined) {
+    return null;
+  }
+
+  return (
+    <p aria-live="polite" className="rounded-md border p-3 text-sm">
+      Latest Test:{" "}
+      {latestTest.outcome === "success" ? "Passed — Step complete" : "Not yet — Needs practice"}.
+    </p>
+  );
+}
+
+function ColdnessGuidance({
+  checked,
+  eligibleByDay,
+  onChange,
+}: {
+  checked: boolean;
+  eligibleByDay: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  if (eligibleByDay) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        The last recorded Practice or Test was on another day. Start without warming up this
+        Behavior.
+      </p>
+    );
+  }
+
+  return (
+    <>
+      <p className="text-sm text-muted-foreground">
+        You recorded Practice or a Test today. Wait until another day, or confirm that you can test
+        the Behavior cold now.
+      </p>
+      <ColdnessConfirmation checked={checked} onChange={onChange} />
+    </>
   );
 }
 
@@ -85,7 +127,9 @@ function ColdnessConfirmation({
       <input
         checked={checked}
         type="checkbox"
-        onChange={(event) => onChange(event.currentTarget.checked)}
+        onChange={(event) => {
+          onChange(event.currentTarget.checked);
+        }}
       />
       <span>I confirm I can test this Behavior cold without warming it up now.</span>
     </label>
@@ -162,7 +206,9 @@ function TestOutcomes({
         className="min-h-16 rounded-md bg-primary text-lg font-semibold text-primary-foreground"
         disabled={actions.saving}
         type="button"
-        onClick={() => actions.record("success", coldOverride)}
+        onClick={() => {
+          actions.record("success", coldOverride);
+        }}
       >
         Test passed
       </button>
@@ -170,7 +216,9 @@ function TestOutcomes({
         className="min-h-16 rounded-md border text-lg font-semibold"
         disabled={actions.saving}
         type="button"
-        onClick={() => actions.record("not_yet", coldOverride)}
+        onClick={() => {
+          actions.record("not_yet", coldOverride);
+        }}
       >
         Not yet
       </button>

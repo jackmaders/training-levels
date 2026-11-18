@@ -26,22 +26,22 @@ describe("practice attempt inputs", () => {
     expect(parsed.success).toBe(false);
   });
 
-  it("accepts only the supported representative Practice Step", () => {
+  it("accepts source-backed duration and distance Steps", () => {
     expect.assertions(1);
 
     // Arrange
     const input = {
       attemptId: "018f47ad-9d72-7a31-a50b-a55555555555",
       outcome: "success",
-      stepId: "level-1/zen:step-2",
-      target: "Dog stays away from the treat for five seconds",
+      stepId: "level-3/crate:step-2",
+      target: "2 feet · 15 seconds",
     };
 
     // Act
     const parsed = recordPracticeAttemptInputSchema.safeParse(input);
 
     // Assert
-    expect(parsed.success).toBe(false);
+    expect(parsed.success).toBe(true);
   });
 
   it("requires an observable target", () => {
