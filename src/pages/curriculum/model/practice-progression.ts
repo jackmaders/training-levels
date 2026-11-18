@@ -108,6 +108,17 @@ function getPracticeProgression(
   }
 }
 
+function countTrailingSuccesses(attempts: readonly { outcome: PracticeOutcome }[]): number {
+  let count = 0;
+  for (const attempt of attempts.toReversed()) {
+    if (attempt.outcome !== "success") {
+      return count;
+    }
+    count += 1;
+  }
+  return count;
+}
+
 function clampSeconds(rawSeconds: number): number {
   return Math.min(ZEN_DURATION_SECONDS, Math.max(0, rawSeconds));
 }
@@ -223,5 +234,5 @@ function retrieveStepThreeProgression(consecutiveSuccesses: number): PracticePro
   };
 }
 
-export { getPracticeProgression };
+export { countTrailingSuccesses, getPracticeProgression };
 export type { PracticeProgression, PracticeProgressionProgress, PracticeMethod };

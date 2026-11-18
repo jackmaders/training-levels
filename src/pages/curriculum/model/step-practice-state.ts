@@ -7,7 +7,11 @@ import {
   type PRACTICE_STEP_OPTIONS,
   type PracticePlan,
 } from "./practice-ladders";
-import { getPracticeProgression, type PracticeProgression } from "./practice-progression";
+import {
+  countTrailingSuccesses,
+  getPracticeProgression,
+  type PracticeProgression,
+} from "./practice-progression";
 import {
   getTrainingFallbackGuidance,
   inspectManualStepSelection,
@@ -50,19 +54,6 @@ function selectPracticeTarget({
   return progression?.nextTarget ?? guidance?.target ?? fallbackTarget;
 }
 
-function countTrailingSuccesses(history: readonly StepPracticeAttempt[]): number {
-  let count = 0;
-  for (const attempt of history.toReversed()) {
-    if (attempt.undoneAt === null) {
-      if (attempt.outcome !== "success") {
-        return count;
-      }
-      count += 1;
-    }
-  }
-  return count;
-}
-
 function deriveStepPracticeState({
   activeStep,
   curriculumPage,
@@ -82,7 +73,7 @@ function deriveStepPracticeState({
     : null;
   const lastOutcome = activeAttempts.at(LAST_ITEM_INDEX)?.outcome;
   const progression = getPracticeProgression(activeStep.stepId, {
-    consecutiveSuccesses: countTrailingSuccesses(history),
+    consecutiveSuccesses: countTrailingSuccesses(activeAttempts),
     ...(lastOutcome === undefined ? {} : { lastOutcome }),
   });
   const guidance = getPracticeGuidance(
