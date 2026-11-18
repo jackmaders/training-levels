@@ -73,11 +73,7 @@ const SIXTY_SECONDS = 60;
 const NINETY_SECONDS = 90;
 const ONE_HUNDRED_TWENTY_SECONDS = 120;
 const TARGET_INDEX_INCREMENT = 1;
-const PRACTICE_STEP_OPTIONS = [
-  ...getPracticeStepOptions(),
-  { label: "Level 3 Crate · Step 2", pageSlug: "level-3/crate", stepId: CRATE_STEP_2_ID },
-  { label: "Level 3 Crate · Step 3", pageSlug: "level-3/crate", stepId: CRATE_STEP_3_ID },
-] as const;
+const PRACTICE_STEP_OPTIONS = getPracticeStepOptions();
 
 const STEP_TWO_TARGETS = [
   [TWO_FEET, NO_DURATION_SECONDS],

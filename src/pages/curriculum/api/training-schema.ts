@@ -3,10 +3,10 @@ import { z } from "zod";
 import { PRACTICE_STEP_OPTIONS } from "../model/practice-ladders";
 
 const TARGET_MAX_LENGTH = 256;
+const [FIRST_PRACTICE_STEP, ...REST_PRACTICE_STEPS] = PRACTICE_STEP_OPTIONS;
 const TRAINING_STEP_IDS: readonly [string, ...string[]] = [
-  "level-3/retrieve:step-1",
-  "level-3/retrieve:step-2",
-  ...PRACTICE_STEP_OPTIONS.map((step) => step.stepId),
+  FIRST_PRACTICE_STEP.stepId,
+  ...REST_PRACTICE_STEPS.map((step) => step.stepId),
 ];
 const TOTAL_COUNT_MAX = 10_000;
 
