@@ -388,7 +388,61 @@ describe("training-service (workers D1)", () => {
     });
   });
 
-  it("rejects unknown steps and invalid totals or targets", async () => {
+  it("records and queries step tests for any cold-testable Main Quest step across levels", async () => {
+    expect.assertions(5);
+
+    // Arrange
+    const db = getDb(env.DB);
+    await db
+      .insert(user)
+      .values({ email: "multi-test@example.com", id: "multi-test-owner", name: "Multi Owner" });
+    await db.insert(dogs).values({ id: "multi-test-dog", userId: "multi-test-owner" });
+
+    // Act
+    const zenTwo = await recordStepTest(
+      {
+        coldOverride: false,
+        outcome: "success",
+        stepId: "level-1/zen:step-2",
+        testId: "018f47ad-9d72-7a31-a50b-b99999999991",
+      },
+      { db, userId: "multi-test-owner" },
+    );
+    const comeThree = await recordStepTest(
+      {
+        coldOverride: true,
+        outcome: "not_yet",
+        stepId: "level-2/come:step-3",
+        testId: "018f47ad-9d72-7a31-a50b-b99999999992",
+      },
+      { db, userId: "multi-test-owner" },
+    );
+    const retrieveOne = await recordStepTest(
+      {
+        coldOverride: false,
+        outcome: "success",
+        stepId: "level-3/retrieve:step-1",
+        testId: "018f47ad-9d72-7a31-a50b-b99999999993",
+      },
+      { db, userId: "multi-test-owner" },
+    );
+    const comeHistory = await getStepTestHistory("level-2/come:step-3", {
+      db,
+      userId: "multi-test-owner",
+    });
+    const completions = await getStepProgress({ db, userId: "multi-test-owner" });
+
+    // Assert
+    expect(zenTwo.stepId).toBe("level-1/zen:step-2");
+    expect(comeThree.stepId).toBe("level-2/come:step-3");
+    expect(retrieveOne.stepId).toBe("level-3/retrieve:step-1");
+    expect(comeHistory.map((test) => test.testId)).toStrictEqual([
+      "018f47ad-9d72-7a31-a50b-b99999999992",
+    ]);
+    expect(completions).toStrictEqual(["level-1/zen:step-2", "level-3/retrieve:step-1"]);
+  });
+
+  it("rejects recordStepTest and getStepTestHistory for steps without cold tests or invalid steps", async () => {
     expect.hasAssertions();
     const db = getDb(env.DB);
 
@@ -397,11 +451,31 @@ describe("training-service (workers D1)", () => {
         {
           coldOverride: false,
           outcome: "success",
-          stepId: "level-1/zen:step-2",
+          stepId: "level-1/zen:step-5",
           testId: "018f47ad-9d72-7a31-a50b-b99999999999",
         },
         { db, userId: "undo-owner" },
       ),
+    ).rejects.toMatchObject({ code: "CURRICULUM_STEP_NOT_FOUND" });
+
+    await expect(
+      recordStepTest(
+        {
+          coldOverride: false,
+          outcome: "success",
+          stepId: "level-2/tricks:step-1",
+          testId: "018f47ad-9d72-7a31-a50b-b99999999998",
+        },
+        { db, userId: "undo-owner" },
+      ),
+    ).rejects.toMatchObject({ code: "CURRICULUM_STEP_NOT_FOUND" });
+
+    await expect(
+      getStepTestHistory("theory/01-foreword:step-1", { db, userId: "undo-owner" }),
+    ).rejects.toMatchObject({ code: "CURRICULUM_STEP_NOT_FOUND" });
+
+    await expect(
+      getStepTestHistory("invalid-step", { db, userId: "undo-owner" }),
     ).rejects.toMatchObject({ code: "CURRICULUM_STEP_NOT_FOUND" });
   });
 
@@ -464,7 +538,7 @@ describe("training-service (workers D1)", () => {
     ).rejects.toMatchObject({ code: "CURRICULUM_STEP_NOT_FOUND" });
   });
 
-  it("rejects recordStepTest for non-zen-step-1 and correctPracticeTotals for missing record", async () => {
+  it("rejects recordStepTest for non-cold-testable step and correctPracticeTotals for missing record", async () => {
     expect.hasAssertions();
     const db = getDb(env.DB);
     await db
@@ -477,7 +551,7 @@ describe("training-service (workers D1)", () => {
         {
           coldOverride: false,
           outcome: "success",
-          stepId: "level-1/zen:step-2",
+          stepId: "invalid-step",
           testId: "018f47ad-9d72-7a31-a50b-c77777777777",
         },
         { db, userId: "edge-owner-2" },

@@ -116,8 +116,9 @@ function CurriculumTrainingPage({
       >
         {({ openReading, timerInterrupted }) => (
           <CurriculumTrainingTestGate
-            coldOverride={view === "test-override"}
             active={isTestView(view)}
+            coldOverride={view === "test-override"}
+            stepId={selectedStepId}
           >
             {view === "prep" ? (
               <>

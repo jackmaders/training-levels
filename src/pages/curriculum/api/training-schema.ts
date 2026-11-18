@@ -1,14 +1,13 @@
 import { z } from "zod";
 
-import { PRACTICE_STEP_OPTIONS } from "../model/practice-ladders";
+import { isValidMainQuestStepId } from "@/shared/curriculum-data";
 
 const TARGET_MAX_LENGTH = 256;
-const TRAINING_STEP_IDS: readonly [string, ...string[]] = [
-  "level-3/retrieve:step-1",
-  "level-3/retrieve:step-2",
-  ...PRACTICE_STEP_OPTIONS.map((step) => step.stepId),
-];
 const TOTAL_COUNT_MAX = 10_000;
+const mainQuestStepIdSchema = z
+  .string()
+  .trim()
+  .refine(isValidMainQuestStepId, "Invalid training step");
 
 export const practiceHistoryInputSchema = z.object({
   stepId: z.string().trim().min(1),
@@ -34,7 +33,7 @@ export const recordPracticeTotalsInputSchema = z
   .object({
     notYetCount: z.number().int().min(0).max(TOTAL_COUNT_MAX),
     recordId: z.uuid(),
-    stepId: z.enum(TRAINING_STEP_IDS),
+    stepId: mainQuestStepIdSchema,
     successCount: z.number().int().min(0).max(TOTAL_COUNT_MAX),
     target: z.string().trim().min(1).max(TARGET_MAX_LENGTH),
   })
@@ -54,13 +53,13 @@ export const correctPracticeTotalsInputSchema = z
 
 export const savePracticeStepDecisionInputSchema = z.object({
   decision: z.enum(["keep_practicing", "recommend_test"]),
-  stepId: z.enum(TRAINING_STEP_IDS),
+  stepId: mainQuestStepIdSchema,
 });
 
 export const recordStepTestInputSchema = z.object({
   coldOverride: z.boolean(),
   outcome: z.enum(["success", "not_yet"]),
-  stepId: z.enum(TRAINING_STEP_IDS),
+  stepId: mainQuestStepIdSchema,
   testId: z.uuid(),
 });
 

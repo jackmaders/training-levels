@@ -4,38 +4,49 @@ import type { ReactElement } from "react";
 import type { BehaviorStep } from "@/shared/curriculum-data";
 
 import { curriculumPageQueryOptions } from "../api/curriculum-query-options";
-import { PRACTICE_STEP_ID, stepTestHistoryQueryOptions } from "../api/training-query-options";
-import { CurriculumTrainingTestOffer, TrainingTest } from "./curriculum-training-test-views";
+import { stepTestHistoryQueryOptions } from "../api/training-query-options";
+import {
+  CurriculumTrainingTestOffer,
+  TrainingTest,
+  type StepTestActions,
+} from "./curriculum-training-test-views";
 import type { PracticeDecision, PracticeRecord } from "./curriculum-training-views";
 import { useStepTestActions } from "./use-step-test-actions";
 
-const TESTED_PAGE_SLUG = "level-1/zen";
+const NOT_FOUND_INDEX = -1;
 
-function useTestedStep(): BehaviorStep | undefined {
-  const { data: curriculumPage } = useSuspenseQuery(curriculumPageQueryOptions(TESTED_PAGE_SLUG));
+function extractPageSlug(stepId: string): string {
+  const separatorIndex = stepId.indexOf(":");
+  return separatorIndex === NOT_FOUND_INDEX ? stepId : stepId.slice(0, separatorIndex);
+}
+
+function hasColdTest(step: BehaviorStep | undefined): step is BehaviorStep {
+  return (step?.tryItCold?.length ?? 0) > 0;
+}
+
+function useTestedStep(stepId: string): BehaviorStep | undefined {
+  const { data: curriculumPage } = useSuspenseQuery(
+    curriculumPageQueryOptions(extractPageSlug(stepId)),
+  );
   return curriculumPage?.kind === "behavior"
-    ? curriculumPage.steps.find((candidate) => candidate.stepId === PRACTICE_STEP_ID)
+    ? curriculumPage.steps.find((candidate) => candidate.stepId === stepId)
     : undefined;
 }
 
-function CurriculumTrainingStepTestOffer({
+function StepTestOfferContent({
   decision,
   history,
   onStartTest,
-  stepId,
+  step,
   totals,
 }: {
   decision: PracticeDecision | null;
   history: readonly PracticeRecord[];
   onStartTest: (coldOverride: boolean) => void;
-  stepId: string;
+  step: BehaviorStep;
   totals: readonly { createdAt: Date }[];
 }) {
-  const { data: testHistory } = useSuspenseQuery(stepTestHistoryQueryOptions());
-  const step = useTestedStep();
-  if (step === undefined || stepId !== PRACTICE_STEP_ID) {
-    return null;
-  }
+  const { data: testHistory } = useSuspenseQuery(stepTestHistoryQueryOptions(step.stepId));
   const practiceDates = [
     ...history.filter((attempt) => attempt.undoneAt === null).map(({ createdAt }) => createdAt),
     ...totals.map(({ createdAt }) => createdAt),
@@ -52,29 +63,83 @@ function CurriculumTrainingStepTestOffer({
   );
 }
 
-function CurriculumTrainingStepTest({ coldOverride }: { coldOverride: boolean }) {
-  const { data: testHistory } = useSuspenseQuery(stepTestHistoryQueryOptions());
-  const step = useTestedStep();
-  const actions = useStepTestActions();
-  if (step === undefined) {
-    return <p>Cold Test instructions are unavailable.</p>;
+function CurriculumTrainingStepTestOffer({
+  decision,
+  history,
+  onStartTest,
+  stepId,
+  totals,
+}: {
+  decision: PracticeDecision | null;
+  history: readonly PracticeRecord[];
+  onStartTest: (coldOverride: boolean) => void;
+  stepId: string;
+  totals: readonly { createdAt: Date }[];
+}) {
+  const step = useTestedStep(stepId);
+  if (!hasColdTest(step)) {
+    return null;
   }
+
+  return (
+    <StepTestOfferContent
+      decision={decision}
+      history={history}
+      onStartTest={onStartTest}
+      step={step}
+      totals={totals}
+    />
+  );
+}
+
+function StepTestContent({
+  actions,
+  coldOverride,
+  step,
+}: {
+  actions: StepTestActions;
+  coldOverride: boolean;
+  step: BehaviorStep;
+}) {
+  const { data: testHistory } = useSuspenseQuery(stepTestHistoryQueryOptions(step.stepId));
 
   return (
     <TrainingTest actions={actions} coldOverride={coldOverride} history={testHistory} step={step} />
   );
 }
 
+function CurriculumTrainingStepTest({
+  coldOverride,
+  stepId,
+}: {
+  coldOverride: boolean;
+  stepId: string;
+}) {
+  const step = useTestedStep(stepId);
+  const actions = useStepTestActions(stepId);
+  if (!hasColdTest(step)) {
+    return <p>Cold Test instructions are unavailable.</p>;
+  }
+
+  return <StepTestContent actions={actions} coldOverride={coldOverride} step={step} />;
+}
+
 function CurriculumTrainingTestGate({
   active,
   children,
   coldOverride,
+  stepId,
 }: {
   active: boolean;
   children: ReactElement;
   coldOverride: boolean;
+  stepId: string;
 }): ReactElement {
-  return active ? <CurriculumTrainingStepTest coldOverride={coldOverride} /> : children;
+  return active ? (
+    <CurriculumTrainingStepTest coldOverride={coldOverride} stepId={stepId} />
+  ) : (
+    children
+  );
 }
 
 export { CurriculumTrainingStepTestOffer, CurriculumTrainingTestGate };

@@ -27,6 +27,8 @@ export type {
   SyllabusStepSummary,
 } from "./curriculum.types";
 
+export { isValidMainQuestStepId } from "./main-quest";
+
 export { CURRICULUM_SECTIONS } from "./sections";
 
 export type { CurriculumSectionMeta } from "./sections";

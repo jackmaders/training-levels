@@ -86,7 +86,7 @@ function createTrainingQueryClient({
   queryClient.setQueryData(practiceHistoryQueryOptions(stepId).queryKey, history);
   queryClient.setQueryData(practiceTotalsQueryOptions(stepId).queryKey, totals);
   queryClient.setQueryData(practiceStepDecisionQueryOptions(stepId).queryKey, decisionRecord);
-  queryClient.setQueryData(stepTestHistoryQueryOptions().queryKey, []);
+  queryClient.setQueryData(stepTestHistoryQueryOptions(stepId).queryKey, []);
   return queryClient;
 }
 
@@ -619,6 +619,54 @@ describe("curriculum training page", () => {
 
     // Assert
     expect(screen.getByRole("heading", { name: "Guided Test" })).toBeDefined();
+  });
+
+  it("routes non-zen cold tests using the selected stepId and links Finish Test to its page", async () => {
+    expect.hasAssertions();
+
+    // Arrange
+    const user = userEvent.setup();
+    const stepId = "level-2/come:step-3";
+    const queryClient = createTrainingQueryClient({
+      decisionRecord: {
+        decidedAt: new Date("2026-01-01T00:00:00.000Z"),
+        decision: "recommend_test",
+        stepId,
+      },
+      stepId,
+    });
+    queryClient.setQueryData(
+      curriculumPageQueryOptions("level-2/come").queryKey,
+      createBehaviorPageFixture({
+        pageSlug: "level-2/come",
+        steps: [
+          createBehaviorStepFixture({
+            heading: "Step 3: Call from 10 feet",
+            stepId,
+            stepNumber: 3,
+          }),
+        ],
+        title: "Come",
+      }),
+    );
+
+    renderWithProviders(
+      <CurriculumTrainingPage
+        selectedStepId={stepId}
+        selectedTarget={undefined}
+        onSelectionChange={vi.fn<() => void>()}
+      />,
+      { queryClient, routePaths: ["/", "/levels/$section/$page"] },
+    );
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Start Test" }));
+
+    // Assert
+    expect(screen.getByRole("heading", { name: "Guided Test" })).toBeDefined();
+    expect(screen.getByRole("link", { name: "Finish Test" }).getAttribute("href")).toBe(
+      "/levels/level-2/come",
+    );
   });
 
   it("uses ladder plan target options when selected step has a practice ladder", () => {

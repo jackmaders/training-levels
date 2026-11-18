@@ -15,20 +15,21 @@ beforeEach(() => {
 });
 
 describe("use step test actions", () => {
-  it("records a step test and invalidates test history and step progress queries", async () => {
+  it("records a step test for the given stepId and invalidates test history and step progress queries", async () => {
     expect.hasAssertions();
 
     // Arrange
+    const stepId = "level-2/come:step-3";
     vi.mocked(recordStepTestFn).mockResolvedValueOnce({
       coldOverride: true,
       outcome: "success",
-      stepId: "level-1/zen#step-1",
+      stepId,
       testId: "test-1",
       testedAt: new Date("2026-01-01T00:00:00.000Z"),
     });
     const { queryClient, wrapper } = createTestingWrapper();
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
-    const { result } = renderHook(() => useStepTestActions(), { wrapper });
+    const { result } = renderHook(() => useStepTestActions(stepId), { wrapper });
 
     // Act
     act(() => {
@@ -38,8 +39,13 @@ describe("use step test actions", () => {
     // Assert
     await waitFor(() => {
       expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: stepTestHistoryQueryOptions().queryKey,
+        queryKey: stepTestHistoryQueryOptions(stepId).queryKey,
       });
+    });
+    expect(vi.mocked(recordStepTestFn).mock.calls[0]?.[0]?.data).toMatchObject({
+      coldOverride: true,
+      outcome: "success",
+      stepId,
     });
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: stepProgressQueryOptions().queryKey,
@@ -53,7 +59,7 @@ describe("use step test actions", () => {
     // Arrange
     vi.mocked(recordStepTestFn).mockRejectedValueOnce(new Error("Save failed"));
     const { wrapper } = createTestingWrapper();
-    const { result } = renderHook(() => useStepTestActions(), { wrapper });
+    const { result } = renderHook(() => useStepTestActions("level-1/zen:step-1"), { wrapper });
 
     // Act
     act(() => {
