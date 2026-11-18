@@ -21,7 +21,9 @@ const STEP_TARGET = "Dog moves away from a treat held in your hand while you are
 const LAST_ITEM_OFFSET = 1;
 const DEFAULT_PRACTICE_LIMIT = 5;
 const TIMER_TICK_MILLISECONDS = 1000;
+const SECONDS_PER_MINUTE = 60;
 const NO_TARGET_INDEX = -1;
+const DURATION_TARGET_PATTERN = /\b(?<amount>\d+)\s+(?<unit>second|seconds|minute|minutes)\b/iu;
 type PracticeStepOption = (typeof PRACTICE_STEP_OPTIONS)[number];
 type Outcome = "success" | "not_yet";
 type PracticeDecision = "keep_practicing" | "recommend_test";
@@ -290,10 +292,7 @@ function TrainingPractice({
   const timerComplete = remainingSeconds === 0;
   const timerActive =
     deadlineTimestamp !== null && remainingSeconds !== null && remainingSeconds > 0;
-  const targetDuration =
-    plan?.targetOptions.find((option) => option.label === target)?.durationSeconds ??
-    plan?.durationSeconds ??
-    0;
+  const targetDuration = getTargetDurationSeconds(plan, target);
   const { readyForTest, targetOptions } = getPracticeChoices(plan, guidance, progression);
   const practiceActions: PracticeActions = {
     ...actions,
@@ -343,7 +342,7 @@ function TrainingPractice({
         <PracticeGuidanceSummary guidance={guidance} showReadiness={progression === null} />
       )}
       {showTimerInterrupted && remainingSeconds === null ? <InterruptedTimerNotice /> : null}
-      {plan === null || targetDuration === 0 ? null : (
+      {targetDuration === 0 ? null : (
         <TimerControls
           complete={timerComplete}
           remainingSeconds={remainingSeconds}
@@ -380,6 +379,22 @@ function TrainingPractice({
       />
     </section>
   );
+}
+
+function getTargetDurationSeconds(plan: PracticePlan | null, target: string): number {
+  const planDuration =
+    plan?.targetOptions.find((option) => option.label === target)?.durationSeconds ??
+    plan?.durationSeconds ??
+    0;
+  if (planDuration > 0) {
+    return planDuration;
+  }
+  const match = DURATION_TARGET_PATTERN.exec(target);
+  if (match === null) {
+    return 0;
+  }
+  const amount = Number(match[1]);
+  return /minute/iu.test(match[0]) ? amount * SECONDS_PER_MINUTE : amount;
 }
 
 function getPracticeChoices(
