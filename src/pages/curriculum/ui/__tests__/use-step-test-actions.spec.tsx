@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { createTestingWrapper } from "@test/vitest/wrappers/testing-wrapper";
 
 import { stepProgressQueryOptions } from "../../api/curriculum-query-options";
+import { generalizationKeys } from "../../api/generalization-query-options";
 import { stepTestHistoryQueryOptions } from "../../api/training-query-options";
 import { recordStepTestFn } from "../../api/training.functions";
 import { useStepTestActions } from "../use-step-test-actions";
@@ -43,6 +44,9 @@ describe("use step test actions", () => {
     });
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: stepProgressQueryOptions().queryKey,
+    });
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: generalizationKeys.all,
     });
     expect(result.current.errorMessage).toBeNull();
   });

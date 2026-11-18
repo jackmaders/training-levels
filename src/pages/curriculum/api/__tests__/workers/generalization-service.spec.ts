@@ -305,7 +305,7 @@ describe("generalization-service (workers D1)", () => {
   });
 
   it("returns the latest step_tests outcome per stepId in ascending test order", async () => {
-    expect.assertions(2);
+    expect.assertions(3);
 
     // Arrange
     const db = getDb(env.DB);
@@ -345,6 +345,10 @@ describe("generalization-service (workers D1)", () => {
       db,
       userId: "gen-user-tests",
     });
+    const overviewState = await getPageGeneralization("level-1/00-overview", {
+      db,
+      userId: "gen-user-tests",
+    });
 
     // Assert
     expect(state.latestStepTests).toStrictEqual({
@@ -352,6 +356,11 @@ describe("generalization-service (workers D1)", () => {
       "level-1/zen:step-2": "success",
     });
     expect(state.comeafters).toStrictEqual({});
+    expect(overviewState).toStrictEqual({
+      comeafters: {},
+      homeworkReflection: null,
+      latestStepTests: {},
+    });
   });
 
   it("throws INTERNAL_SERVER_ERROR when inserted dog cannot be read back", async () => {

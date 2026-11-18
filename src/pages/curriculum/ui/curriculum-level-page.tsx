@@ -80,7 +80,12 @@ function CurriculumLevelContent({
             syllabus={syllabus}
           />
         ) : (
-          <CurriculumProseArticle page={page} syllabus={syllabus} />
+          <CurriculumProseArticle
+            completedStepIds={completedStepIds}
+            key={page.pageSlug}
+            page={page}
+            syllabus={syllabus}
+          />
         )}
       </div>
     </div>

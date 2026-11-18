@@ -41,4 +41,14 @@ describe("generalization query options", () => {
     expect(getPageGeneralizationFn).toHaveBeenCalledWith({ data: { pageSlug: "level-1/zen" } });
     expect(result).toStrictEqual(EMPTY_PAGE_GENERALIZATION);
   });
+
+  it("falls back to trimmed pageSlug when schema validation fails", () => {
+    expect.assertions(1);
+
+    // Act
+    const options = pageGeneralizationQueryOptions("   ");
+
+    // Assert
+    expect(options.queryKey).toStrictEqual(["curriculum", "generalization", ""]);
+  });
 });
