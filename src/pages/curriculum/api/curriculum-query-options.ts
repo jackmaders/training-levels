@@ -16,6 +16,7 @@ import {
   getCurriculumSyllabusFn,
   getStepProgressFn,
 } from "./curriculum.functions";
+import { pageGeneralizationQueryOptions } from "./generalization-query-options";
 
 type ArticleSectionSlug = Extract<SectionSlug, "theory" | "appendices">;
 
@@ -105,6 +106,8 @@ async function loadLevelPage({
   if (curriculumPage === null) {
     throw createNotFoundError();
   }
+
+  await queryClient.query(pageGeneralizationQueryOptions(target.pageSlug));
 
   return curriculumPage;
 }

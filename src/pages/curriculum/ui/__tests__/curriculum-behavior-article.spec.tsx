@@ -1,3 +1,4 @@
+import { QueryClient } from "@tanstack/react-query";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
@@ -15,9 +16,16 @@ import { createTestingWrapper, renderWithProviders } from "@test/vitest/wrappers
 import { stepProgressQueryOptions } from "../../api/curriculum-query-options";
 import type { ToggleStepResult } from "../../api/curriculum-service";
 import { toggleStepFn } from "../../api/curriculum.functions";
+import {
+  EMPTY_PAGE_GENERALIZATION,
+  pageGeneralizationQueryOptions,
+} from "../../api/generalization-query-options";
+import type { PageGeneralizationState } from "../../api/generalization-service";
+import { getPageGeneralizationFn, saveComeafterRecordFn } from "../../api/generalization.functions";
 import { CurriculumBehaviorArticle } from "../curriculum-behavior-article";
 
 vi.mock(import("../../api/curriculum.functions"));
+vi.mock(import("../../api/generalization.functions"));
 
 const LEVEL_ROUTE_PATHS = ["/", "/levels/$section/$page"];
 
@@ -29,13 +37,28 @@ afterEach(() => {
 function renderBehaviorArticle({
   activeAnchor,
   completedStepIds = [],
+  generalization,
   page = TEST_BEHAVIOR_PAGE,
 }: {
   activeAnchor?: string | undefined;
   completedStepIds?: readonly string[];
+  generalization?: PageGeneralizationState;
   page?: typeof TEST_BEHAVIOR_PAGE;
 } = {}) {
-  const view = renderWithProviders(
+  vi.mocked(getPageGeneralizationFn).mockResolvedValue(generalization ?? EMPTY_PAGE_GENERALIZATION);
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      mutations: { retry: false },
+      queries: { retry: false },
+    },
+  });
+  queryClient.setQueryDefaults(["curriculum"], { staleTime: Infinity });
+  queryClient.setQueryData(stepProgressQueryOptions().queryKey, [...completedStepIds]);
+  queryClient.setQueryData(
+    pageGeneralizationQueryOptions(page.pageSlug).queryKey,
+    generalization ?? EMPTY_PAGE_GENERALIZATION,
+  );
+  return renderWithProviders(
     <CurriculumBehaviorArticle
       activeAnchor={activeAnchor}
       completedStepIds={new Set(completedStepIds)}
@@ -44,11 +67,10 @@ function renderBehaviorArticle({
     />,
     {
       initialLocation: "/levels/level-1/zen",
+      queryClient,
       routePaths: LEVEL_ROUTE_PATHS,
     },
   );
-  view.queryClient.setQueryData(stepProgressQueryOptions().queryKey, [...completedStepIds]);
-  return view;
 }
 
 describe("curriculum behavior article structure", () => {
@@ -381,5 +403,92 @@ describe("curriculum behavior article step toggling", () => {
     const alert = await screen.findByRole("alert");
     expect(within(alert).getByText("Could not update step progress")).toBeDefined();
     expect(within(alert).getByText("Curriculum step not found.")).toBeDefined();
+  });
+});
+
+describe("curriculum behavior article provenance and comeafter tracking", () => {
+  it("renders step provenance badges in collapsed headers without adding buttons", () => {
+    expect.assertions(5);
+
+    // Arrange
+    const generalization: PageGeneralizationState = {
+      comeafters: {},
+      homeworkReflection: null,
+      latestStepTests: {
+        "level-1/zen:step-1": "success",
+        "level-1/zen:step-3": "not_yet",
+      },
+    };
+
+    // Act
+    renderBehaviorArticle({
+      completedStepIds: ["level-1/zen:step-1", "level-1/zen:step-2", "level-1/zen:step-3"],
+      generalization,
+    });
+    const article = screen.getByRole("article");
+
+    // Assert
+    expect(within(article).getAllByRole("button")).toHaveLength(5);
+    expect(screen.getByText("Passed Cold Test")).toBeDefined();
+    expect(screen.getByText("Previously recorded")).toBeDefined();
+    expect(screen.getByText("Needs Practice")).toBeDefined();
+    expect(screen.getByText("Previously recorded; latest retest needs practice")).toBeDefined();
+  });
+
+  it("keeps level advancement readiness anchored to completed behavior steps", () => {
+    expect.assertions(1);
+
+    // Arrange
+    const generalization: PageGeneralizationState = {
+      comeafters: {},
+      homeworkReflection: null,
+      latestStepTests: {
+        "level-1/zen:step-1": "success",
+        "level-1/zen:step-3": "not_yet",
+      },
+    };
+
+    // Act
+    renderBehaviorArticle({
+      completedStepIds: ["level-1/zen:step-1", "level-1/zen:step-2", "level-1/zen:step-3"],
+      generalization,
+    });
+
+    // Assert
+    expect(screen.getByText(/3 of 10 Behavior steps completed \(7 remaining\)\./u)).toBeDefined();
+  });
+
+  it("saves comeafter tracking inside expanded step without changing behavior step progress", async () => {
+    expect.hasAssertions();
+
+    // Arrange
+    vi.mocked(saveComeafterRecordFn).mockResolvedValueOnce({
+      note: "Quiet hallway",
+      status: "practicing",
+      stepId: "level-1/zen:step-2",
+      updatedAt: new Date("2026-04-01T12:00:00.000Z"),
+    });
+    const { user } = renderBehaviorArticle({
+      activeAnchor: "step-2",
+      generalization: EMPTY_PAGE_GENERALIZATION,
+    });
+
+    // Act
+    await user.selectOptions(screen.getByLabelText("Comeafter status"), "practicing");
+    await user.type(screen.getByLabelText("Generalization note (optional)"), "Quiet hallway");
+    await user.click(screen.getByRole("button", { name: "Save Comeafter" }));
+
+    // Assert
+    await waitFor(() => {
+      expect(screen.getByRole("status").textContent).toBe("Comeafter saved.");
+    });
+    expect(saveComeafterRecordFn).toHaveBeenCalledWith({
+      data: {
+        note: "Quiet hallway",
+        status: "practicing",
+        stepId: "level-1/zen:step-2",
+      },
+    });
+    expect(screen.getByText("0 of 5 steps")).toBeDefined();
   });
 });

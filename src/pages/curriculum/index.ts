@@ -6,6 +6,10 @@ export {
   loadLevelPage,
   stepProgressQueryOptions,
 } from "./api/curriculum-query-options";
+export {
+  EMPTY_PAGE_GENERALIZATION,
+  pageGeneralizationQueryOptions,
+} from "./api/generalization-query-options";
 export { PRACTICE_STEP_ID, practiceHistoryQueryOptions } from "./api/training-query-options";
 export type {
   ArticleSectionSlug,
