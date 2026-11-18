@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { getPracticePlan, recordLadderOutcome } from "../practice-ladders";
+import { getPracticePlan, hasPracticeLadder, recordLadderOutcome } from "../practice-ladders";
 
 describe("source-backed Practice ladders", () => {
   it("starts Crate Step 3 at five feet with no duration", () => {
@@ -81,5 +81,30 @@ describe("source-backed Practice ladders", () => {
     // Assert
     expect(completed.outcome).toBe("success");
     expect(completed.target).toBe("5 feet · 0 seconds");
+  });
+
+  it("handles ladder availability, unknown steps, restarts, and target clamping", () => {
+    expect.assertions(6);
+
+    expect(hasPracticeLadder("level-3/crate:step-2")).toBe(true);
+    expect(hasPracticeLadder("level-1/zen:step-1")).toBe(false);
+    expect(() => getPracticePlan("level-1/zen:step-1", [])).toThrow(
+      "No source-backed Practice ladder is available for level-1/zen:step-1.",
+    );
+
+    const restarted = getPracticePlan("level-3/crate:step-2", [
+      { outcome: "not_yet", target: "3 feet · 30 seconds" },
+    ]);
+    expect(restarted.target).toBe("2 feet · 0 seconds");
+
+    const unknownTarget = getPracticePlan("level-3/crate:step-2", [
+      { outcome: "success", target: "unknown target" },
+    ]);
+    expect(unknownTarget.target).toBe("2 feet · 0 seconds");
+
+    const clamped = getPracticePlan("level-3/crate:step-2", [
+      { outcome: "success", target: "5 feet · 60 seconds" },
+    ]);
+    expect(clamped.nextTarget).toBeNull();
   });
 });

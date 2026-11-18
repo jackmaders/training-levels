@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import {
+  correctPracticeTotalsInputSchema,
   recordPracticeTotalsInputSchema,
   recordPracticeAttemptInputSchema,
   recordStepTestInputSchema,
@@ -154,6 +155,24 @@ describe("step Test inputs", () => {
 
     const valid = recordStepTestInputSchema.safeParse(input);
     const invalid = recordStepTestInputSchema.safeParse({ ...input, outcome: "maybe" });
+
+    expect(valid.success).toBe(true);
+    expect(invalid.success).toBe(false);
+  });
+
+  it("requires at least one result when correcting practice totals", () => {
+    expect.assertions(2);
+
+    const valid = correctPracticeTotalsInputSchema.safeParse({
+      notYetCount: 1,
+      recordId: "018f47ad-9d72-7a31-a50b-a77777777777",
+      successCount: 0,
+    });
+    const invalid = correctPracticeTotalsInputSchema.safeParse({
+      notYetCount: 0,
+      recordId: "018f47ad-9d72-7a31-a50b-a77777777777",
+      successCount: 0,
+    });
 
     expect(valid.success).toBe(true);
     expect(invalid.success).toBe(false);

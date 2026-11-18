@@ -130,4 +130,47 @@ describe("general training FAQ", () => {
       },
     ]);
   });
+
+  it("extracts nested inline text and ignores non-FAQ callouts", () => {
+    expect.assertions(1);
+
+    const page = createProsePageFixture({
+      blocks: [
+        {
+          blocks: [{ content: [{ text: "No title", type: "text" }], type: "paragraph" }],
+          type: "callout",
+          variant: "note",
+        },
+        {
+          blocks: [{ content: [{ text: "Not FAQ", type: "text" }], type: "paragraph" }],
+          title: [{ text: "Tip", type: "text" }],
+          type: "callout",
+          variant: "note",
+        },
+        {
+          blocks: [
+            {
+              content: [
+                { text: "Use ", type: "text" },
+                { text: "zen", type: "code" },
+                { children: [{ text: " calmly", type: "text" }], type: "emphasis" },
+                { text: "?", type: "text" },
+              ],
+              type: "paragraph",
+            },
+            { content: [{ text: "Yes.", type: "text" }], type: "paragraph" },
+          ],
+          title: [{ text: "Question", type: "text" }],
+          type: "callout",
+          variant: "note",
+        },
+      ],
+      href: "/theory/07-the-thinking-of-training",
+      pageSlug: "theory/07-the-thinking-of-training",
+      title: "The Thinking of Training",
+    });
+
+    const faq = getGeneralFaq([page]);
+    expect(faq[0]?.question).toBe("Use zencalmly?");
+  });
 });

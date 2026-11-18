@@ -48,4 +48,11 @@ describe("curriculum dependency relationships", () => {
       "level-1/sit",
     ]);
   });
+
+  it("returns false when required page slugs are missing", () => {
+    expect.assertions(2);
+
+    expect(validateDependencyRelationships([])).toBe(false);
+    expect(validateDependencyRelationships(["level-1/zen"])).toBe(false);
+  });
 });

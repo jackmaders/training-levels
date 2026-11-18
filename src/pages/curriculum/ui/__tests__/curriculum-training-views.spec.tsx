@@ -41,16 +41,16 @@ describe("curriculum training views", () => {
       <TrainingHeading mode="prep" stepLabel="Level 1 Zen, Step 1" />,
       { routePaths: ["/"] },
     );
-    expect(screen.getByRole("heading", { name: "Guided prep" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Guided prep" })).toBe(true);
 
     rerender(<TrainingHeading mode="practice" stepLabel="Level 1 Zen, Step 1" />);
-    expect(screen.getByRole("heading", { name: "Guided practice" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Guided practice" })).toBe(true);
 
     rerender(<TrainingHeading mode="break" stepLabel="Level 1 Zen, Step 1" />);
-    expect(screen.getByRole("heading", { name: "Guided break" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Guided break" })).toBe(true);
 
     rerender(<TrainingHeading mode="test" stepLabel="Level 1 Zen, Step 1" />);
-    expect(screen.getByRole("heading", { name: "Guided test" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Guided test" })).toBe(true);
   });
 
   it("renders TrainingPractice with limit notice, save error, and attempt history", async () => {
@@ -85,12 +85,12 @@ describe("curriculum training views", () => {
       { routePaths: ["/", "/levels/$section/$page"] },
     );
 
-    expect(screen.getByText(/Could not save this attempt/)).toBeTruthy();
+    expect(screen.getByText(/Could not save this attempt/)).toBe(true);
     expect(
       screen.getByText(
         "App-default practice limit reached. Take a break, then choose Continue or Finish.",
       ),
-    ).toBeTruthy();
+    ).toBe(true);
 
     await user.click(screen.getByRole("button", { name: "Retry save" }));
 
@@ -99,7 +99,7 @@ describe("curriculum training views", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Undo" }));
-    expect(actions.undo).toHaveBeenCalled();
+    expect(actions.undo).toHaveBeenCalledWith();
   });
 
   it("runs timed hold countdown in TrainingPractice", () => {
@@ -141,7 +141,7 @@ describe("curriculum training views", () => {
     act(() => {
       vi.advanceTimersByTime(1100);
     });
-    expect(screen.getByRole("button", { name: "Success" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Success" })).toBe(true);
   });
 
   it("renders TrainingBreak and handles continue", async () => {
@@ -155,7 +155,7 @@ describe("curriculum training views", () => {
     });
 
     await user.click(screen.getByRole("button", { name: "Continue" }));
-    expect(onContinue).toHaveBeenCalledTimes(1);
+    expect(onContinue).toHaveBeenCalledOnce();
   });
 
   it("renders TrainingPrep with decision notice, target selection, and start practice", async () => {
@@ -183,7 +183,7 @@ describe("curriculum training views", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Start Practice" }));
-    expect(onStartPractice).toHaveBeenCalledTimes(1);
+    expect(onStartPractice).toHaveBeenCalledOnce();
   });
 
   it("renders TrainingPractice with guidance, progression, target choices, and reading button", async () => {
@@ -219,7 +219,7 @@ describe("curriculum training views", () => {
           source: "Test source",
         }}
         target="3 seconds"
-        timerInterrupted={true}
+        timerInterrupted
         totals={[]}
       />,
       { routePaths: ["/", "/levels/$section/$page"] },
@@ -231,6 +231,6 @@ describe("curriculum training views", () => {
     await user.click(screen.getByRole("button", { name: "Easier target" }));
     await user.click(screen.getByRole("button", { name: "Next ladder target" }));
     await user.click(screen.getByRole("button", { name: "Explanation" }));
-    expect(onOpenReading).toHaveBeenCalledTimes(1);
+    expect(onOpenReading).toHaveBeenCalledOnce();
   });
 });

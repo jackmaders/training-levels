@@ -92,4 +92,23 @@ describe("practice progression rules", () => {
     // Assert
     expect(progression).toBeNull();
   });
+
+  it("advances Retrieve Step 1 after a success and ladders Retrieve Step 2 grabs and duration", () => {
+    expect.assertions(4);
+
+    const step1 = getPracticeProgression("level-3/retrieve:step-1", { consecutiveSuccesses: 1 });
+    const step2TwoGrabs = getPracticeProgression("level-3/retrieve:step-2", {
+      consecutiveSuccesses: 2,
+      lastOutcome: "success",
+    });
+    const step2ThreeGrabs = getPracticeProgression("level-3/retrieve:step-2", {
+      consecutiveSuccesses: 3,
+      lastOutcome: "success",
+    });
+
+    expect(step1?.nextTarget).toContain("spoon");
+    expect(step2TwoGrabs?.nextTarget).toContain("2 grabs");
+    expect(step2TwoGrabs?.nextTarget).toContain("1 seconds");
+    expect(step2ThreeGrabs?.nextTarget).toContain("3 grabs");
+  });
 });

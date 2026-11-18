@@ -75,13 +75,13 @@ describe("curriculum dependencies page", () => {
     });
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Main Quest foundations" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Main Quest foundations" })).toBe(true);
 
     // Act
     await user.click(screen.getAllByRole("button", { name: /^Zen\b/ })[0]);
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Zen" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Zen" })).toBe(true);
   });
 
   it("handles dependency list clicks, relationship target clicks, and missing stepIds or detail", async () => {
@@ -180,14 +180,14 @@ describe("curriculum dependencies page", () => {
     await user.click(screen.getByRole("button", { name: "Level 2 Down" }));
 
     // Assert: selected behavior switched to Level 2 Down (with null detail)
-    expect(screen.getByRole("heading", { name: "Level 2 Down" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Level 2 Down" })).toBe(true);
 
     // Act: click Come in the Dependency list section (last button matching Come)
     const comeButtons = screen.getAllByRole("button", { name: /^Come\b/ });
     await user.click(comeButtons.at(-1)!);
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Come" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Come" })).toBe(true);
   });
 
   it("throws when syllabus has no behavior pages", () => {

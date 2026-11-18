@@ -19,6 +19,7 @@ import {
   correctPracticeAttempt,
   getPracticeHistory,
   recordPracticeAttempt,
+  undoPracticeAttempt,
 } from "../../training-service";
 
 describe("training-service (workers D1)", () => {
@@ -309,5 +310,134 @@ describe("training-service (workers D1)", () => {
     expect(completion.completed).toBe(true);
     expect(history).toStrictEqual([]);
     expect(completions).toStrictEqual(["level-1/zen:step-1"]);
+  });
+
+  it("undoes a practice attempt and handles missing dog, invalid step, or missing attempt", async () => {
+    expect.assertions(8);
+
+    // Arrange
+    const db = getDb(env.DB);
+    await db.insert(user).values({
+      email: "undo@example.com",
+      id: "undo-owner",
+      name: "Undo Owner",
+    });
+
+    // No dog yet
+    const emptyHistory = await getPracticeHistory("level-1/zen:step-1", {
+      db,
+      userId: "undo-owner",
+    });
+    expect(emptyHistory).toStrictEqual([]);
+
+    await expect(
+      getPracticeHistory("invalid-step", { db, userId: "undo-owner" }),
+    ).rejects.toMatchObject({ code: "CURRICULUM_STEP_NOT_FOUND" });
+
+    await expect(
+      correctPracticeAttempt(
+        { attemptId: "018f47ad-9d72-7a31-a50b-a99999999999", outcome: "success" },
+        { db, userId: "undo-owner" },
+      ),
+    ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+
+    await expect(
+      undoPracticeAttempt("018f47ad-9d72-7a31-a50b-a99999999999", { db, userId: "undo-owner" }),
+    ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+
+    await db.insert(dogs).values({ id: "undo-dog", userId: "undo-owner" });
+
+    await expect(
+      correctPracticeAttempt(
+        { attemptId: "018f47ad-9d72-7a31-a50b-a99999999999", outcome: "success" },
+        { db, userId: "undo-owner" },
+      ),
+    ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+
+    await expect(
+      undoPracticeAttempt("018f47ad-9d72-7a31-a50b-a99999999999", { db, userId: "undo-owner" }),
+    ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+
+    await recordPracticeAttempt(
+      {
+        attemptId: "018f47ad-9d72-7a31-a50b-a88888888888",
+        outcome: "success",
+        stepId: "level-1/zen:step-1",
+        target: "First target",
+      },
+      { db, userId: "undo-owner" },
+    );
+
+    const undone = await undoPracticeAttempt("018f47ad-9d72-7a31-a50b-a88888888888", {
+      db,
+      userId: "undo-owner",
+    });
+    expect(undone).toStrictEqual({
+      attemptId: "018f47ad-9d72-7a31-a50b-a88888888888",
+      undone: true,
+    });
+
+    await expect(
+      recordStepTest(
+        {
+          coldOverride: false,
+          outcome: "success",
+          stepId: "level-1/zen:step-2",
+          testId: "018f47ad-9d72-7a31-a50b-b99999999999",
+        },
+        { db, userId: "undo-owner" },
+      ),
+    ).rejects.toMatchObject({ code: "CURRICULUM_STEP_NOT_FOUND" });
+  });
+
+  it("handles missing dogs, missing records, and invalid practice steps", async () => {
+    expect.assertions(7);
+
+    const db = getDb(env.DB);
+    await db
+      .insert(user)
+      .values({ email: "edge@example.com", id: "edge-owner", name: "Edge Owner" });
+
+    await expect(
+      getPracticeTotals("level-1/zen:step-1", { db, userId: "edge-owner" }),
+    ).resolves.toStrictEqual([]);
+    await expect(
+      getPracticeStepDecision("level-1/zen:step-1", { db, userId: "edge-owner" }),
+    ).resolves.toBeNull();
+    await expect(
+      getStepTestHistory("level-1/zen:step-1", { db, userId: "edge-owner" }),
+    ).resolves.toStrictEqual([]);
+
+    await expect(
+      correctPracticeTotals(
+        { notYetCount: 0, recordId: "018f47ad-9d72-7a31-a50b-c99999999999", successCount: 1 },
+        { db, userId: "edge-owner" },
+      ),
+    ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+
+    await db.insert(dogs).values({ id: "edge-dog", userId: "edge-owner" });
+
+    await expect(
+      getPracticeStepDecision("level-1/zen:step-1", { db, userId: "edge-owner" }),
+    ).resolves.toBeNull();
+
+    await expect(
+      correctPracticeTotals(
+        { notYetCount: 0, recordId: "018f47ad-9d72-7a31-a50b-c99999999999", successCount: 1 },
+        { db, userId: "edge-owner" },
+      ),
+    ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+
+    await expect(
+      recordPracticeAttempt(
+        {
+          attemptId: "018f47ad-9d72-7a31-a50b-c88888888888",
+          outcome: "success",
+          stepId: "invalid-step",
+          target: "Target",
+        },
+        { db, userId: "edge-owner" },
+      ),
+    ).rejects.toMatchObject({ code: "CURRICULUM_STEP_NOT_FOUND" });
   });
 });

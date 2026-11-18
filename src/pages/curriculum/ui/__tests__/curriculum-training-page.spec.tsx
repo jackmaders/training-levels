@@ -45,22 +45,22 @@ function createTrainingQueryClient({
   stepId = PRACTICE_STEP_ID,
   totals = [],
 }: {
-  history?: Array<{
+  history?: {
     attemptId: string;
     createdAt: Date;
     outcome: "success" | "not_yet";
     target: string;
     undoneAt: Date | null;
-  }>;
+  }[];
   page?: typeof TEST_BEHAVIOR_PAGE | null;
   stepId?: string;
-  totals?: Array<{
+  totals?: {
     createdAt: Date;
     notYetCount: number;
     recordId: string;
     stepId: string;
     successCount: number;
-  }>;
+  }[];
 } = {}) {
   vi.mocked(getPracticeHistoryFn).mockResolvedValue(history);
   vi.mocked(getPracticeTotalsFn).mockResolvedValue(totals);
@@ -93,7 +93,7 @@ describe("curriculum training page", () => {
     );
 
     // Assert
-    expect(screen.getByText("Training instructions are unavailable.")).toBeTruthy();
+    expect(screen.getByText("Training instructions are unavailable.")).toBe(true);
   });
 
   it("navigates between prep, practice, and break views and records attempts", async () => {
@@ -125,27 +125,27 @@ describe("curriculum training page", () => {
     await user.click(screen.getByRole("button", { name: "Start Practice" }));
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Current target" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Current target" })).toBe(true);
 
     // Act
     await user.click(screen.getByRole("button", { name: "Success" }));
 
     // Assert
     await waitFor(() => {
-      expect(recordPracticeAttemptFn).toHaveBeenCalledTimes(1);
+      expect(recordPracticeAttemptFn).toHaveBeenCalledOnce();
     });
 
     // Act
     await user.click(screen.getByRole("button", { name: "Take a break" }));
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Take a break" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Take a break" })).toBe(true);
 
     // Act
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     // Assert
-    expect(screen.getByRole("heading", { name: "Current target" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Current target" })).toBe(true);
   });
 
   it("handles step selection change, undo, correct, totals, and readiness decision", async () => {
@@ -273,7 +273,7 @@ describe("curriculum training page", () => {
 
     // Assert
     await waitFor(() => {
-      expect(undoPracticeAttemptFn).toHaveBeenCalledTimes(1);
+      expect(undoPracticeAttemptFn).toHaveBeenCalledOnce();
     });
   });
 
@@ -333,27 +333,27 @@ describe("curriculum training page", () => {
 
     // Act: take a break and continue
     await user.click(screen.getByRole("button", { name: "Take a break" }));
-    expect(screen.getByRole("heading", { name: "Take a break" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Take a break" })).toBe(true);
     await user.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByRole("heading", { name: "Current target" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Current target" })).toBe(true);
 
     // Act: correct attempt
     await user.click(screen.getByRole("button", { name: "Correct" }));
     await waitFor(() => {
-      expect(correctPracticeAttemptFn).toHaveBeenCalledTimes(1);
+      expect(correctPracticeAttemptFn).toHaveBeenCalledOnce();
     });
 
     // Act: save totals
     await user.type(screen.getByLabelText("Success count"), "2");
     await user.click(screen.getByRole("button", { name: "Save totals" }));
     await waitFor(() => {
-      expect(recordPracticeTotalsFn).toHaveBeenCalledTimes(1);
+      expect(recordPracticeTotalsFn).toHaveBeenCalledOnce();
     });
 
     // Act: fail attempt and retry
     await user.click(screen.getByRole("button", { name: "Success" }));
     await waitFor(() => {
-      expect(screen.getByText(/Could not save this attempt/)).toBeTruthy();
+      expect(screen.getByText(/Could not save this attempt/)).toBe(true);
     });
     await user.click(screen.getByRole("button", { name: "Retry save" }));
     await waitFor(() => {
@@ -413,7 +413,7 @@ describe("curriculum training page", () => {
     // Act: correct not_yet attempt
     await user.click(screen.getByRole("button", { name: "Correct" }));
     await waitFor(() => {
-      expect(correctPracticeAttemptFn).toHaveBeenCalledTimes(1);
+      expect(correctPracticeAttemptFn).toHaveBeenCalledOnce();
     });
   });
 });
