@@ -1,0 +1,11 @@
+[data-slot="card"] {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-slot="dialog-content"],
+[data-slot="dropdown-menu-content"],
+[data-slot="dropdown-menu-sub-content"] {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+}
