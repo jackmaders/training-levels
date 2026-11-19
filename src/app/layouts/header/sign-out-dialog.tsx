@@ -18,7 +18,7 @@ export function SignOutDialog({ ...props }: ComponentProps<typeof DialogTrigger>
 
   return (
     <Dialog>
-      <DialogTrigger render={<Button />} {...props}>
+      <DialogTrigger render={<Button variant="secondary" />} {...props}>
         Sign Out
       </DialogTrigger>
       <DialogContent>
