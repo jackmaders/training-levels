@@ -54,12 +54,11 @@ allowed actions such as `"curriculum:read"` or `"progress:update"`.
 An authentication record connecting a User to credentials or an identity
 provider. An Account belongs to a User; it is not the User.
 
-**Session**:
-A time-bounded authenticated state associated with a User.
+**Auth Session**:
+A time-bounded authenticated login state associated with a User (distinct from a **Training Session**).
 
 **Profile**:
-The user-facing view of a User’s name and email address. It is not a separate
-identity from the User.
+The user-facing view of a User's account details and their Dogs, with links to each Dog's individual profile and progress.
 
 **User sign-in feature**:
 The `features/user-sign-in` slice owns the sign-in form and its card and dialog
@@ -86,9 +85,15 @@ schema and narrowed for the fields a caller may supply.
 
 ### Training Curriculum
 
-**Main Quest**:
+**Training Curriculum**:
 The core four-level dog training curriculum in `docs/training/markdown/` comprising Theory, Levels 1 through 4, Homework, and Appendices.
 _Avoid_: Core Track, Primary Levels.
+
+**Theory**:
+The private (`curriculum:read`) reference area of the application covering the Main Quest: Levels 1–4, **Foundations**, and **Appendices**.
+
+**Foundations**:
+The prerequisite concepts and learning-theory prose (`00-theory` articles and Comebefore dependencies) that underpin Levels 1–4.
 
 **Side Quest**:
 A post-MVP specialty curriculum in `docs/training/draft/` that builds on Main Quest foundations.
@@ -116,7 +121,10 @@ _Avoid_: Pass Test, Final Exam.
 
 **Training**:
 Guided work with one Dog on one Behavior, through Practice or a Test.
-_Avoid_: Training session, Workout.
+_Avoid_: Workout.
+
+**Training Session**:
+A focused guided session where a User works with one Dog on one Behavior through Practice or a Test; displayed in history as a UI grouping of practice attempts and step completions rather than a separate stored record.
 
 **Practice**:
 Training that develops a Behavior toward a Step's criterion through appropriately adjusted targets and rewards.
