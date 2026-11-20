@@ -15,6 +15,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedDependenciesRouteImport } from './routes/_authenticated/dependencies'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedTrainingRouteImport } from './routes/_authenticated/training'
+import { Route as TrainingHistoryRouteImport } from './routes/training/history'
 import { Route as AuthenticatedAppendicesIndexRouteImport } from './routes/_authenticated/appendices/index'
 import { Route as AuthenticatedAppendicesPageRouteImport } from './routes/_authenticated/appendices/$page'
 import { Route as AuthenticatedLevelsIndexRouteImport } from './routes/_authenticated/levels/index'
@@ -53,6 +54,11 @@ const AuthenticatedTrainingRoute = AuthenticatedTrainingRouteImport.update({
   id: '/training',
   path: '/training',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const TrainingHistoryRoute = TrainingHistoryRouteImport.update({
+  id: '/training/history',
+  path: '/training/history',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppendicesIndexRoute =
   AuthenticatedAppendicesIndexRouteImport.update({
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/dependencies': typeof AuthenticatedDependenciesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/training': typeof AuthenticatedTrainingRoute
+  '/training/history': typeof TrainingHistoryRoute
   '/appendices/$page': typeof AuthenticatedAppendicesPageRoute
   '/theory/$page': typeof AuthenticatedTheoryPageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/dependencies': typeof AuthenticatedDependenciesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/training': typeof AuthenticatedTrainingRoute
+  '/training/history': typeof TrainingHistoryRoute
   '/appendices/$page': typeof AuthenticatedAppendicesPageRoute
   '/theory/$page': typeof AuthenticatedTheoryPageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/_authenticated/dependencies': typeof AuthenticatedDependenciesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/training': typeof AuthenticatedTrainingRoute
+  '/training/history': typeof TrainingHistoryRoute
   '/_authenticated/appendices/$page': typeof AuthenticatedAppendicesPageRoute
   '/_authenticated/theory/$page': typeof AuthenticatedTheoryPageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/dependencies'
     | '/profile'
     | '/training'
+    | '/training/history'
     | '/appendices/$page'
     | '/theory/$page'
     | '/api/auth/$'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/dependencies'
     | '/profile'
     | '/training'
+    | '/training/history'
     | '/appendices/$page'
     | '/theory/$page'
     | '/api/auth/$'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dependencies'
     | '/_authenticated/profile'
     | '/_authenticated/training'
+    | '/training/history'
     | '/_authenticated/appendices/$page'
     | '/_authenticated/theory/$page'
     | '/api/auth/$'
@@ -200,6 +212,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AboutRoute: typeof AboutRoute
+  TrainingHistoryRoute: typeof TrainingHistoryRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiImagesSplatRoute: typeof ApiImagesSplatRoute
 }
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/training'
       preLoaderRoute: typeof AuthenticatedTrainingRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/training/history': {
+      id: '/training/history'
+      path: '/training/history'
+      fullPath: '/training/history'
+      preLoaderRoute: typeof TrainingHistoryRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/appendices/': {
       id: '/_authenticated/appendices/'
@@ -339,6 +359,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AboutRoute: AboutRoute,
+  TrainingHistoryRoute: TrainingHistoryRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiImagesSplatRoute: ApiImagesSplatRoute,
 }
