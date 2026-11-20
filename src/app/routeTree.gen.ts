@@ -12,17 +12,22 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedDependenciesRouteImport } from './routes/_authenticated/dependencies'
-import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedTrainingRouteImport } from './routes/_authenticated/training'
 import { Route as AuthenticatedAppendicesIndexRouteImport } from './routes/_authenticated/appendices/index'
 import { Route as AuthenticatedAppendicesPageRouteImport } from './routes/_authenticated/appendices/$page'
 import { Route as AuthenticatedLevelsIndexRouteImport } from './routes/_authenticated/levels/index'
+import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile/index'
+import { Route as AuthenticatedProfileDogIdRouteImport } from './routes/_authenticated/profile/$dogId'
 import { Route as AuthenticatedTheoryIndexRouteImport } from './routes/_authenticated/theory/index'
-import { Route as AuthenticatedTheoryPageRouteImport } from './routes/_authenticated/theory/$page'
+import { Route as AuthenticatedTheoryAppendicesRouteImport } from './routes/_authenticated/theory/appendices'
+import { Route as AuthenticatedTheoryFoundationsRouteImport } from './routes/_authenticated/theory/foundations'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiImagesSplatRouteImport } from './routes/api/images/$'
 import { Route as AuthenticatedLevelsSectionPageRouteImport } from './routes/_authenticated/levels/$section.$page'
+import { Route as AuthenticatedTheoryLevelIdIndexRouteImport } from './routes/_authenticated/theory/$levelId/index'
+import { Route as AuthenticatedTheoryLevelIdBehaviorIdRouteImport } from './routes/_authenticated/theory/$levelId/$behaviorId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -38,17 +43,17 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDependenciesRoute =
   AuthenticatedDependenciesRouteImport.update({
     id: '/dependencies',
     path: '/dependencies',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedTrainingRoute = AuthenticatedTrainingRouteImport.update({
   id: '/training',
   path: '/training',
@@ -72,17 +77,36 @@ const AuthenticatedLevelsIndexRoute =
     path: '/levels/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedProfileIndexRoute =
+  AuthenticatedProfileIndexRouteImport.update({
+    id: '/profile/',
+    path: '/profile/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedProfileDogIdRoute =
+  AuthenticatedProfileDogIdRouteImport.update({
+    id: '/profile/$dogId',
+    path: '/profile/$dogId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedTheoryIndexRoute =
   AuthenticatedTheoryIndexRouteImport.update({
     id: '/theory/',
     path: '/theory/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedTheoryPageRoute = AuthenticatedTheoryPageRouteImport.update({
-  id: '/theory/$page',
-  path: '/theory/$page',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
+const AuthenticatedTheoryAppendicesRoute =
+  AuthenticatedTheoryAppendicesRouteImport.update({
+    id: '/theory/appendices',
+    path: '/theory/appendices',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedTheoryFoundationsRoute =
+  AuthenticatedTheoryFoundationsRouteImport.update({
+    id: '/theory/foundations',
+    path: '/theory/foundations',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -99,101 +123,143 @@ const AuthenticatedLevelsSectionPageRoute =
     path: '/levels/$section/$page',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedTheoryLevelIdIndexRoute =
+  AuthenticatedTheoryLevelIdIndexRouteImport.update({
+    id: '/theory/$levelId/',
+    path: '/theory/$levelId/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedTheoryLevelIdBehaviorIdRoute =
+  AuthenticatedTheoryLevelIdBehaviorIdRouteImport.update({
+    id: '/theory/$levelId/$behaviorId',
+    path: '/theory/$levelId/$behaviorId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/dependencies': typeof AuthenticatedDependenciesRoute
-  '/profile': typeof AuthenticatedProfileRoute
   '/training': typeof AuthenticatedTrainingRoute
   '/appendices/$page': typeof AuthenticatedAppendicesPageRoute
-  '/theory/$page': typeof AuthenticatedTheoryPageRoute
+  '/profile/$dogId': typeof AuthenticatedProfileDogIdRoute
+  '/theory/appendices': typeof AuthenticatedTheoryAppendicesRoute
+  '/theory/foundations': typeof AuthenticatedTheoryFoundationsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/images/$': typeof ApiImagesSplatRoute
   '/appendices/': typeof AuthenticatedAppendicesIndexRoute
   '/levels/': typeof AuthenticatedLevelsIndexRoute
+  '/profile/': typeof AuthenticatedProfileIndexRoute
   '/theory/': typeof AuthenticatedTheoryIndexRoute
   '/levels/$section/$page': typeof AuthenticatedLevelsSectionPageRoute
+  '/theory/$levelId/$behaviorId': typeof AuthenticatedTheoryLevelIdBehaviorIdRoute
+  '/theory/$levelId/': typeof AuthenticatedTheoryLevelIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/dependencies': typeof AuthenticatedDependenciesRoute
-  '/profile': typeof AuthenticatedProfileRoute
   '/training': typeof AuthenticatedTrainingRoute
   '/appendices/$page': typeof AuthenticatedAppendicesPageRoute
-  '/theory/$page': typeof AuthenticatedTheoryPageRoute
+  '/profile/$dogId': typeof AuthenticatedProfileDogIdRoute
+  '/theory/appendices': typeof AuthenticatedTheoryAppendicesRoute
+  '/theory/foundations': typeof AuthenticatedTheoryFoundationsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/images/$': typeof ApiImagesSplatRoute
   '/appendices': typeof AuthenticatedAppendicesIndexRoute
   '/levels': typeof AuthenticatedLevelsIndexRoute
+  '/profile': typeof AuthenticatedProfileIndexRoute
   '/theory': typeof AuthenticatedTheoryIndexRoute
   '/levels/$section/$page': typeof AuthenticatedLevelsSectionPageRoute
+  '/theory/$levelId/$behaviorId': typeof AuthenticatedTheoryLevelIdBehaviorIdRoute
+  '/theory/$levelId': typeof AuthenticatedTheoryLevelIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/about': typeof AboutRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/dependencies': typeof AuthenticatedDependenciesRoute
-  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/training': typeof AuthenticatedTrainingRoute
   '/_authenticated/appendices/$page': typeof AuthenticatedAppendicesPageRoute
-  '/_authenticated/theory/$page': typeof AuthenticatedTheoryPageRoute
+  '/_authenticated/profile/$dogId': typeof AuthenticatedProfileDogIdRoute
+  '/_authenticated/theory/appendices': typeof AuthenticatedTheoryAppendicesRoute
+  '/_authenticated/theory/foundations': typeof AuthenticatedTheoryFoundationsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/images/$': typeof ApiImagesSplatRoute
   '/_authenticated/appendices/': typeof AuthenticatedAppendicesIndexRoute
   '/_authenticated/levels/': typeof AuthenticatedLevelsIndexRoute
+  '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
   '/_authenticated/theory/': typeof AuthenticatedTheoryIndexRoute
   '/_authenticated/levels/$section/$page': typeof AuthenticatedLevelsSectionPageRoute
+  '/_authenticated/theory/$levelId/$behaviorId': typeof AuthenticatedTheoryLevelIdBehaviorIdRoute
+  '/_authenticated/theory/$levelId/': typeof AuthenticatedTheoryLevelIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/about'
+    | '/admin'
     | '/dependencies'
-    | '/profile'
     | '/training'
     | '/appendices/$page'
-    | '/theory/$page'
+    | '/profile/$dogId'
+    | '/theory/appendices'
+    | '/theory/foundations'
     | '/api/auth/$'
     | '/api/images/$'
     | '/appendices/'
     | '/levels/'
+    | '/profile/'
     | '/theory/'
     | '/levels/$section/$page'
+    | '/theory/$levelId/$behaviorId'
+    | '/theory/$levelId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
+    | '/admin'
     | '/dependencies'
-    | '/profile'
     | '/training'
     | '/appendices/$page'
-    | '/theory/$page'
+    | '/profile/$dogId'
+    | '/theory/appendices'
+    | '/theory/foundations'
     | '/api/auth/$'
     | '/api/images/$'
     | '/appendices'
     | '/levels'
+    | '/profile'
     | '/theory'
     | '/levels/$section/$page'
+    | '/theory/$levelId/$behaviorId'
+    | '/theory/$levelId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/about'
+    | '/_authenticated/admin'
     | '/_authenticated/dependencies'
-    | '/_authenticated/profile'
     | '/_authenticated/training'
     | '/_authenticated/appendices/$page'
-    | '/_authenticated/theory/$page'
+    | '/_authenticated/profile/$dogId'
+    | '/_authenticated/theory/appendices'
+    | '/_authenticated/theory/foundations'
     | '/api/auth/$'
     | '/api/images/$'
     | '/_authenticated/appendices/'
     | '/_authenticated/levels/'
+    | '/_authenticated/profile/'
     | '/_authenticated/theory/'
     | '/_authenticated/levels/$section/$page'
+    | '/_authenticated/theory/$levelId/$behaviorId'
+    | '/_authenticated/theory/$levelId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -227,18 +293,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dependencies': {
       id: '/_authenticated/dependencies'
       path: '/dependencies'
       fullPath: '/dependencies'
       preLoaderRoute: typeof AuthenticatedDependenciesRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/profile': {
-      id: '/_authenticated/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/training': {
@@ -269,6 +335,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLevelsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/profile/': {
+      id: '/_authenticated/profile/'
+      path: '/profile'
+      fullPath: '/profile/'
+      preLoaderRoute: typeof AuthenticatedProfileIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/profile/$dogId': {
+      id: '/_authenticated/profile/$dogId'
+      path: '/profile/$dogId'
+      fullPath: '/profile/$dogId'
+      preLoaderRoute: typeof AuthenticatedProfileDogIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/theory/': {
       id: '/_authenticated/theory/'
       path: '/theory'
@@ -276,11 +356,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTheoryIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/theory/$page': {
-      id: '/_authenticated/theory/$page'
-      path: '/theory/$page'
-      fullPath: '/theory/$page'
-      preLoaderRoute: typeof AuthenticatedTheoryPageRouteImport
+    '/_authenticated/theory/appendices': {
+      id: '/_authenticated/theory/appendices'
+      path: '/theory/appendices'
+      fullPath: '/theory/appendices'
+      preLoaderRoute: typeof AuthenticatedTheoryAppendicesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/theory/foundations': {
+      id: '/_authenticated/theory/foundations'
+      path: '/theory/foundations'
+      fullPath: '/theory/foundations'
+      preLoaderRoute: typeof AuthenticatedTheoryFoundationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/api/auth/$': {
@@ -304,31 +391,56 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLevelsSectionPageRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/theory/$levelId/': {
+      id: '/_authenticated/theory/$levelId/'
+      path: '/theory/$levelId'
+      fullPath: '/theory/$levelId/'
+      preLoaderRoute: typeof AuthenticatedTheoryLevelIdIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/theory/$levelId/$behaviorId': {
+      id: '/_authenticated/theory/$levelId/$behaviorId'
+      path: '/theory/$levelId/$behaviorId'
+      fullPath: '/theory/$levelId/$behaviorId'
+      preLoaderRoute: typeof AuthenticatedTheoryLevelIdBehaviorIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedDependenciesRoute: typeof AuthenticatedDependenciesRoute
-  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedTrainingRoute: typeof AuthenticatedTrainingRoute
   AuthenticatedAppendicesPageRoute: typeof AuthenticatedAppendicesPageRoute
-  AuthenticatedTheoryPageRoute: typeof AuthenticatedTheoryPageRoute
+  AuthenticatedProfileDogIdRoute: typeof AuthenticatedProfileDogIdRoute
+  AuthenticatedTheoryAppendicesRoute: typeof AuthenticatedTheoryAppendicesRoute
+  AuthenticatedTheoryFoundationsRoute: typeof AuthenticatedTheoryFoundationsRoute
   AuthenticatedAppendicesIndexRoute: typeof AuthenticatedAppendicesIndexRoute
   AuthenticatedLevelsIndexRoute: typeof AuthenticatedLevelsIndexRoute
+  AuthenticatedProfileIndexRoute: typeof AuthenticatedProfileIndexRoute
   AuthenticatedTheoryIndexRoute: typeof AuthenticatedTheoryIndexRoute
   AuthenticatedLevelsSectionPageRoute: typeof AuthenticatedLevelsSectionPageRoute
+  AuthenticatedTheoryLevelIdBehaviorIdRoute: typeof AuthenticatedTheoryLevelIdBehaviorIdRoute
+  AuthenticatedTheoryLevelIdIndexRoute: typeof AuthenticatedTheoryLevelIdIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedDependenciesRoute: AuthenticatedDependenciesRoute,
-  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedTrainingRoute: AuthenticatedTrainingRoute,
   AuthenticatedAppendicesPageRoute: AuthenticatedAppendicesPageRoute,
-  AuthenticatedTheoryPageRoute: AuthenticatedTheoryPageRoute,
+  AuthenticatedProfileDogIdRoute: AuthenticatedProfileDogIdRoute,
+  AuthenticatedTheoryAppendicesRoute: AuthenticatedTheoryAppendicesRoute,
+  AuthenticatedTheoryFoundationsRoute: AuthenticatedTheoryFoundationsRoute,
   AuthenticatedAppendicesIndexRoute: AuthenticatedAppendicesIndexRoute,
   AuthenticatedLevelsIndexRoute: AuthenticatedLevelsIndexRoute,
+  AuthenticatedProfileIndexRoute: AuthenticatedProfileIndexRoute,
   AuthenticatedTheoryIndexRoute: AuthenticatedTheoryIndexRoute,
   AuthenticatedLevelsSectionPageRoute: AuthenticatedLevelsSectionPageRoute,
+  AuthenticatedTheoryLevelIdBehaviorIdRoute:
+    AuthenticatedTheoryLevelIdBehaviorIdRoute,
+  AuthenticatedTheoryLevelIdIndexRoute: AuthenticatedTheoryLevelIdIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

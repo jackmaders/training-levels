@@ -41,7 +41,7 @@ const TRAINING_LEVELS = [
 export function AppSidebar() {
   const { session } = rootRouteApi.useRouteContext();
   const canReadCurriculum = hasPermission(session?.user.role, "curriculum:read");
-  const isAdmin = session?.user.role === "admin";
+  const [theoryOpen, setTheoryOpen] = useState(true);
   const [trainingOpen, setTrainingOpen] = useState(true);
 
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -73,18 +73,79 @@ export function AppSidebar() {
             <SidebarMenu>
               {canReadCurriculum ? (
                 <>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={pathname.startsWith("/theory")}
-                      tooltip="Theory"
+                  <Collapsible
+                    open={theoryOpen}
+                    onOpenChange={setTheoryOpen}
+                    render={<SidebarMenuItem />}
+                  >
+                    <CollapsibleTrigger
                       render={
-                        <Link to="/theory">
+                        <SidebarMenuButton
+                          isActive={pathname.startsWith("/theory")}
+                          tooltip="Theory"
+                        >
                           <BookOpen aria-hidden="true" />
                           <span>Theory</span>
-                        </Link>
+                          <ChevronRight
+                            aria-hidden="true"
+                            className={cn(
+                              "ml-auto transition-transform",
+                              theoryOpen && "rotate-90",
+                            )}
+                          />
+                        </SidebarMenuButton>
                       }
                     />
-                  </SidebarMenuItem>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            isActive={pathname === "/theory" || pathname === "/theory/"}
+                            render={
+                              <Link to="/theory">
+                                <span>Overview</span>
+                              </Link>
+                            }
+                          />
+                        </SidebarMenuSubItem>
+
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            isActive={pathname === "/theory/foundations"}
+                            render={
+                              <Link to="/theory/foundations">
+                                <span>Foundations</span>
+                              </Link>
+                            }
+                          />
+                        </SidebarMenuSubItem>
+
+                        {TRAINING_LEVELS.map((level) => (
+                          <SidebarMenuSubItem key={level.id}>
+                            <SidebarMenuSubButton
+                              isActive={pathname.startsWith(`/theory/${level.id}`)}
+                              render={
+                                <Link params={{ levelId: level.id }} to="/theory/$levelId">
+                                  <span>{level.label}</span>
+                                </Link>
+                              }
+                            />
+                          </SidebarMenuSubItem>
+                        ))}
+
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            isActive={pathname === "/theory/appendices"}
+                            render={
+                              <Link to="/theory/appendices">
+                                <span>Appendices</span>
+                              </Link>
+                            }
+                          />
+                        </SidebarMenuSubItem>
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </Collapsible>
 
                   <Collapsible
                     open={trainingOpen}
@@ -154,7 +215,7 @@ export function AppSidebar() {
               {session ? (
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    isActive={pathname === "/profile"}
+                    isActive={pathname.startsWith("/profile")}
                     tooltip="Profile"
                     render={
                       <Link to="/profile">
@@ -179,20 +240,18 @@ export function AppSidebar() {
                 />
               </SidebarMenuItem>
 
-              {isAdmin ? (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={pathname.startsWith("/admin")}
-                    tooltip="Admin"
-                    render={
-                      <a href="/admin">
-                        <Shield aria-hidden="true" />
-                        <span>Admin</span>
-                      </a>
-                    }
-                  />
-                </SidebarMenuItem>
-              ) : null}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={pathname.startsWith("/admin")}
+                  tooltip="Admin"
+                  render={
+                    <Link to="/admin">
+                      <Shield aria-hidden="true" />
+                      <span>Admin</span>
+                    </Link>
+                  }
+                />
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
