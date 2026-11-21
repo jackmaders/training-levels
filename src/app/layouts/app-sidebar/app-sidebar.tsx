@@ -42,7 +42,7 @@ const TRAINING_LEVELS: readonly { id: TrainingLevelId; label: string }[] = [
   { id: "level-4", label: "Level 4" },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { session } = useAuth();
   const location = useLocation();
   const { pathname } = location;
@@ -51,7 +51,7 @@ export function AppSidebar() {
   const canReadCurriculum = session ? hasPermission(session.user.role, "curriculum:read") : false;
 
   return (
-    <Sidebar>
+    <Sidebar {...props}>
       <SidebarBrandHeader />
       <SidebarPrimaryNav
         activeLevel={activeLevel}

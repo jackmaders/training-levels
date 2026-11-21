@@ -11,12 +11,17 @@ import { getRouteOption } from "@test/vitest/helpers/route";
 
 const { mockNavigate, mockSearch } = vi.hoisted(() => ({
   mockNavigate: vi.fn<() => Promise<void>>(),
-  mockSearch: vi.fn<() => { mode?: TrainingRecommendationMode; stepId?: string; target?: string }>(
-    () => ({
-      stepId: "level-1/zen:step-1",
-      target: "3 seconds",
-    }),
-  ),
+  mockSearch: vi.fn<
+    () => {
+      level?: "level-1" | "level-2" | "level-3" | "level-4";
+      mode?: TrainingRecommendationMode;
+      stepId?: string;
+      target?: string;
+    }
+  >(() => ({
+    stepId: "level-1/zen:step-1",
+    target: "3 seconds",
+  })),
 }));
 
 const BASE_QUERY_COUNT = 2;
@@ -28,6 +33,9 @@ vi.mock(import("@/pages/curriculum"), async (importOriginal) => {
   const actual: object = await importOriginal();
   return {
     ...actual,
+    CurriculumTrainingHubPage: ({ levelId }: { levelId?: string }) => (
+      <div data-level={levelId} data-testid="training-hub" />
+    ),
     CurriculumTrainingPage: ({
       onModeChange,
       onSelectionChange,
@@ -238,5 +246,29 @@ describe("training route", () => {
       replace: true,
       search: { mode: "practice", stepId: "level-1/zen:step-2", target: "5 seconds" },
     });
+  });
+
+  it("renders CurriculumTrainingHubPage when stepId is undefined and runner with Back to Training when stepId is set", () => {
+    expect.assertions(5);
+
+    vi.spyOn(TrainingRoute, "useSearch").mockImplementation(mockSearch);
+    vi.spyOn(TrainingRoute, "useNavigate").mockReturnValue(mockNavigate);
+
+    mockSearch.mockReturnValue({ level: "level-2" });
+    const Component = getRouteOption(TrainingRoute, "component") as ComponentType;
+    const { rerender } = render(<Component />);
+
+    expect(screen.getByTestId("training-hub")).toHaveAttribute("data-level", "level-2");
+    expect(screen.queryByRole("link", { name: "Back to Training" })).not.toBeInTheDocument();
+
+    mockSearch.mockReturnValue({ level: "level-2", stepId: "level-1/zen:step-1" });
+    rerender(<Component />);
+
+    expect(screen.queryByTestId("training-hub")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to Training" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Trigger" })).toHaveAttribute(
+      "data-step",
+      "level-1/zen:step-1",
+    );
   });
 });

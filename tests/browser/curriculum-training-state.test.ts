@@ -74,6 +74,7 @@ async function confirmOverrideStartAndReturnToTraining(trainingPage: TrainingPag
   await trainingPage.confirmLaterLevelOverride();
   await trainingPage.startButton.click();
   await trainingPage.gotoTraining();
+  await trainingPage.openUpNextFromHub();
 }
 
 async function passZenStepOneColdTest(page: Page) {
