@@ -35,6 +35,10 @@ class HomePage {
     return this.page.getByRole("banner");
   }
 
+  public get primaryNavigation(): Locator {
+    return this.page.getByRole("navigation", { name: "Primary navigation" });
+  }
+
   public get main(): Locator {
     return this.page.getByRole("main");
   }
@@ -94,13 +98,12 @@ class HomePage {
   }
 
   public async navigateToAbout() {
-    const menu = this.page.getByRole("button", { name: "Open menu" });
-    if (await menu.isVisible()) {
-      await menu.click();
+    if (!(await this.primaryNavigation.isVisible())) {
+      await this.page.getByRole("button", { name: "Toggle Sidebar" }).click();
       await this.page.getByRole("dialog").getByRole("link", { name: "About" }).click();
       return;
     }
-    await this.banner.getByRole("link", { name: "About" }).click();
+    await this.primaryNavigation.getByRole("link", { name: "About" }).click();
   }
 
   public async navigateToProfile() {

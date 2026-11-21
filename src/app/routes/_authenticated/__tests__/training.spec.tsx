@@ -94,8 +94,14 @@ describe("training route", () => {
     const validateSearch = getRouteOption(TrainingRoute, "validateSearch") as ValidateSearchFn;
 
     expect(
-      validateSearch({ mode: "practice", stepId: "level-1/zen:step-1", target: "3 seconds" }),
+      validateSearch({
+        level: "level-2",
+        mode: "practice",
+        stepId: "level-1/zen:step-1",
+        target: "3 seconds",
+      }),
     ).toStrictEqual({
+      level: "level-2",
       mode: "practice",
       stepId: "level-1/zen:step-1",
       target: "3 seconds",

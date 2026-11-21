@@ -22,8 +22,8 @@ test("shows the product wordmark and keeps Profile out of public navigation", as
   await homePage.goto();
 
   // Assert
-  await expect(homePage.banner).toContainText("Dog Training Levels");
-  await expect(homePage.banner.getByRole("link", { name: "Profile" })).toBeHidden();
+  await expect(homePage.primaryNavigation).toContainText("Dog Training Levels");
+  await expect(homePage.primaryNavigation.getByRole("link", { name: "Profile" })).toBeHidden();
 });
 
 test("keyboard users can skip the shared header to the main content", async ({ page }) => {
@@ -54,7 +54,7 @@ test("omits legacy todo copy and links on the landing page", async ({ page }) =>
 
   // Assert
   await expect(homePage.main).not.toContainText(/todo/iu);
-  await expect(homePage.banner).not.toContainText(/todo/iu);
+  await expect(homePage.primaryNavigation).not.toContainText(/todo/iu);
 });
 
 test("switches between sign in and sign up tabs", async ({ page }) => {

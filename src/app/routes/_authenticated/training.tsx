@@ -15,10 +15,19 @@ import {
 } from "@/pages/curriculum";
 import { isValidMainQuestStepId } from "@/shared/curriculum-data";
 
+type TrainingLevelFilter = "level-1" | "level-2" | "level-3" | "level-4";
+
 interface TrainingSearch {
+  level?: TrainingLevelFilter | undefined;
   mode?: TrainingRecommendationMode | undefined;
   stepId?: string | undefined;
   target?: string | undefined;
+}
+
+function parseLevel(level: unknown): TrainingLevelFilter | undefined {
+  return level === "level-1" || level === "level-2" || level === "level-3" || level === "level-4"
+    ? level
+    : undefined;
 }
 
 function parseMode(mode: unknown): TrainingRecommendationMode | undefined {
@@ -41,11 +50,15 @@ async function prefetchStepQueries(queryClient: QueryClient, stepId: string): Pr
 }
 
 const Route = createFileRoute("/_authenticated/training")({
-  validateSearch: (search: Record<string, unknown>): TrainingSearch => ({
-    mode: parseMode(search["mode"]),
-    stepId: parseStepId(search["stepId"]),
-    target: typeof search["target"] === "string" ? search["target"] : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): TrainingSearch => {
+    const level = parseLevel(search["level"]);
+    return {
+      ...(level ? { level } : {}),
+      mode: parseMode(search["mode"]),
+      stepId: parseStepId(search["stepId"]),
+      target: typeof search["target"] === "string" ? search["target"] : undefined,
+    };
+  },
   loaderDeps: ({ search }) => ({
     mode: search.mode,
     stepId: search.stepId,

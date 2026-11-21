@@ -10,7 +10,9 @@ class TrainingPage {
   }
 
   public get startTrainingHeaderLink(): Locator {
-    return this.page.getByRole("banner").getByRole("link", { exact: true, name: "Start Training" });
+    return this.page
+      .getByRole("navigation", { name: "Primary navigation" })
+      .getByRole("link", { exact: true, name: "Up Next / Overview" });
   }
   public get recommendationPanel(): Locator {
     return this.page.getByRole("region", { name: "Recommended next activity" });

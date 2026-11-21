@@ -1,1 +1,1 @@
-export { Devtools, Footer, Header } from "./layouts";
+export { AppSidebar, Devtools, Footer } from "./layouts";
