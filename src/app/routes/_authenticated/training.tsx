@@ -1,7 +1,9 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 
 import {
+  CurriculumTrainingHubPage,
   CurriculumTrainingPage,
   curriculumPageQueryOptions,
   curriculumSyllabusQueryOptions,
@@ -14,6 +16,7 @@ import {
   type TrainingRecommendationMode,
 } from "@/pages/curriculum";
 import { isValidMainQuestStepId } from "@/shared/curriculum-data";
+import { Button } from "@/shared/ui/shadcn/button";
 
 type TrainingLevelFilter = "level-1" | "level-2" | "level-3" | "level-4";
 
@@ -68,6 +71,9 @@ const Route = createFileRoute("/_authenticated/training")({
       queryClient.query(trainingOverviewQueryOptions()),
       queryClient.query(curriculumSyllabusQueryOptions()),
     ]);
+    if (deps.stepId === undefined) {
+      return;
+    }
     const ssrRecommendation = recommendNextTrainingActivity({
       now: null,
       overview,
@@ -79,10 +85,7 @@ const Route = createFileRoute("/_authenticated/training")({
       preferredMode: deps.mode,
       syllabus,
     });
-    const stepIds = new Set([ssrRecommendation.stepId, clientRecommendation.stepId]);
-    if (deps.stepId !== undefined) {
-      stepIds.add(deps.stepId);
-    }
+    const stepIds = new Set([ssrRecommendation.stepId, clientRecommendation.stepId, deps.stepId]);
     await Promise.all(
       [...stepIds].map(async (stepId) => {
         await prefetchStepQueries(queryClient, stepId);
@@ -96,25 +99,44 @@ function TrainingRoute() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
 
+  if (search.stepId === undefined) {
+    return <CurriculumTrainingHubPage levelId={search.level} />;
+  }
+
   return (
-    <CurriculumTrainingPage
-      selectedMode={search.mode}
-      selectedStepId={search.stepId}
-      selectedTarget={search.target}
-      onModeChange={(mode) => {
-        void navigate({ replace: true, search: { mode } });
-      }}
-      onSelectionChange={(stepId, target) => {
-        void navigate({
-          replace: true,
-          search: {
-            ...(search.mode === undefined ? {} : { mode: search.mode }),
-            stepId,
-            target,
-          },
-        });
-      }}
-    />
+    <div className="space-y-4">
+      <div>
+        <Button
+          nativeButton={false}
+          render={
+            <Link search={search.level ? { level: search.level } : {}} to="/training">
+              <ArrowLeft aria-hidden="true" className="size-4" />
+              <span>Back to Training</span>
+            </Link>
+          }
+          size="sm"
+          variant="ghost"
+        />
+      </div>
+      <CurriculumTrainingPage
+        selectedMode={search.mode}
+        selectedStepId={search.stepId}
+        selectedTarget={search.target}
+        onModeChange={(mode) => {
+          void navigate({ replace: true, search: { mode, stepId: search.stepId } });
+        }}
+        onSelectionChange={(stepId, target) => {
+          void navigate({
+            replace: true,
+            search: {
+              ...(search.mode === undefined ? {} : { mode: search.mode }),
+              stepId,
+              target,
+            },
+          });
+        }}
+      />
+    </div>
   );
 }
 

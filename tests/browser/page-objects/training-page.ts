@@ -115,6 +115,24 @@ class TrainingPage {
     return this.page.getByRole("button", { exact: true, name: "Not yet" });
   }
 
+  public get dogBadge(): Locator {
+    return this.page.locator("[data-slot='badge']").first();
+  }
+  public get upNextCard(): Locator {
+    return this.page.locator("[data-slot='card']").first();
+  }
+  public get startUpNextLink(): Locator {
+    return this.upNextCard.getByRole("button", { name: /^Start (?:Practice|Test)$/u });
+  }
+  public get backToTrainingLink(): Locator {
+    return this.page.getByRole("button", { name: "Back to Training" });
+  }
+
+  public async openUpNextFromHub() {
+    await this.startUpNextLink.click();
+    await waitForHydration(this.page);
+  }
+
   public async gotoTraining(stepId?: string) {
     const path =
       stepId === undefined ? "/training" : `/training?stepId=${encodeURIComponent(stepId)}`;
