@@ -116,13 +116,15 @@ class TrainingPage {
   }
 
   public get dogBadge(): Locator {
-    return this.page.locator("[data-slot='badge']").first();
+    return this.page.getByText("My Dog", { exact: true });
   }
   public get upNextCard(): Locator {
-    return this.page.locator("[data-slot='card']").first();
+    return this.page.getByRole("region").filter({ hasText: "Up Next" });
   }
   public get startUpNextLink(): Locator {
-    return this.upNextCard.getByRole("button", { name: /^Start (?:Practice|Test)$/u });
+    return this.page
+      .getByRole("region", { name: "Up Next" })
+      .getByRole("button", { name: /^Start (?:Practice|Test)$/u });
   }
   public get backToTrainingLink(): Locator {
     return this.page.getByRole("button", { name: "Back to Training" });

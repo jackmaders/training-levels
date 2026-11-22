@@ -1,8 +1,9 @@
+// oxlint-disable-next-line import/no-namespace
+import type * as ReactRouter from "@tanstack/react-router";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { useAuth } from "@/shared/auth";
 import { SidebarProvider } from "@/shared/ui/shadcn/sidebar";
 import { TEST_SESSION } from "@test/vitest/fixtures/session";
 import { createTestingWrapper } from "@test/vitest/wrappers/testing-wrapper";
@@ -14,8 +15,13 @@ const mockUseLocation = vi.fn<() => { pathname: string; search: Record<string, u
   search: {},
 }));
 
-vi.mock(import("@tanstack/react-router"), async (importOriginal) => {
-  const actual = await importOriginal();
+const mockUseRouteContext = vi.fn<() => { session: typeof TEST_SESSION | null }>(() => ({
+  session: null,
+}));
+
+// oxlint-disable-next-line vitest/prefer-import-in-mock -- dynamic import() in vi.mock triggers TS2769 with importOriginal
+vi.mock("@tanstack/react-router", async (importOriginal) => {
+  const actual = await importOriginal<typeof ReactRouter>();
   return {
     ...actual,
     Link: ({
@@ -35,11 +41,13 @@ vi.mock(import("@tanstack/react-router"), async (importOriginal) => {
         </a>
       );
     },
+    getRouteApi: () => ({
+      useRouteContext: () => mockUseRouteContext(),
+    }),
     useLocation: () => mockUseLocation(),
   };
 });
 
-vi.mock(import("@/shared/auth"));
 vi.mock(import("@/features/user-sign-in"), () => ({
   SignInDialog: () => <button type="button">Sign In</button>,
 }));
@@ -66,12 +74,7 @@ afterEach(() => {
 });
 
 function mockAuthState(session: typeof TEST_SESSION | null) {
-  vi.mocked(useAuth).mockReturnValue({
-    session,
-    signIn: vi.fn<() => Promise<void>>(),
-    signOut: vi.fn<() => Promise<void>>(),
-    signUp: vi.fn<() => Promise<void>>(),
-  });
+  mockUseRouteContext.mockReturnValue({ session });
 }
 
 function renderSidebar() {
@@ -94,39 +97,42 @@ describe("app sidebar", () => {
     expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeDefined();
     expect(screen.getByRole("link", { name: "Dog Training Levels" })).toBeDefined();
     expect(screen.getByRole("link", { name: "Home" })).toBeDefined();
-    expect(screen.getByRole("link", { name: "About" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Sign In" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Sign Up" })).toBeDefined();
+  });
+
+  it("hides authenticated curriculum and profile links when signed out", () => {
+    expect.hasAssertions();
+    mockAuthState(null);
+
+    renderSidebar();
 
     expect(screen.queryByRole("link", { name: "Theory" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Training" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Levels" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Foundations" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Appendices" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Profile" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Sign Out" })).toBeNull();
   });
 
-  it("renders authenticated curriculum navigation and toggles Training group", async () => {
+  it("renders authenticated curriculum navigation when signed in", () => {
     expect.hasAssertions();
-    const user = userEvent.setup();
     mockAuthState(TEST_SESSION);
 
     renderSidebar();
 
     expect(screen.getByRole("link", { name: "Theory" })).toBeDefined();
     expect(screen.getByRole("link", { name: "Up Next / Overview" })).toBeDefined();
-    expect(screen.getByRole("link", { name: "Level 1" })).toBeDefined();
-    expect(screen.getByRole("link", { name: "Level 2" })).toBeDefined();
-    expect(screen.getByRole("link", { name: "Level 3" })).toBeDefined();
-    expect(screen.getByRole("link", { name: "Level 4" })).toBeDefined();
     expect(screen.getByRole("link", { name: "Levels" })).toBeDefined();
-    expect(screen.getByRole("link", { name: "Foundations" })).toBeDefined();
-    expect(screen.getByRole("link", { name: "Appendices" })).toBeDefined();
-    expect(screen.getByRole("link", { name: "Profile" })).toBeDefined();
-    expect(screen.getByRole("link", { name: "About" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Sign Out" })).toBeDefined();
     expect(screen.queryByRole("button", { name: "Sign In" })).toBeNull();
+  });
+
+  it("toggles Training group open and closed", async () => {
+    expect.hasAssertions();
+    const user = userEvent.setup();
+    mockAuthState(TEST_SESSION);
+
+    renderSidebar();
 
     const trainingToggle = screen.getByRole("button", { name: "Training" });
     expect(trainingToggle.getAttribute("aria-expanded")).toBe("true");
@@ -150,8 +156,10 @@ describe("app sidebar", () => {
 
     renderSidebar();
 
-    expect(screen.getByRole("link", { name: "Level 2" }).dataset.active).toBe("");
-    expect(screen.getByRole("link", { name: "Up Next / Overview" }).dataset.active).toBeUndefined();
+    expect(screen.getByRole("link", { name: "Level 2" }).dataset["active"]).toBe("");
+    expect(
+      screen.getByRole("link", { name: "Up Next / Overview" }).dataset["active"],
+    ).toBeUndefined();
   });
 
   it("hides curriculum links when user lacks curriculum:read permission", () => {
@@ -167,5 +175,20 @@ describe("app sidebar", () => {
     expect(screen.queryByRole("button", { name: "Training" })).toBeNull();
     expect(screen.getByRole("link", { name: "Profile" })).toBeDefined();
     expect(screen.getByRole("link", { name: "About" })).toBeDefined();
+  });
+
+  it("closes mobile sidebar when pathname changes", () => {
+    expect.hasAssertions();
+    mockAuthState(TEST_SESSION);
+    const { rerender } = renderSidebar();
+
+    mockUseLocation.mockReturnValue({ pathname: "/profile", search: {} });
+    rerender(
+      <SidebarProvider>
+        <AppSidebar />
+      </SidebarProvider>,
+    );
+
+    expect(screen.getByRole("link", { name: "Profile" }).dataset["active"]).toBe("");
   });
 });

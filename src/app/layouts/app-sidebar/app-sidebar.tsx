@@ -1,4 +1,4 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { getRouteApi, Link, useLocation } from "@tanstack/react-router";
 import {
   BookOpen,
   ChevronRight,
@@ -15,7 +15,7 @@ import { useState } from "react";
 
 import { SignInDialog } from "@/features/user-sign-in";
 import { SignUpDialog } from "@/features/user-sign-up";
-import { hasPermission, useAuth } from "@/shared/auth";
+import { hasPermission } from "@/shared/auth";
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +29,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/shared/ui/shadcn/sidebar";
 
 import { SignOutDialog } from "./sign-out-dialog";
@@ -42,13 +43,25 @@ const TRAINING_LEVELS: readonly { id: TrainingLevelId; label: string }[] = [
   { id: "level-4", label: "Level 4" },
 ];
 
+const rootRoute = getRouteApi("__root__");
+
+function useCloseMobileOnNavigate(pathname: string) {
+  const { setOpenMobile } = useSidebar();
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    setOpenMobile(false);
+  }
+}
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { session } = useAuth();
+  const { session } = rootRoute.useRouteContext();
   const location = useLocation();
   const { pathname } = location;
   const search = location.search as Record<string, unknown>;
   const activeLevel = typeof search["level"] === "string" ? search["level"] : undefined;
   const canReadCurriculum = session ? hasPermission(session.user.role, "curriculum:read") : false;
+  useCloseMobileOnNavigate(pathname);
 
   return (
     <Sidebar {...props}>
@@ -213,7 +226,9 @@ function TrainingNavGroup({
     <SidebarMenuItem>
       <SidebarMenuButton
         aria-expanded={isOpen}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => {
+          setIsOpen((prev) => !prev);
+        }}
         type="button"
       >
         <Dumbbell />
@@ -224,7 +239,7 @@ function TrainingNavGroup({
         <SidebarMenuSub>
           <SidebarMenuSubItem>
             <SidebarMenuSubButton
-              isActive={isTrainingRoute && !activeLevel}
+              isActive={isTrainingRoute && activeLevel === undefined}
               render={<Link to="/training" />}
             >
               <span>Up Next / Overview</span>
@@ -252,7 +267,7 @@ function AppSidebarFooter({ isSignedIn }: { isSignedIn: boolean }) {
       <SidebarMenu>
         {isSignedIn ? (
           <SidebarMenuItem>
-            <SignOutDialog className="w-full" variant="outline" />
+            <SignOutDialog className="w-full" />
           </SidebarMenuItem>
         ) : (
           <>

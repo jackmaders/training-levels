@@ -44,6 +44,7 @@ vi.mock(import("../../api/recommendation.functions"), async (importOriginal) => 
   return {
     ...actual,
     getTrainingOverviewFn: vi.fn<() => Promise<TrainingOverview>>().mockResolvedValue({
+      activeDog: null,
       curriculumProgress: [],
       practiceAttempts: [],
       practiceTotals: [],

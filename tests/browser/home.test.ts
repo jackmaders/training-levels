@@ -22,7 +22,7 @@ test("shows the product wordmark and keeps Profile out of public navigation", as
   await homePage.goto();
 
   // Assert
-  await expect(homePage.primaryNavigation).toContainText("Dog Training Levels");
+  await expect(page.getByRole("link", { name: "Dog Training Levels" })).toBeVisible();
   await expect(homePage.primaryNavigation.getByRole("link", { name: "Profile" })).toBeHidden();
 });
 

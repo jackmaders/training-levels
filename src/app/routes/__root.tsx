@@ -11,6 +11,7 @@ import { TooltipProvider } from "@/shared/ui/shadcn/tooltip";
 
 import { AppSidebar, Devtools, Footer } from "../layouts";
 
+// oxlint-disable-next-line import/max-dependencies -- root route wires app shell, providers, and error boundaries
 import appCss from "../styles/index.css?url";
 
 export interface RootRouterContext {

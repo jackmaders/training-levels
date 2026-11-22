@@ -29,6 +29,7 @@ const ONE_SECOND_MS = 1000;
 
 function emptyOverview(overrides: Partial<TrainingOverview> = {}): TrainingOverview {
   return {
+    activeDog: null,
     curriculumProgress: [],
     practiceAttempts: [],
     practiceTotals: [],

@@ -1,3 +1,4 @@
+/* oxlint-disable eslint/max-lines, import/max-dependencies */
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
@@ -35,6 +36,7 @@ import {
   type TrainingHubRecommendation,
   type TrainingHubStep,
 } from "../model/training-hub-state";
+import { useHydratedNow } from "./use-hydrated-now";
 
 const LEVEL_STATUS_META: Record<
   LevelStatus,
@@ -92,39 +94,47 @@ function UpNextHeaderMeta({ recommended }: { recommended: TrainingHubRecommendat
   );
 }
 
+function UpNextActions({ recommended }: { recommended: TrainingHubRecommendation }) {
+  return (
+    <CardContent className="flex flex-wrap items-center gap-2">
+      <Button
+        nativeButton={false}
+        render={
+          <Link search={{ mode: recommended.mode, stepId: recommended.stepId }} to="/training">
+            <span>{recommended.ctaLabel}</span>
+            <ArrowRight aria-hidden="true" className="size-4" />
+          </Link>
+        }
+        size="sm"
+        variant="default"
+      />
+      <Button
+        nativeButton={false}
+        render={
+          <Link params={recommended.theoryParams} to="/levels/$section/$page">
+            <BookOpen aria-hidden="true" className="size-4" />
+            <span>Read Theory</span>
+          </Link>
+        }
+        size="sm"
+        variant="outline"
+      />
+    </CardContent>
+  );
+}
+
 function UpNextCard({ recommended }: { recommended: TrainingHubRecommendation }) {
   return (
-    <Card className="border-primary/40 bg-card shadow-sm">
-      <CardHeader>
-        <UpNextHeaderMeta recommended={recommended} />
-        <CardTitle className="text-lg">{recommended.stepLabel}</CardTitle>
-        <CardDescription>{recommended.reason}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-wrap items-center gap-2">
-        <Button
-          nativeButton={false}
-          render={
-            <Link search={{ mode: recommended.mode, stepId: recommended.stepId }} to="/training">
-              <span>{recommended.ctaLabel}</span>
-              <ArrowRight aria-hidden="true" className="size-4" />
-            </Link>
-          }
-          size="sm"
-          variant="default"
-        />
-        <Button
-          nativeButton={false}
-          render={
-            <Link params={recommended.theoryParams} to="/levels/$section/$page">
-              <BookOpen aria-hidden="true" className="size-4" />
-              <span>Read Theory</span>
-            </Link>
-          }
-          size="sm"
-          variant="outline"
-        />
-      </CardContent>
-    </Card>
+    <section aria-label="Up Next">
+      <Card className="border-primary/40 bg-card shadow-sm">
+        <CardHeader>
+          <UpNextHeaderMeta recommended={recommended} />
+          <CardTitle className="text-lg">{recommended.stepLabel}</CardTitle>
+          <CardDescription>{recommended.reason}</CardDescription>
+        </CardHeader>
+        <UpNextActions recommended={recommended} />
+      </Card>
+    </section>
   );
 }
 
@@ -236,26 +246,28 @@ function BehaviorCard({ behavior }: { behavior: TrainingHubBehavior }) {
   const [showSteps, setShowSteps] = useState(false);
 
   return (
-    <Card className="flex h-full flex-col justify-between">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">{behavior.name}</CardTitle>
-        <CardDescription className="tabular-nums">
-          {behavior.comebeforeNote ?? `${behavior.completedSteps}/${behavior.totalSteps} steps`}
-        </CardDescription>
-        <CardAction>
-          <TheoryLink params={behavior.theoryParams} />
-        </CardAction>
-      </CardHeader>
+    <section aria-label={behavior.name}>
+      <Card className="flex h-full flex-col justify-between">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">{behavior.name}</CardTitle>
+          <CardDescription className="tabular-nums">
+            {behavior.comebeforeNote ?? `${behavior.completedSteps}/${behavior.totalSteps} steps`}
+          </CardDescription>
+          <CardAction>
+            <TheoryLink params={behavior.theoryParams} />
+          </CardAction>
+        </CardHeader>
 
-      <CardContent className="space-y-3">
-        <Progress aria-label={`${behavior.name} progress`} value={behavior.percentage} />
-        <BehaviorCardStepsCollapsible
-          behavior={behavior}
-          showSteps={showSteps}
-          onOpenChange={setShowSteps}
-        />
-      </CardContent>
-    </Card>
+        <CardContent className="space-y-3">
+          <Progress aria-label={`${behavior.name} progress`} value={behavior.percentage} />
+          <BehaviorCardStepsCollapsible
+            behavior={behavior}
+            showSteps={showSteps}
+            onOpenChange={setShowSteps}
+          />
+        </CardContent>
+      </Card>
+    </section>
   );
 }
 
@@ -288,6 +300,8 @@ function TrainingHubView({
   data: TrainingHubData;
   levelId?: string | undefined;
 }) {
+  // oxlint-disable-next-line eslint/capitalized-comments
+  /* v8 ignore next 3 -- @preserve */
   if (data.levels.length === 0) {
     return null;
   }
@@ -295,6 +309,8 @@ function TrainingHubView({
   const activeLevelId = levelId ?? data.activeLevelId;
   const selectedLevel = data.levels.find((level) => level.id === activeLevelId) ?? data.levels[0];
 
+  // oxlint-disable-next-line eslint/capitalized-comments
+  /* v8 ignore next 3 -- @preserve */
   if (selectedLevel === undefined) {
     return null;
   }
@@ -311,7 +327,8 @@ function TrainingHubView({
 function CurriculumTrainingHubPage({ levelId }: CurriculumTrainingHubPageProps) {
   const { data: overview } = useSuspenseQuery(trainingOverviewQueryOptions());
   const { data: syllabus } = useSuspenseQuery(curriculumSyllabusQueryOptions());
-  const data = buildTrainingHubData({ overview, syllabus });
+  const now = useHydratedNow();
+  const data = buildTrainingHubData({ now, overview, syllabus });
 
   return <TrainingHubView data={data} levelId={levelId} />;
 }

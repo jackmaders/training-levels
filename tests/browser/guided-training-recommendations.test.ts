@@ -71,7 +71,7 @@ test("rotates same-day Practice when a Test is waiting and unlocks Cold Test the
 
   await advanceClockOneDayAndReturn(page, trainingPage);
 
-  await expect(page).toHaveURL(/\/training$/u);
+  await expect(page).toHaveURL(/\/training\?mode=test&stepId=level-1%2Fzen%3Astep-1/u);
   await expect(trainingPage.recommendationPanel).toContainText(
     /Recommended next: Cold Test · Zen — Step 1:[\s\S]*You marked this step ready for a cold Test, and no practice or test has happened today\./u,
   );
@@ -122,6 +122,13 @@ test("flags unmet Comebefores on current-Level manual selection", async ({ baseU
   await expect(trainingPage.startButton).toBeEnabled();
 });
 
+async function startLaterLevelWithOverride(trainingPage: TrainingPage) {
+  await trainingPage.confirmLaterLevelOverride();
+  await expect(trainingPage.startButton).toBeEnabled();
+  await trainingPage.startButton.click();
+  await expect(trainingPage.successButton).toBeVisible();
+}
+
 test("requires temporary override for later-Level Behaviors without changing current goal", async ({
   baseURL,
   page,
@@ -132,10 +139,7 @@ test("requires temporary override for later-Level Behaviors without changing cur
   await expect(trainingPage.unmetComebeforesList).toContainText("Down");
   await expect(trainingPage.startButton).toBeDisabled();
 
-  await trainingPage.confirmLaterLevelOverride();
-  await expect(trainingPage.startButton).toBeEnabled();
-  await trainingPage.startButton.click();
-  await expect(trainingPage.successButton).toBeVisible();
+  await startLaterLevelWithOverride(trainingPage);
 
   await trainingPage.gotoTraining();
   await trainingPage.openUpNextFromHub();

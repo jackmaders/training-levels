@@ -107,20 +107,19 @@ class HomePage {
   }
 
   public async navigateToProfile() {
-    const menu = this.page.getByRole("button", { name: "Open menu" });
-    if (await menu.isVisible()) {
-      await menu.click();
+    if (!(await this.primaryNavigation.isVisible())) {
+      await this.page.getByRole("button", { name: "Toggle Sidebar" }).click();
       await this.page.getByRole("dialog").getByRole("link", { name: "Profile" }).click();
       return;
     }
-    await this.banner.getByRole("link", { name: "Profile" }).click();
+    await this.primaryNavigation.getByRole("link", { name: "Profile" }).click();
   }
 
   public async navigateToProfileByKeyboard() {
-    const menu = this.page.getByRole("button", { name: "Open menu" });
-    let profileLink = this.banner.getByRole("link", { exact: true, name: "Profile" });
-    if (await menu.isVisible()) {
-      await this.focusControlByKeyboard(menu);
+    let profileLink = this.primaryNavigation.getByRole("link", { exact: true, name: "Profile" });
+    if (!(await this.primaryNavigation.isVisible())) {
+      const toggle = this.page.getByRole("button", { name: "Toggle Sidebar" });
+      await this.focusControlByKeyboard(toggle);
       await this.page.keyboard.press("Enter");
       profileLink = this.page
         .getByRole("dialog")

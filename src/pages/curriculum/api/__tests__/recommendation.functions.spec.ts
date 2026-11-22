@@ -21,6 +21,7 @@ describe("recommendation functions", () => {
     expect.assertions(3);
 
     const overview = {
+      activeDog: null,
       curriculumProgress: [],
       practiceAttempts: [],
       practiceTotals: [],

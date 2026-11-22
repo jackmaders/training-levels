@@ -20,11 +20,25 @@ test("renders Training Hub with active Dog badge, Up Next CTA, and level switchi
   await trainingPage.gotoTraining();
 
   await expect(page.getByText("My Dog")).toBeVisible();
-  await expect(page.getByRole("link", { name: /^Practice Zen/u })).toBeVisible();
+  await expect(trainingPage.startUpNextLink).toBeVisible();
 
   await page.getByRole("link", { name: "Level 2" }).click();
   await expect(page).toHaveURL(/\/training\?level=level-2$/u);
 });
+
+async function openLevel2GoToMatStep1(page: Parameters<typeof signUpTestUser>[0]) {
+  await page.getByRole("link", { name: "Level 2" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: "Level 2" })).toBeVisible();
+  const goToMat = page.getByRole("region", { name: "Go To Mat" });
+  await expect(goToMat.getByText("Comebefore: Down")).toBeVisible();
+  await expect(goToMat.getByRole("button", { name: "Train" })).toBeEnabled();
+  await goToMat.getByRole("button", { name: "Steps" }).click();
+  await goToMat
+    .getByRole("listitem")
+    .filter({ hasText: "Dog goes to her mat." })
+    .getByRole("button", { name: "Train" })
+    .click();
+}
 
 test("shows Comebefore notice, launches from Steps, and returns via Back to Training", async ({
   baseURL,
@@ -34,16 +48,10 @@ test("shows Comebefore notice, launches from Steps, and returns via Back to Trai
 
   const trainingPage = new TrainingPage(page);
   await trainingPage.gotoTraining();
-  await page.getByRole("link", { name: "Level 2" }).click();
+  await openLevel2GoToMatStep1(page);
 
-  await expect(page.getByText(/Comebefore/iu)).toBeVisible();
-  await expect(page.getByRole("link", { name: "Train Go To Mat" })).toBeEnabled();
-
-  await page.getByRole("button", { name: /Steps for Go To Mat/iu }).click();
-  await page.getByRole("link", { name: /Go To Mat · Step 1/iu }).click();
-
-  await expect(page).toHaveURL(/\/training\?stepId=level-2%2Fgo-to-mat%3Astep-1/u);
-  const backLink = page.getByRole("link", { name: "Back to Training" });
+  await expect(page).toHaveURL(/\/training\?mode=practice&stepId=level-2%2Fgo-to-mat%3Astep-1/u);
+  const backLink = trainingPage.backToTrainingLink;
   await expect(backLink).toBeVisible();
   await backLink.click();
 
