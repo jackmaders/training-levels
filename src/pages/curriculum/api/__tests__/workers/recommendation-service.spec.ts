@@ -187,6 +187,7 @@ describe("recommendation-service (workers D1)", () => {
     const dogRows = await db.select().from(dogs).where(eq(dogs.userId, "user-nodog"));
 
     expect(overview).toStrictEqual({
+      activeDog: null,
       curriculumProgress: [],
       practiceAttempts: [],
       practiceTotals: [],

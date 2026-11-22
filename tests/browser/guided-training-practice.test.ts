@@ -245,8 +245,7 @@ test("supports mixed-method Level 3 Retrieve across shaping and hold duration st
   // Act
   await trainingPage.finishPractice();
   await expect(page).toHaveURL(/\/levels\/level-3\/retrieve$/u);
-  await trainingPage.gotoTraining();
-  await trainingPage.selectStep("Level 3 Retrieve · Step 2");
+  await trainingPage.gotoTraining("level-3/retrieve:step-2");
   await trainingPage.confirmLaterLevelOverride();
   await trainingPage.startButton.click();
 

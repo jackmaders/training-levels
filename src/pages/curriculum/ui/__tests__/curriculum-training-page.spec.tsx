@@ -54,6 +54,7 @@ beforeEach(() => {
 
 function createEmptyOverview(overrides: Partial<TrainingOverview> = {}): TrainingOverview {
   return {
+    activeDog: null,
     curriculumProgress: [],
     practiceAttempts: [],
     practiceTotals: [],

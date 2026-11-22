@@ -5,10 +5,13 @@ import { useEffect } from "react";
 import { ErrorPage } from "@/pages/error";
 import { NotFoundPage } from "@/pages/not-found";
 import { getSessionFn, type Session } from "@/shared/auth";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/shared/ui/shadcn/sidebar";
 import { Toaster } from "@/shared/ui/shadcn/toast";
+import { TooltipProvider } from "@/shared/ui/shadcn/tooltip";
 
-import { Devtools, Footer, Header } from "../layouts";
+import { AppSidebar, Devtools, Footer } from "../layouts";
 
+// oxlint-disable-next-line import/max-dependencies -- root route wires app shell, providers, and error boundaries
 import appCss from "../styles/index.css?url";
 
 export interface RootRouterContext {
@@ -66,19 +69,34 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         >
           Skip to content
         </a>
-        <Header />
-        <main
-          className="container mx-auto flex flex-1 flex-col px-4 py-8"
-          id="main-content"
-          tabIndex={-1}
-        >
-          {children}
-        </main>
-        <Footer />
+        <RootShellContent>{children}</RootShellContent>
         <Toaster />
         <Devtools />
         <Scripts />
       </body>
     </html>
+  );
+}
+
+function RootShellContent({ children }: { children: React.ReactNode }) {
+  return (
+    <TooltipProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+            <SidebarTrigger />
+          </header>
+          <main
+            className="container mx-auto flex flex-1 flex-col px-4 py-8"
+            id="main-content"
+            tabIndex={-1}
+          >
+            {children}
+          </main>
+          <Footer />
+        </SidebarInset>
+      </SidebarProvider>
+    </TooltipProvider>
   );
 }

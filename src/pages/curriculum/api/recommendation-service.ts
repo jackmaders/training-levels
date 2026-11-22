@@ -49,7 +49,13 @@ interface TrainingOverviewTotal {
   target: string;
 }
 
+interface TrainingOverviewDog {
+  id: string;
+  name: string;
+}
+
 interface TrainingOverview {
+  activeDog: TrainingOverviewDog | null;
   curriculumProgress: TrainingOverviewCompletion[];
   practiceAttempts: TrainingOverviewAttempt[];
   practiceTotals: TrainingOverviewTotal[];
@@ -57,14 +63,14 @@ interface TrainingOverview {
   stepTests: TrainingOverviewStepTest[];
 }
 
-async function findPrimaryDogId(db: Database, userId: string): Promise<string | null> {
+async function findPrimaryDog(db: Database, userId: string): Promise<TrainingOverviewDog | null> {
   const [dog] = await db
-    .select({ id: dogs.id })
+    .select({ id: dogs.id, name: dogs.name })
     .from(dogs)
     .where(eq(dogs.userId, userId))
     .orderBy(asc(dogs.createdAt), asc(dogs.id))
     .limit(1);
-  return dog?.id ?? null;
+  return dog ?? null;
 }
 
 async function findCurriculumProgress(
@@ -144,9 +150,10 @@ async function getTrainingOverview({
   db = getDb(),
   userId,
 }: TrainingUserContext): Promise<TrainingOverview> {
-  const dogId = await findPrimaryDogId(db, userId);
-  if (dogId === null) {
+  const activeDog = await findPrimaryDog(db, userId);
+  if (activeDog === null) {
     return {
+      activeDog: null,
       curriculumProgress: [],
       practiceAttempts: [],
       practiceTotals: [],
@@ -162,14 +169,15 @@ async function getTrainingOverview({
     stepDecisionRows,
     stepTestRows,
   ] = await Promise.all([
-    findCurriculumProgress(db, dogId),
-    findPracticeAttempts(db, dogId),
-    findPracticeTotals(db, dogId),
-    findStepDecisions(db, dogId),
-    findStepTests(db, dogId),
+    findCurriculumProgress(db, activeDog.id),
+    findPracticeAttempts(db, activeDog.id),
+    findPracticeTotals(db, activeDog.id),
+    findStepDecisions(db, activeDog.id),
+    findStepTests(db, activeDog.id),
   ]);
 
   return {
+    activeDog,
     curriculumProgress: curriculumProgressRows,
     practiceAttempts: practiceAttemptRows,
     practiceTotals: practiceTotalRows,
@@ -184,6 +192,7 @@ export {
   type TrainingOverviewAttempt,
   type TrainingOverviewCompletion,
   type TrainingOverviewDecision,
+  type TrainingOverviewDog,
   type TrainingOverviewStepTest,
   type TrainingOverviewTotal,
 };

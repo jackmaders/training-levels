@@ -17,6 +17,7 @@ async function signUpAndVisitTraining(page: Page, baseURL: string | undefined) {
   await signUpTestUser(page, baseURL);
   const trainingPage = new TrainingPage(page);
   await trainingPage.gotoTraining();
+  await trainingPage.openUpNextFromHub();
   return trainingPage;
 }
 
@@ -35,6 +36,7 @@ async function advanceClockOneDayAndReturn(page: Page, trainingPage: TrainingPag
   await page.clock.install({ time: new Date() });
   await page.clock.fastForward("24:00:00");
   await trainingPage.gotoTraining();
+  await trainingPage.openUpNextFromHub();
 }
 
 test("starts recommended Practice from header Start Training link", async ({ baseURL, page }) => {
@@ -45,6 +47,7 @@ test("starts recommended Practice from header Start Training link", async ({ bas
   await trainingPage.openFromHeader();
 
   await expect(page).toHaveURL(/\/training$/u);
+  await trainingPage.openUpNextFromHub();
   await expect(trainingPage.recommendationPanel).toContainText(
     /Current goal: Level 1[\s\S]*Recommended next: Practice · Zen — Step 1:[\s\S]*Recommended next in Level 1 because its prerequisites are complete and it has not been practiced yet\./u,
   );
@@ -59,6 +62,7 @@ test("rotates same-day Practice when a Test is waiting and unlocks Cold Test the
 }) => {
   const trainingPage = await signUpWithTestReadyZenStepOne(page, baseURL);
   await trainingPage.gotoTraining();
+  await trainingPage.openUpNextFromHub();
 
   await expect(trainingPage.recommendationPanel).toContainText(
     /Recommended next: Practice · Zen — Step 2:[\s\S]*Cold Test waiting: Zen · Step 1:[\s\S]*wait for a fresh day before testing cold\./u,
@@ -67,7 +71,7 @@ test("rotates same-day Practice when a Test is waiting and unlocks Cold Test the
 
   await advanceClockOneDayAndReturn(page, trainingPage);
 
-  await expect(page).toHaveURL(/\/training$/u);
+  await expect(page).toHaveURL(/\/training\?mode=test&stepId=level-1%2Fzen%3Astep-1/u);
   await expect(trainingPage.recommendationPanel).toContainText(
     /Recommended next: Cold Test · Zen — Step 1:[\s\S]*You marked this step ready for a cold Test, and no practice or test has happened today\./u,
   );
@@ -77,6 +81,7 @@ test("rotates same-day Practice when a Test is waiting and unlocks Cold Test the
 test("opens a same-day waiting Test from the recommendation panel", async ({ baseURL, page }) => {
   const trainingPage = await signUpWithTestReadyZenStepOne(page, baseURL);
   await trainingPage.gotoTraining();
+  await trainingPage.openUpNextFromHub();
 
   await expect(trainingPage.openWaitingTestButton).toBeVisible();
   await trainingPage.openWaitingTest();
@@ -117,6 +122,13 @@ test("flags unmet Comebefores on current-Level manual selection", async ({ baseU
   await expect(trainingPage.startButton).toBeEnabled();
 });
 
+async function startLaterLevelWithOverride(trainingPage: TrainingPage) {
+  await trainingPage.confirmLaterLevelOverride();
+  await expect(trainingPage.startButton).toBeEnabled();
+  await trainingPage.startButton.click();
+  await expect(trainingPage.successButton).toBeVisible();
+}
+
 test("requires temporary override for later-Level Behaviors without changing current goal", async ({
   baseURL,
   page,
@@ -127,11 +139,9 @@ test("requires temporary override for later-Level Behaviors without changing cur
   await expect(trainingPage.unmetComebeforesList).toContainText("Down");
   await expect(trainingPage.startButton).toBeDisabled();
 
-  await trainingPage.confirmLaterLevelOverride();
-  await expect(trainingPage.startButton).toBeEnabled();
-  await trainingPage.startButton.click();
-  await expect(trainingPage.successButton).toBeVisible();
+  await startLaterLevelWithOverride(trainingPage);
 
   await trainingPage.gotoTraining();
+  await trainingPage.openUpNextFromHub();
   await expect(trainingPage.recommendationPanel).toContainText("Current goal: Level 1");
 });

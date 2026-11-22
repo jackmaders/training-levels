@@ -8,15 +8,21 @@ import { Route as TrainingRoute } from "@/app/routes/_authenticated/training";
 import { recommendNextTrainingActivity, type TrainingRecommendationMode } from "@/pages/curriculum";
 import { TEST_SYLLABUS } from "@test/vitest/fixtures/curriculum";
 import { getRouteOption } from "@test/vitest/helpers/route";
+import { createTestingWrapper } from "@test/vitest/wrappers/testing-wrapper";
 
 const { mockNavigate, mockSearch } = vi.hoisted(() => ({
   mockNavigate: vi.fn<() => Promise<void>>(),
-  mockSearch: vi.fn<() => { mode?: TrainingRecommendationMode; stepId?: string; target?: string }>(
-    () => ({
-      stepId: "level-1/zen:step-1",
-      target: "3 seconds",
-    }),
-  ),
+  mockSearch: vi.fn<
+    () => {
+      level?: "level-1" | "level-2" | "level-3" | "level-4";
+      mode?: TrainingRecommendationMode;
+      stepId?: string;
+      target?: string;
+    }
+  >(() => ({
+    stepId: "level-1/zen:step-1",
+    target: "3 seconds",
+  })),
 }));
 
 const BASE_QUERY_COUNT = 2;
@@ -28,6 +34,9 @@ vi.mock(import("@/pages/curriculum"), async (importOriginal) => {
   const actual: object = await importOriginal();
   return {
     ...actual,
+    CurriculumTrainingHubPage: ({ levelId }: { levelId?: string }) => (
+      <div data-level={levelId}>Training Hub</div>
+    ),
     CurriculumTrainingPage: ({
       onModeChange,
       onSelectionChange,
@@ -94,8 +103,14 @@ describe("training route", () => {
     const validateSearch = getRouteOption(TrainingRoute, "validateSearch") as ValidateSearchFn;
 
     expect(
-      validateSearch({ mode: "practice", stepId: "level-1/zen:step-1", target: "3 seconds" }),
+      validateSearch({
+        level: "level-2",
+        mode: "practice",
+        stepId: "level-1/zen:step-1",
+        target: "3 seconds",
+      }),
     ).toStrictEqual({
+      level: "level-2",
       mode: "practice",
       stepId: "level-1/zen:step-1",
       target: "3 seconds",
@@ -200,7 +215,7 @@ describe("training route", () => {
       deps: { mode: "practice", stepId: undefined },
     });
 
-    expect(query).toHaveBeenCalledTimes(BASE_QUERY_COUNT + QUERIES_PER_STEP);
+    expect(query).toHaveBeenCalledTimes(BASE_QUERY_COUNT);
   });
 
   it("renders CurriculumTrainingPage and navigates on selection and mode changes", async () => {
@@ -211,7 +226,8 @@ describe("training route", () => {
     vi.spyOn(TrainingRoute, "useNavigate").mockReturnValue(mockNavigate);
 
     const Component = getRouteOption(TrainingRoute, "component") as ComponentType;
-    const { rerender } = render(<Component />);
+    const { wrapper } = createTestingWrapper();
+    const { rerender } = render(<Component />, { wrapper });
 
     await user.click(screen.getByRole("button", { name: "Trigger" }));
     expect(mockNavigate).toHaveBeenCalledWith({
@@ -222,7 +238,7 @@ describe("training route", () => {
     await user.click(screen.getByRole("button", { name: "Mode" }));
     expect(mockNavigate).toHaveBeenCalledWith({
       replace: true,
-      search: { mode: "practice" },
+      search: { mode: "practice", stepId: "level-1/zen:step-1" },
     });
 
     mockSearch.mockReturnValue({ mode: "practice", stepId: "level-1/zen:step-1" });
@@ -232,5 +248,29 @@ describe("training route", () => {
       replace: true,
       search: { mode: "practice", stepId: "level-1/zen:step-2", target: "5 seconds" },
     });
+  });
+
+  it("renders CurriculumTrainingHubPage when stepId is undefined and runner with Back to Training when stepId is set", () => {
+    expect.assertions(5);
+
+    vi.spyOn(TrainingRoute, "useSearch").mockImplementation(mockSearch);
+    vi.spyOn(TrainingRoute, "useNavigate").mockReturnValue(mockNavigate);
+
+    mockSearch.mockReturnValue({ level: "level-2" });
+    const Component = getRouteOption(TrainingRoute, "component") as ComponentType;
+    const { wrapper } = createTestingWrapper();
+    const { rerender } = render(<Component />, { wrapper });
+
+    expect(screen.getByText("Training Hub").dataset["level"]).toBe("level-2");
+    expect(screen.queryByRole("button", { name: "Back to Training" })).toBeNull();
+
+    mockSearch.mockReturnValue({ level: "level-2", stepId: "level-1/zen:step-1" });
+    rerender(<Component />);
+
+    expect(screen.queryByText("Training Hub")).toBeNull();
+    expect(screen.getByRole("button", { name: "Back to Training" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Trigger" }).dataset["step"]).toBe(
+      "level-1/zen:step-1",
+    );
   });
 });

@@ -17,6 +17,7 @@ vi.mock(import("@/shared/ui/shadcn/toast"));
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("root route document metadata", () => {
@@ -53,6 +54,15 @@ describe("root route layout and shellComponent", () => {
     expect.assertions(5);
 
     // Arrange
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn<() => unknown>(() => ({
+        addEventListener: vi.fn<() => void>(),
+        matches: false,
+        media: "(max-width: 767px)",
+        removeEventListener: vi.fn<() => void>(),
+      })),
+    );
     const Shell = getRouteOption(RootRoute, "shellComponent") as React.ComponentType<{
       children?: React.ReactNode;
     }>;

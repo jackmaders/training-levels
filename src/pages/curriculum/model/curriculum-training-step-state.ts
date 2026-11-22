@@ -55,6 +55,7 @@ interface ResolveCurriculumStepTrainingStateInput {
 }
 
 const EMPTY_TRAINING_OVERVIEW: TrainingOverview = {
+  activeDog: null,
   curriculumProgress: [],
   practiceAttempts: [],
   practiceTotals: [],

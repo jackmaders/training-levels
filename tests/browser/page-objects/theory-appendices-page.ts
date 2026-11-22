@@ -61,7 +61,9 @@ class TheoryAppendicesPage {
   }
 
   public getHeaderLink(name: HeaderCurriculumLinkName): Locator {
-    return this.page.getByRole("banner").getByRole("link", { exact: true, name });
+    return this.page
+      .getByRole("navigation", { name: "Primary navigation" })
+      .getByRole("link", { exact: true, name });
   }
 
   public async openSectionArticle(title: string) {
@@ -85,9 +87,9 @@ class TheoryAppendicesPage {
   }
 
   public async navigateFromHeader(section: CurriculumSectionName) {
-    const menu = this.page.getByRole("button", { name: "Open menu" });
-    if (await menu.isVisible()) {
-      await menu.click();
+    const primaryNav = this.page.getByRole("navigation", { name: "Primary navigation" });
+    if (!(await primaryNav.isVisible())) {
+      await this.page.getByRole("button", { name: "Toggle Sidebar" }).click();
       await this.page.getByRole("dialog").getByRole("link", { name: section }).click();
       return;
     }

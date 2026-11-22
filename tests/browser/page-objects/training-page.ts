@@ -10,7 +10,9 @@ class TrainingPage {
   }
 
   public get startTrainingHeaderLink(): Locator {
-    return this.page.getByRole("banner").getByRole("link", { exact: true, name: "Start Training" });
+    return this.page
+      .getByRole("navigation", { name: "Primary navigation" })
+      .getByRole("link", { exact: true, name: "Up Next / Overview" });
   }
   public get recommendationPanel(): Locator {
     return this.page.getByRole("region", { name: "Recommended next activity" });
@@ -111,6 +113,26 @@ class TrainingPage {
   }
   public get failTestButton(): Locator {
     return this.page.getByRole("button", { exact: true, name: "Not yet" });
+  }
+
+  public get dogBadge(): Locator {
+    return this.page.getByText("My Dog", { exact: true });
+  }
+  public get upNextCard(): Locator {
+    return this.page.getByRole("region").filter({ hasText: "Up Next" });
+  }
+  public get startUpNextLink(): Locator {
+    return this.page
+      .getByRole("region", { name: "Up Next" })
+      .getByRole("button", { name: /^Start (?:Practice|Test)$/u });
+  }
+  public get backToTrainingLink(): Locator {
+    return this.page.getByRole("button", { name: "Back to Training" });
+  }
+
+  public async openUpNextFromHub() {
+    await this.startUpNextLink.click();
+    await waitForHydration(this.page);
   }
 
   public async gotoTraining(stepId?: string) {
